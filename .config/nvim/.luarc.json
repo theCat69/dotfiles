@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
+  "runtime.version": "Lua 5.4",
+  "workspace": {
+    "library": [
+      "C:/Users/fef/AppData/Local/nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/lazy.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/rust-tools.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-dap/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-dap-ui/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-nio/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-dap-virtual-text/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/neodev.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/mason-update-all/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/mason-lspconfig.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/mason.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-lspconfig/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-notify/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nui.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/noice.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/gitsigns.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/friendly-snippets/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/cmp_luasnip/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/LuaSnip/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/cmp-nvim-lsp/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-cmp/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/telescope-ui-select.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/plenary.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/telescope.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/Comment.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-autopairs/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-treesitter-textobjects/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-treesitter/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/arrow.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/lualine.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/telescope-fzf-native.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/dropbar.nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-web-devicons/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/nvim-tree.lua/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/gruvbox/lua",
+      "C:/nvim/share/nvim/runtime/lua",
+      "C:/nvim/share/nvim/runtime/pack/dist/opt/matchit/lua",
+      "C:/nvim/lib/nvim/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/readme/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/cmp_luasnip/after/lua",
+      "C:/Users/fef/AppData/Local/nvim-data/lazy/cmp-nvim-lsp/after/lua"
+    ]
+  },
+  "diagnostics": {
+    "globals": [
+      "vim"
+    ]
+  }
+}

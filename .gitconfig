@@ -1,0 +1,23 @@
+[user]
+  email = vadcard.felix@gmail.com
+  name = Felix Vadcard
+  password = ''
+[core]
+  editor = nvim
+  pager = batcat --pager=never -p
+  longpaths = true
+[pull]
+  rebase = false
+[fetch]
+  prune = false
+[rebase]
+  autoStash = false
+[merge]
+  conflictstyle = diff3
+  tool = nvimdiff
+[diff]
+  colorMoved = default
+[init]
+  defaultBranch = main
+[mergetool]
+  keepBackup = false
