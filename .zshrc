@@ -92,7 +92,7 @@ source $ZSH/oh-my-zsh.sh
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
 else
-  export EDITOR='nvim -c "set ft=bash"'
+  export EDITOR='nvim'
 fi
 
 # Compilation flags
@@ -131,6 +131,8 @@ alias lt="eza -la -t modified -s modified"
 alias grep="rg"
 alias cat="batcat -p --pager=never"
 alias vim="nvim"
+alias ccb="clipcopy"
+alias pcb="clippaste"
 
 # Evals 
 eval "$(starship init zsh)"
