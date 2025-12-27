@@ -45,6 +45,13 @@ symbol = "\uebc4"
 style = "white"
 format = ' [$symbol]($style) '
 
+[custom.zsh]
+when = """ test "$STARSHIP_SHELL" = "zsh" """
+os = "linux"
+symbol = "󰰶"
+style = "green"
+format = ' [$symbol]($style) '
+
 [aws]
 format = '\[[$symbol($profile)(\($region\))(\[$duration\])]($style)\]'
 
