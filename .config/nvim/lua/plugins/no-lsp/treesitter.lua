@@ -11,26 +11,27 @@ return {
       -- custom handling of parsers
       ensure_installed = {
         'c', 'cpp', 'go', 'lua', 'python', 'rust', 'typescript', 'java', 'scala', 'yaml', 'kotlin', 'tsx', 'bash',
-        'groovy', 'zig', 'solidity', 'gitcommit'
+        'groovy', 'zig', 'solidity', 'gitcommit', 'zsh'
       },
     },
     config = function(_, opts)
+      -- TODO this will log at every nvim startup so i remove it for now
       -- install parsers from custom opts.ensure_installed
-      if opts.ensure_installed and #opts.ensure_installed > 0 then
-        require("nvim-treesitter").install(opts.ensure_installed)
-        -- register and start parsers for filetypes
-        for _, parser in ipairs(opts.ensure_installed) do
-          local filetypes = parser -- In this case, parser is the filetype/language name
-          vim.treesitter.language.register(parser, filetypes)
-
-          vim.api.nvim_create_autocmd({ "FileType" }, {
-            pattern = filetypes,
-            callback = function(event)
-              vim.treesitter.start(event.buf, parser)
-            end,
-          })
-        end
-      end
+      -- if opts.ensure_installed and #opts.ensure_installed > 0 then
+      --   require("nvim-treesitter").install(opts.ensure_installed)
+      --   -- register and start parsers for filetypes
+      --   for _, parser in ipairs(opts.ensure_installed) do
+      --     local filetypes = parser -- In this case, parser is the filetype/language name
+      --     vim.treesitter.language.register(parser, filetypes)
+      --
+      --     vim.api.nvim_create_autocmd({ "FileType" }, {
+      --       pattern = filetypes,
+      --       callback = function(event)
+      --         vim.treesitter.start(event.buf, parser)
+      --       end,
+      --     })
+      --   end
+      -- end
 
       -- Auto-install and start parsers for any buffer
       vim.api.nvim_create_autocmd({ "BufRead" }, {
