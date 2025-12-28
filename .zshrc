@@ -121,8 +121,14 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
 
 # Paths
+## local bin
 export PATH=/home/fefou/.local/bin:$PATH
+## nvim
 export PATH=/opt/nvim:$PATH
+## sjvm
+export PATH=/home/fefou/projects/rust/sjvm/target/release:$PATH
+export PATH=~/.java/current/bin:$PATH
+export JAVA_HOME=~/.java/current
 
 # Aliases
 alias ls="eza"
