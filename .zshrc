@@ -168,6 +168,14 @@ setopt hist_save_no_dups
 setopt hist_ignore_dups
 setopt hist_find_no_dups
 
+# Custom widgets
+copy-command () {
+  echo -n $BUFFER | clipcopy
+  zle -M "Copied to clipboard"
+}
+zle -N copy-command
+bindkey '^Xc' copy-command
+
 # Evals 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
