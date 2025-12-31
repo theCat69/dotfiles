@@ -138,8 +138,18 @@ alias grep="rg"
 alias cat="batcat -p --pager=never"
 alias bathelp="batcat --language=help"
 alias vim="nvim"
-alias ccb="clipcopy"
-alias pcb="clippaste"
+# Suffix aliases
+alias -s md="batcat"
+alias -s rs="$EDITOR"
+alias -s zsh="$EDITOR"
+alias -s zshrc="$EDITOR"
+alias -s sh="$EDITOR"
+alias -s yaml="batcat -l yaml"
+alias -s json="jless"
+# Global aliases
+alias -g C="| clipcopy"
+alias -g P="clippaste"
+alias -g H="--help 2>&1 | bathelp"
 
 # Keys
 bindkey '^p' history-search-backward
