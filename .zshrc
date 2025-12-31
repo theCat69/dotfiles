@@ -148,7 +148,7 @@ alias -s json="jless"
 # Global aliases
 alias -g C="| clipcopy"
 alias -g P="clippaste"
-alias -g H="--help 2>&1 | bathelp"
+alias -g H="--help 2>&1 | batcat --language=help"
 
 # Keys
 bindkey '^p' history-search-backward
