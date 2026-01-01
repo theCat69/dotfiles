@@ -136,7 +136,7 @@ alias ll="eza -la"
 alias lt="eza -la -t modified -s modified"
 alias grep="rg"
 alias cat="batcat -p --pager=never"
-alias bathelp="batcat --language=help"
+alias bathelp="batcat --language=help -p"
 alias vim="nvim"
 # Suffix aliases
 alias -s md="batcat"
@@ -148,7 +148,7 @@ alias -s json="jless"
 # Global aliases
 alias -g C="| clipcopy"
 alias -g P="clippaste"
-alias -g H="--help 2>&1 | batcat --language=help"
+alias -g H="--help 2>&1 | batcat --language=help -p"
 
 # Keys
 bindkey '^p' history-search-backward
