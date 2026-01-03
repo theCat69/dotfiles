@@ -141,8 +141,6 @@ alias vim="nvim"
 # Suffix aliases
 alias -s md="batcat"
 alias -s rs="$EDITOR"
-alias -s zsh="$EDITOR"
-alias -s sh="$EDITOR"
 alias -s yaml="batcat -l yaml"
 alias -s json="jless"
 # Global aliases
