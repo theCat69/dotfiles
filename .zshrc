@@ -118,15 +118,16 @@ export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 # Generated for envman. Do not edit.
+# Is it really needed ? Because it is empty right now
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
 
 # Paths
 ## local bin
-export PATH=/home/fefou/.local/bin:$PATH
+export PATH=~/.local/bin:$PATH
 ## nvim
 export PATH=/opt/nvim:$PATH
 ## sjvm
-export PATH=/home/fefou/projects/rust/sjvm/target/release:$PATH
+export PATH=~/projects/rust/sjvm/target/release:$PATH
 export PATH=~/.java/current/bin:$PATH
 export JAVA_HOME=~/.java/current
 
