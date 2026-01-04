@@ -20,4 +20,7 @@ ln -s $(pwd)/.config/starship.toml ~/.config/starship.toml
 ln -s $(pwd)/.config/nvim/ ~/.config/
 
 # gitui
-ln -s $(pwd)/.config/gitui ~/.config/
+ln -s $(pwd)/.config/gitui/ ~/.config/
+
+# hyprland
+ln -s $(pwd)/.config/hypr/ ~/.config/
