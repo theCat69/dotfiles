@@ -24,3 +24,6 @@ ln -s $(pwd)/.config/gitui/ ~/.config/
 
 # hyprland
 ln -s $(pwd)/.config/hypr/ ~/.config/
+
+# waybar
+ln -s $(pwd)/.config/waybar/ ~/.config/
