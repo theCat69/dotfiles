@@ -3,7 +3,7 @@
   name = Felix Vadcard
   password = ''
 [core]
-  editor = nvim
+  editor = vim
   pager = batcat --pager=never -p
   longpaths = true
 [pull]
