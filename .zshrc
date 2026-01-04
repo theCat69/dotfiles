@@ -139,20 +139,20 @@ alias ls="eza"
 alias ll="eza -la"
 alias lt="eza -la -t modified -s modified"
 alias grep="rg"
-alias cat="batcat -p --pager=never"
-alias bathelp="batcat --language=help -p"
+alias cat="bat -p --pager=never"
+alias bathelp="bat --language=help -p"
 alias vim="nvim"
 alias ij="idea &> /dev/null & disown"
 alias jtool="jetbrains-toolbox &> /dev/null & disown"
 # Suffix aliases
-alias -s md="batcat"
+alias -s md="bat"
 alias -s rs="$EDITOR"
-alias -s yaml="batcat -l yaml"
+alias -s yaml="bat -l yaml"
 alias -s json="jless"
 # Global aliases
 alias -g C="| clipcopy"
 alias -g P="clippaste"
-alias -g H="--help 2>&1 | batcat --language=help -p"
+alias -g H="--help 2>&1 | bat --language=help -p"
 
 # Keys
 bindkey '^p' history-search-backward
