@@ -14,10 +14,10 @@ ln -s $(pwd)/.gitconfig ~/.gitconfig
 ln -s $(pwd)/.config/ghostty/ ~/.config/
 
 # starship
-ln -s $(pwd)/.config/starship.toml ~/.config
+ln -s $(pwd)/.config/starship.toml ~/.config/starship.toml
 
 # nvim
-ln -s $(pwd)/.config/nvim/ ~/.config/nvim
+ln -s $(pwd)/.config/nvim/ ~/.config/
 
 # gitui
-ln -s $(pwd)/gitui ~/.config
+ln -s $(pwd)/.config/gitui ~/.config/
