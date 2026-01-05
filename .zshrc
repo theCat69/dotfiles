@@ -130,6 +130,9 @@ export PATH=/opt/nvim:$PATH
 export PATH=~/projects/rust/sjvm/target/release:$PATH
 export PATH=~/.java/current/bin:$PATH
 export JAVA_HOME=~/.java/current
+# IntelliJ 
+export PATH=~/.local/share/JetBrains/Toolbox/apps/intellij-idea/bin:$PATH
+export PATH=~/jetbrains-toolbox/jetbrains-toolbox-3.2.0.65851/bin:$PATH
 
 # Aliases
 alias ls="eza"
@@ -139,6 +142,8 @@ alias grep="rg"
 alias cat="batcat -p --pager=never"
 alias bathelp="batcat --language=help -p"
 alias vim="nvim"
+alias ij="nohup idea &> /dev/null &"
+alias jtool="nohup jetbrains-toolbox &> /dev/null &"
 # Suffix aliases
 alias -s md="batcat"
 alias -s rs="$EDITOR"
