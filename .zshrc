@@ -150,8 +150,8 @@ alias -s rs="$EDITOR"
 alias -s yaml="bat -l yaml"
 alias -s json="jless"
 # Global aliases
-alias -g C="| clipcopy"
-alias -g P="clippaste"
+alias -g C="| wl-copy"
+alias -g P="wl-paste"
 alias -g H="--help 2>&1 | bat --language=help -p"
 
 # Keys

@@ -7,6 +7,12 @@ cd yay-bin
 makepkg -si
 cd ..
 
+# jetbrain mono nerd font
+sudo pacman -S extra/ttf-jetbrains-mono-nerd
+
+# copy past from terminal
+sudo pacman -S wl-clipboard
+
 # ghostty
 sudo pacman -S zsh ghostty neovim waybar starship bat fzf zoxide gitui eza 
 
