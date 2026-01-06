@@ -4,7 +4,7 @@
   password = ''
 [core]
   editor = vim
-  pager = batcat --pager=never -p
+  pager = bat --pager=never -p
   longpaths = true
 [pull]
   rebase = false
