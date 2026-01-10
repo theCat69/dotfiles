@@ -11,7 +11,7 @@ return {
       -- custom handling of parsers
       ensure_installed = {
         'c', 'cpp', 'go', 'lua', 'python', 'rust', 'typescript', 'java', 'scala', 'yaml', 'kotlin', 'tsx', 'bash',
-        'groovy', 'zig', 'solidity', 'gitcommit', 'zsh'
+        'groovy', 'zig', 'solidity', 'gitcommit', 'zsh', 'css', 'angular', "html"
       },
     },
     config = function(_, opts)

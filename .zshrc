@@ -179,7 +179,11 @@ copy-command () {
 zle -N copy-command
 bindkey '^Xc' copy-command
 
+# source external completion script
+source <(ng completion script)
+
 # Evals 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
+
 
