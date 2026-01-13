@@ -1,7 +1,7 @@
 vim.api.nvim_create_autocmd('FileType', {
   pattern = {
-    'c', 'cpp', 'go', 'lua', 'py', 'rs', 'ts', 'java', 'scala', 'yaml', 'kt', 'tsx', 'bash',
-    'groovy', 'zig', 'solidity', 'gitcommit', 'zsh', 'css', 'scss', 'angular', "html"
+    'c', 'cpp', 'go', 'lua', 'py', 'rs', 'ts', 'java', 'scala', 'yaml', 'kt', 'tsx', 'sh',
+    'groovy', 'zig', 'solidity', 'gitcommit', 'zsh', 'css', 'scss', 'angular', 'html', 'regex'
   },
   callback = function() vim.treesitter.start() end,
 })
@@ -19,7 +19,7 @@ return {
       -- custom handling of parsers
       ensure_installed = {
         'c', 'cpp', 'go', 'lua', 'python', 'rust', 'typescript', 'java', 'scala', 'yaml', 'kotlin', 'tsx', 'bash',
-        'groovy', 'zig', 'solidity', 'gitcommit', 'zsh', 'css', 'scss', 'angular', "html"
+        'groovy', 'zig', 'solidity', 'gitcommit', 'zsh', 'css', 'scss', 'angular', 'html', 'regex'
       },
     },
     config = function(_, opts)
