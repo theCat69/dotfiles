@@ -182,8 +182,15 @@ bindkey '^Xc' copy-command
 # source external completion script
 source <(ng completion script)
 
+# opencode
+export PATH=/home/fefou/.opencode/bin:$PATH
+export OPENCODE_EXPERIMENTAL_LSP_TOOL=true
+
+# Add JBang to environment
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$PATH"
+
 # Evals 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
-
 
