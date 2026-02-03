@@ -81,6 +81,10 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
+if [[ -f ~/.secrets ]]; then
+  source ~/.secrets
+fi
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
