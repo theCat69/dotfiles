@@ -7,8 +7,8 @@
 # .zshrc
 ln -s $(pwd)/.zshrc ~/.zshrc
 
-# gitconfig
-ln -s $(pwd)/.gitconfig ~/.gitconfig
+# gitconfig uncommented only if you are me
+# ln -s $(pwd)/.gitconfig ~/.gitconfig
 
 # ghostty
 ln -s $(pwd)/.config/ghostty/ ~/.config/
@@ -21,3 +21,6 @@ ln -s $(pwd)/.config/nvim/ ~/.config/
 
 # gitui
 ln -s $(pwd)/.config/gitui ~/.config/
+
+# opencode 
+ln -s $(pwd)/.config/opencode/ ~/.config/
