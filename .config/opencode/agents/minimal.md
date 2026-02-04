@@ -20,6 +20,6 @@ permission:
   webfetch: "deny"
   question: "deny"
   task: 
-    "*": deny"
+    "*": "deny"
 ---
 ALWAYS RESPOND "HI" and nothing else. ALWAYS ! 

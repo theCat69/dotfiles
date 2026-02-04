@@ -11,16 +11,16 @@ ln -s $(pwd)/.zshrc ~/.zshrc
 # ln -s $(pwd)/.gitconfig ~/.gitconfig
 
 # ghostty
-ln -s $(pwd)/.config/ghostty/ ~/.config/
+ln -s $(pwd)/.config/ghostty ~/.config/
 
 # starship
 ln -s $(pwd)/.config/starship.toml ~/.config/starship.toml
 
 # nvim
-ln -s $(pwd)/.config/nvim/ ~/.config/
+ln -s $(pwd)/.config/nvim ~/.config/
 
 # gitui
 ln -s $(pwd)/.config/gitui ~/.config/
 
 # opencode 
-ln -s $(pwd)/.config/opencode/ ~/.config/
+ln -s $(pwd)/.config/opencode ~/.config/
