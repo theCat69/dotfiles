@@ -19,5 +19,7 @@ permission:
   todoread: "deny"
   webfetch: "deny"
   question: "deny"
+  task: 
+    "*": deny"
 ---
 ALWAYS RESPOND "HI" and nothing else. ALWAYS ! 
