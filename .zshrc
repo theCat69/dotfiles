@@ -138,10 +138,7 @@ export PATH=~/.java/current/bin:$PATH
 export JAVA_HOME=~/.java/current
 # IntelliJ 
 export PATH=~/.local/share/JetBrains/Toolbox/apps/intellij-idea/bin:$PATH
-export PATH=~/jetbrains-toolbox/jetbrains-toolbox-3.2.0.65851/bin:$PATH
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+export PATH="/home/fef/dev/IDE/jetbrains-toolbox-3.2.0.65851/bin:$PATH"
 # opencode
 export PATH=/home/fefou/.opencode/bin:$PATH
 export OPENCODE_EXPERIMENTAL_LSP_TOOL=true
@@ -154,6 +151,9 @@ export PATH=$PATH:/usr/local/go/bin
 # rust
 export PATH=$PATH:~/dev-tools/compilers/wasm/binaryen/binaryen-version_126/bin
 
+
+# neovim
+export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 
 # Aliases
 alias ls="eza"
@@ -209,8 +209,6 @@ bindkey '^Xc' copy-command
 
 # source external completion script
 source <(ng completion script)
-# bun completions
-[ -s "/home/fefou/.bun/_bun" ] && source "/home/fefou/.bun/_bun"
 
 # Evals 
 eval "$(starship init zsh)"
