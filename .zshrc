@@ -146,7 +146,14 @@ alias grep="rg"
 alias cat="batcat -p --pager=never"
 alias bathelp="batcat --language=help -p"
 alias vim="nvim"
-alias ij="idea &> /dev/null & disown"
+ij() {
+  if [[ -n "$1" ]]
+  then 
+    idea "$1" &> /dev/null & disown
+  else 
+    idea &> /dev/null & disown
+  fi
+}
 alias jtool="jetbrains-toolbox &> /dev/null & disown"
 # Suffix aliases
 alias -s md="batcat"

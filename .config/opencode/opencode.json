@@ -8,13 +8,14 @@
         "-y",
         "@upstash/context7-mcp",
         "--api-key",
-        "$CONTEXT7_API_KEY"
+        "{env:CONTEXT7_API_KEY}"
       ],
       "enabled": true
     }
   },
-  "permission": {
-    "lsp": "allow",
-    "question": "allow"
+  "lsp": {
+    "java": {
+      "disabled": true
+    }
   }
 }
