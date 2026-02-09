@@ -1,14 +1,15 @@
 ---
 description: "specification reviewer and quality gate"
 mode: subagent 
-hidden: true
 tools:
   "*": false
   read: true
   grep: true
   glob: true
   list: true
+  todowrite: true
   todoread: true
+  question: true
 permission:
   bash: "deny"
   edit: "deny"
@@ -21,10 +22,10 @@ permission:
   list: "allow"
   lsp: "deny"
   skill: "deny"
-  todowrite: "deny"
+  todowrite: "allow"
   todoread: "allow"
   webfetch: "deny"
-  question: "deny",
+  question: "allow",
   task: 
     "*": "deny"
 ---

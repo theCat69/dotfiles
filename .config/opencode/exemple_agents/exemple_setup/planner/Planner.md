@@ -8,6 +8,7 @@ tools:
   todoread: true
   question: true
   task: true
+  question: true
 permission:
   bash: "deny"
   edit: "deny"

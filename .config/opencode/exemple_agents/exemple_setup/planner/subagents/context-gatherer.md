@@ -1,16 +1,17 @@
 ---
 description: "product and technical context extraction agent."
 mode: subagent 
-hidden: true
 tools:
   "*": false
   read: true
   grep: true
   glob: true
   list: true
+  todowrite: true
   todoread: true
   webfetch: true
   context7: true
+  question: true
 permission:
   bash: "deny"
   edit: "deny"
@@ -23,10 +24,10 @@ permission:
   list: "allow"
   lsp: "deny"
   skill: "deny"
-  todowrite: "deny"
+  todowrite: "allow"
   todoread: "allow"
   webfetch: "allow"
-  question: "deny",
+  question: "allow",
   task: 
     "*": "deny"
 ---
