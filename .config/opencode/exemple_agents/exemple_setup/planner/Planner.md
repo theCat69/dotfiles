@@ -6,7 +6,6 @@ tools:
   read: true
   todowrite: true
   todoread: true
-  question: true
   task: true
   question: true
 permission:

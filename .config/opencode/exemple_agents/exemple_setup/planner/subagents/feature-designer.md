@@ -7,7 +7,6 @@ tools:
   grep: true
   glob: true
   list: true
-  todowrite: true
   todoread: true
   question: true
 permission:
@@ -22,7 +21,7 @@ permission:
   list: "allow"
   lsp: "deny"
   skill: "deny"
-  todowrite: "allow"
+  todowrite: "deny"
   todoread: "allow"
   webfetch: "deny"
   question: "allow",
