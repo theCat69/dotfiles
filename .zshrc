@@ -116,6 +116,7 @@ fi
 #
 #
 #
+#
 # Source other files
 # Rust
 . "$HOME/.cargo/env"
@@ -126,6 +127,9 @@ export NVM_DIR="$HOME/.config/nvm"
 # Generated for envman. Do not edit.
 # Is it really needed ? Because it is empty right now
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
+
+# Browser 
+export BROWSER=firefox
 
 # Paths
 ## local bin
@@ -154,6 +158,9 @@ export PATH=$PATH:~/dev-tools/compilers/wasm/binaryen/binaryen-version_126/bin
 
 # neovim
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+
+# snap app
+export PATH="$PATH:/snap/bin"
 
 # Aliases
 alias ls="eza"
