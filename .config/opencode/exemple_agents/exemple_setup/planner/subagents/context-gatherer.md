@@ -10,7 +10,6 @@ tools:
   todoread: true
   webfetch: true
   context7: true
-  question: true
 permission:
   bash: "deny"
   edit: "deny"
@@ -26,7 +25,6 @@ permission:
   todowrite: "deny"
   todoread: "allow"
   webfetch: "allow"
-  question: "allow",
   task: 
     "*": "deny"
 ---

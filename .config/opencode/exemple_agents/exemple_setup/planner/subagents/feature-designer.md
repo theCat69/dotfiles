@@ -8,7 +8,6 @@ tools:
   glob: true
   list: true
   todoread: true
-  question: true
 permission:
   bash: "deny"
   edit: "deny"
@@ -24,7 +23,6 @@ permission:
   todowrite: "deny"
   todoread: "allow"
   webfetch: "deny"
-  question: "allow",
   task: 
     "*": "deny"
 ---
