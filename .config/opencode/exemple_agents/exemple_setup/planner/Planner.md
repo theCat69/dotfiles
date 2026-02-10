@@ -23,7 +23,7 @@ permission:
   todowrite: "allow"
   todoread: "allow"
   webfetch: "deny"
-  question: "allow",
+  question: "allow"
   task: 
     "*": "deny"
     "context-gatherer": "allow"
