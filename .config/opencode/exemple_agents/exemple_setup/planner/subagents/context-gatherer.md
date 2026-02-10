@@ -9,7 +9,7 @@ tools:
   list: true
   todoread: true
   webfetch: true
-  context7: true
+  "context7_*": true
 permission:
   bash: "deny"
   edit: "deny"
@@ -25,6 +25,7 @@ permission:
   todowrite: "deny"
   todoread: "allow"
   webfetch: "allow"
+  "context7_*": "allow"
   task: 
     "*": "deny"
 ---
