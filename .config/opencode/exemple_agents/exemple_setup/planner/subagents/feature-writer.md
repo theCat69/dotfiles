@@ -3,6 +3,7 @@ description: "technical documentation writer"
 mode: subagent 
 tools:
   "*": false
+  bash: true
   read: true
   write: true
   grep: true
@@ -10,8 +11,8 @@ tools:
   list: true
   todoread: true
 permission:
-  bash: "deny"
-  edit: "deny"
+  bash: "allow" 
+  edit: "allow"
   write: "allow"
   patch: "allow"
   multiedit: "allow"
