@@ -8,6 +8,10 @@ permission:
   glob: "allow"
   grep: "allow"
   list: "allow"
+  bash:
+    "*": "deny"
+    "git log *": "allow"
+    "mv *": "allow"
   task: 
     "*": "deny"
 ---
