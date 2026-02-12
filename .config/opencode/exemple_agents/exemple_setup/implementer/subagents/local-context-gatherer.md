@@ -8,18 +8,19 @@ tools:
   grep: true
   list: true
   lsp: true
+  write: true
 permission:
   read: "allow"
   glob: "allow"
   grep: "allow"
   list: "allow"
   lsp: "allow"
+  write: "allow"
+  edit: "allow"
+  patch: "allow"
+  multiedit: "allow"
 
   bash: "deny"
-  edit: "deny"
-  write: "deny"
-  patch: "deny"
-  multiedit: "deny"
   webfetch: "deny"
   skill: "deny"
   todowrite: "deny"
