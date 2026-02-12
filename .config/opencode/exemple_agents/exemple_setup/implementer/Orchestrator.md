@@ -77,6 +77,7 @@ Safely transform user requests into production-ready code through controlled sub
 
 # Guidelines Access
 Read from `.project-guidelines-for-ai/coding/` if present.
+Warn the user if missing and continue with industrie best practice.
 
 # Rules
 - If guidelines folder is missing, warn the user and continue.
