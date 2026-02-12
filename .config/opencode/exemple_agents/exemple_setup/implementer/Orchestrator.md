@@ -70,8 +70,8 @@ Safely transform user requests into production-ready code through controlled sub
 3. Call external-context-gatherer (cache-first).
 4. Filter into Context Snapshot (≤ 1,000 tokens) and write to `.ai/context-snapshots/current.json`.
 5. Call coder with snapshot path + summary only.
-6. Call reviewer 
-7. Call security-reviewer.
+6. Call reviewer to review the code.
+7. Call security-reviewer to review the code for security issues.
 8. Call librarian to check for doc changed.
 8. Summarize blocking issues and next steps.
 
