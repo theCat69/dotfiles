@@ -1,28 +1,13 @@
 ---
 description: "specification reviewer and quality gate"
 mode: subagent 
-tools:
-  "*": false
-  read: true
-  grep: true
-  glob: true
-  list: true
-  todoread: true
 permission:
-  bash: "deny"
-  edit: "deny"
-  write: "deny"
-  patch: "deny"
-  multiedit: "deny"
+  "*": "deny"
   read: "allow"
   grep: "allow"
   glob: "allow"
   list: "allow"
-  lsp: "deny"
-  skill: "deny"
-  todowrite: "deny"
   todoread: "allow"
-  webfetch: "deny"
   task: 
     "*": "deny"
 ---

@@ -1,28 +1,11 @@
 ---
 description: "Feature Planning Orchestrator for a software project."
 mode: primary 
-tools:
-  "*": false
-  read: true
-  todowrite: true
-  todoread: true
-  task: true
-  question: true
 permission:
-  bash: "deny"
-  edit: "deny"
-  write: "deny"
-  patch: "deny"
-  multiedit: "deny"
+  "*": "deny"
   read: "allow"
-  grep: "deny"
-  glob: "deny"
-  list: "deny"
-  lsp: "deny"
-  skill: "deny"
   todowrite: "allow"
   todoread: "allow"
-  webfetch: "deny"
   question: "allow"
   task: 
     "*": "deny"

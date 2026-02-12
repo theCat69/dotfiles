@@ -1,14 +1,6 @@
 ---
 description: "Writes production code from curated snapshot"
 mode: subagent 
-tools:
-  "*": false
-  write: true
-  bash: true
-  read: true
-  glob: true
-  grep: true
-  list: true
 permission:
   "*": "deny"
   write: "allow"

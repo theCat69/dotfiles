@@ -1,15 +1,8 @@
 ---
 description: "Extracts relevant context from the local repository"
 mode: subagent 
-tools:
-  "*": false
-  read: true
-  glob: true
-  grep: true
-  list: true
-  lsp: true
-  write: true
 permission:
+  "*": "deny"
   read: "allow"
   glob: "allow"
   grep: "allow"
@@ -19,13 +12,6 @@ permission:
   edit: "allow"
   patch: "allow"
   multiedit: "allow"
-
-  bash: "deny"
-  webfetch: "deny"
-  skill: "deny"
-  todowrite: "deny"
-  todoread: "deny"
-  question: "deny"
   task:
     "*": "deny"
 ---

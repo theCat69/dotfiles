@@ -1,17 +1,18 @@
 ---
 description: "Production-grade orchestrator for multi-agent software engineering"
 mode: primary
-tools:
-  "*": false
-  task: true
-  todowrite: true
-  todoread: true
-  question: true
-  read: true
-  glob: true
-  grep: true
-  list: true
 permission:
+  "*": "deny"
+  bash:
+    "*": "deny"
+    "git *": "allow" 
+  todowrite: "allow"
+  todoread: "allow"
+  question: "allow"
+  read: "allow"
+  glob: "allow"
+  grep: "allow"
+  list: "allow"
   task:
     "*": "deny"
     "coder": "allow"
@@ -20,22 +21,6 @@ permission:
     "local-context-gatherer": "allow"
     "reviewer": "allow"
     "security-reviewer": "allow"
-  todowrite: "allow"
-  todoread: "allow"
-  question: "allow"
-  read: "allow"
-  glob: "allow"
-  grep: "allow"
-  list: "allow"
-
-  edit: "deny"
-  write: "deny"
-  patch: "deny"
-  multiedit: "deny"
-  grep: "deny"
-  lsp: "deny"
-  webfetch: "deny"
-  skill: "deny"
 ---
 # Identity
 You are the Orchestrator of a production-grade AI software engineering pipeline.

@@ -1,16 +1,8 @@
 ---
 description: "technical documentation writer"
 mode: subagent 
-tools:
-  "*": false
-  bash: true
-  read: true
-  write: true
-  grep: true
-  glob: true
-  list: true
-  todoread: true
 permission:
+  "*": "deny"
   bash: "allow" 
   edit: "allow"
   write: "allow"
@@ -20,11 +12,7 @@ permission:
   grep: "allow"
   glob: "allow"
   list: "allow"
-  lsp: "deny"
-  skill: "deny"
-  todowrite: "deny"
   todoread: "allow"
-  webfetch: "deny"
   task: 
     "*": "deny"
 ---

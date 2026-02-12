@@ -1,20 +1,13 @@
 ---
 description: "Security-focused code reviewer"
 mode: subagent 
-tools:
-  "*": false
-  read: true
-  glob: true
-  grep: true
-  bash: true
-  list: true
 permission:
+  "*": "deny"
   read: "allow"
   glob: "allow"
   grep: "allow" 
   bash: "allow"
   list: "allow"
-  "*": "deny"
 ---
 # Identity
 You are a security analyste.

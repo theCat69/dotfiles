@@ -1,17 +1,8 @@
 ---
 description: "Fetches external technical context with caching"
 mode: subagent 
-tools:
-  "*": false
-  "context7*": true
-  webfetch: true
-  skill: true
-  write: true
-  read: true
-  glob: true
-  grep: true
-  list: true
 permission:
+  "*": "deny"
   "context7*": "allow"
   webfetch: "allow"
   skill: "allow"
@@ -24,11 +15,6 @@ permission:
   grep: "allow"
   list: "allow"
 
-  bash: "deny"
-  lsp: "deny"
-  todowrite: "deny"
-  todoread: "deny"
-  question: "deny"
   task:
     "*": "deny"
 ---

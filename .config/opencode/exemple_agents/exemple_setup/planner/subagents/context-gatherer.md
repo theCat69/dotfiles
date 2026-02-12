@@ -1,28 +1,12 @@
 ---
 description: "product and technical context extraction agent."
 mode: subagent 
-tools:
-  "*": false
-  read: true
-  grep: true
-  glob: true
-  list: true
-  todoread: true
-  webfetch: true
-  "context7_*": true
 permission:
-  bash: "deny"
-  edit: "deny"
-  write: "deny"
-  patch: "deny"
-  multiedit: "deny"
+  "*": "deny"
   read: "allow"
   grep: "allow"
   glob: "allow"
   list: "allow"
-  lsp: "deny"
-  skill: "deny"
-  todowrite: "deny"
   todoread: "allow"
   webfetch: "allow"
   "context7_*": "allow"

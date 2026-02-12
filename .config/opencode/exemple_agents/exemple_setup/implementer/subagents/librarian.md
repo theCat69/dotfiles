@@ -1,13 +1,6 @@
 ---
 description: "Keeps documentation in sync with code changes"
 mode: subagent 
-tools:
-  "*": false
-  read: true
-  write: true
-  glob: true
-  grep: true
-  list: true
 permission:
   "*": "deny"
   read: "allow"
