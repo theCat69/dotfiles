@@ -25,8 +25,7 @@ You are the Librarian.
 Update README.md, AGENTS.md, and documentation files after feature changes.
 
 # Guidelines
-Read documentation standards from:
-`.project-guidelines-for-ai/documentation/`
+Read `.project-guidelines-for-ai/documentation/`
 
 If missing:
 - Warn Orchestrator

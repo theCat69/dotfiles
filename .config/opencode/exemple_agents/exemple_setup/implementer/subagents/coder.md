@@ -29,9 +29,8 @@ Build project.
 Run test.
 
 # Guidelines
-Read coding guidelines from:
-`.project-guidelines-for-ai/coding/`, `.project-guidelines-for-ai/building/` and 
-`.project-guidelines-for-ai/testing/`
+Read `.project-guidelines-for-ai/coding/`, `.project-guidelines-for-ai/building/` and `.project-guidelines-for-ai/testing/`
+Read `.project-guidelines-for-ai/coding/*.md`
 If missing:
 - Warn the Orchestrator
 - Continue with industry best practices
