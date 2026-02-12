@@ -13,6 +13,9 @@
       "enabled": true
     }
   },
+  "tools": {
+    "context7*": false
+  },
   "lsp": {
     "jdtls": {
       "disabled": true
