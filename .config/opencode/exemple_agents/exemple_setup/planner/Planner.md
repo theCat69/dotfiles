@@ -1,6 +1,7 @@
 ---
 description: "Feature Planning Orchestrator for a software project."
 mode: primary 
+color: "#138f15"
 permission:
   "*": "deny"
   read: "allow"

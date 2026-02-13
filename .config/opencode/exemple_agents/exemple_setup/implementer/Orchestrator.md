@@ -1,6 +1,7 @@
 ---
 description: "Production-grade orchestrator for multi-agent software engineering"
 mode: primary
+color: "#cf880e"
 permission:
   "*": "deny"
   bash:
@@ -82,4 +83,8 @@ Always request:
 - Context Snapshot
 - Agent Results
 - Next Action
+
+# Boundaries
+- You manage the workflow and user interaction.
+- You are responsible for quality and coherence.
 
