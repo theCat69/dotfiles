@@ -20,6 +20,28 @@
   "lsp": {
     "jdtls": {
       "disabled": true
+    },
+    "jdtls-lombok": {
+      "command": [
+        "java",
+        "--jvm-arg=-javaagent:~/dev-tools/jars/lombok.jar",
+        "-jar",
+        "~/.local/share/opencode/bin/jdtls/plugins/org.eclipse.equinox.launcher_1.7.100.v20251111-0406.jar",
+        "-configuration",
+        "~/.local/share/opencode/bin/jdtls/config_linux",
+        "-data",
+        "/tmp/opencode-jdtls-data",
+        "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+        "-Dosgi.bundles.defaultStartLevel=4",
+        "-Declipse.product=org.eclipse.jdt.ls.core.product",
+        "-Dlog.level=ALL",
+        "--add-modules=ALL-SYSTEM",
+        "--add-opens java.base/java.util=ALL-UNNAMED",
+        "--add-opens java.base/java.lang=ALL-UNNAMED"
+      ],
+      "extensions": [
+        ".java"
+      ]
     }
   }
 }
