@@ -7,7 +7,6 @@ permission:
   write: "allow"
   glob: "allow"
   grep: "allow"
-  list: "allow"
   bash:
     "*": "deny"
     "git log *": "allow"

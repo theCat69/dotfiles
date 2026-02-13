@@ -4,15 +4,10 @@ mode: subagent
 permission:
   "*": "deny"
   bash: "allow" 
-  edit: "allow"
   write: "allow"
-  patch: "allow"
-  multiedit: "allow"
   read: "allow"
   grep: "allow"
   glob: "allow"
-  list: "allow"
-  todoread: "allow"
   task: 
     "*": "deny"
 ---

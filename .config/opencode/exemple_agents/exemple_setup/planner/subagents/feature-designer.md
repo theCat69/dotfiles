@@ -6,8 +6,6 @@ permission:
   read: "allow"
   grep: "allow"
   glob: "allow"
-  list: "allow"
-  todoread: "allow"
   task: 
     "*": "deny"
 ---

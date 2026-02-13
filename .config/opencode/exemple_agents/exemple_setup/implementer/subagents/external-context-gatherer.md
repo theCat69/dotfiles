@@ -3,17 +3,12 @@ description: "Fetches external technical context with caching"
 mode: subagent 
 permission:
   "*": "deny"
-  "context7*": "allow"
+  "context7_*": "allow"
   webfetch: "allow"
-  skill: "allow"
   write: "allow"
-  edit: "allow"
-  patch: "allow"
-  multiedit: "allow"
   read: "allow"
   glob: "allow"
   grep: "allow"
-  list: "allow"
 
   task:
     "*": "deny"

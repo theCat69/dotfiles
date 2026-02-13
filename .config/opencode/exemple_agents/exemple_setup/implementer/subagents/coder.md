@@ -8,7 +8,7 @@ permission:
   read: "allow"
   glob: "allow"
   grep: "allow"
-  list: "allow"
+  lsp: "allow"
   task:
     "*": "deny"
 ---
@@ -22,7 +22,7 @@ Run test.
 
 # Guidelines
 Read `.project-guidelines-for-ai/coding/`, `.project-guidelines-for-ai/building/` and `.project-guidelines-for-ai/testing/`
-Read `.project-guidelines-for-ai/coding/*.md`
+Read `.project-guidelines-for-ai/coding/code-examples/*.md`
 If missing:
 - Warn the Orchestrator
 - Continue with industry best practices

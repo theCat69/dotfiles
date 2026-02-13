@@ -6,14 +6,15 @@ permission:
   "*": "deny"
   bash:
     "*": "deny"
-    "git *": "allow" 
+    "git add *": "allow" 
+    "git commit *": "allow" 
+    "git log *": "allow" 
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
   read: "allow"
   glob: "allow"
   grep: "allow"
-  list: "allow"
   task:
     "*": "deny"
     "coder": "allow"

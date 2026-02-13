@@ -6,12 +6,8 @@ permission:
   read: "allow"
   glob: "allow"
   grep: "allow"
-  list: "allow"
   lsp: "allow"
   write: "allow"
-  edit: "allow"
-  patch: "allow"
-  multiedit: "allow"
   task:
     "*": "deny"
 ---

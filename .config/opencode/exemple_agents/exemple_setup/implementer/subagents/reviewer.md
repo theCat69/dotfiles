@@ -1,18 +1,13 @@
 ---
 description: "Code quality and architecture reviewer"
 mode: subagent 
-tools:
-  "*": false
-  read: true
-  glob: true
-  grep: true
-  list: true
 permission:
   "*": "deny"
   read: "allow"
   glob: "allow"
   grep: "allow"
-  list: "allow"
+  task:
+    "*": "deny"
 ---
 # Identity
 You are a Code Reviewer.

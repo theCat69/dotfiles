@@ -7,7 +7,8 @@ permission:
   glob: "allow"
   grep: "allow" 
   bash: "allow"
-  list: "allow"
+  task:
+    "*": "deny"
 ---
 # Identity
 You are a security analyste.
