@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "autoupdate": true,
   "mcp": {
     "context7": {
       "type": "local",
@@ -23,21 +22,12 @@
     },
     "jdtls-lombok": {
       "command": [
-        "{env:HOME}/dev-tools/compilers/java/jdk-21.0.10+7/bin/java",
-        "-javaagent:{env:HOME}/dev-tools/jars/lombok.jar",
-        "-jar",
-        "{env:HOME}/.local/share/opencode/bin/jdtls/plugins/org.eclipse.equinox.launcher_1.7.100.v20251111-0406.jar",
+        "{env:HOME}/.local/share/opencode/bin/jdtls/bin/jdtls",
+        "--jvm-arg=-javaagent:{env:HOME}/dev-tools/jars/lombok.jar",
         "-configuration",
         "{env:HOME}/.local/share/opencode/bin/jdtls/config_linux",
         "-data",
-        "/tmp/opencode-jdtls-data",
-        "-Declipse.application=org.eclipse.jdt.ls.core.id1",
-        "-Dosgi.bundles.defaultStartLevel=4",
-        "-Declipse.product=org.eclipse.jdt.ls.core.product",
-        "-Dlog.level=ALL",
-        "--add-modules=ALL-SYSTEM",
-        "--add-opens java.base/java.util=ALL-UNNAMED",
-        "--add-opens java.base/java.lang=ALL-UNNAMED"
+        "/tmp/opencode-jdtls-data"
       ],
       "extensions": [
         ".java"
