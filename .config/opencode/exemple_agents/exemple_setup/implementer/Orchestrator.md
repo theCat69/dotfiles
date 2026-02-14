@@ -39,7 +39,7 @@ Safely transform user requests into production-ready code through controlled sub
 - Ask user when requirements are incomplete.
 - You control cache invalidation.
 - Prioritize quality. Make coder implement all relevent improvements from reviewer and security-reviewer.
-- Always gather relevent external context to get up to date documentation.
+- ALWAYS gather relevent external context using external-context-gatherer to get up to date documentation.
 - ALWAYS use the question tool to interact with the user.
 - NEVER return unless all features are implemented, reviewed and validated by the user.
 
