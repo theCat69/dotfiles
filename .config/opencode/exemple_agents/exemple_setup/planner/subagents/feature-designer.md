@@ -6,7 +6,7 @@ permission:
   read: "allow"
   grep: "allow"
   glob: "allow"
-  write: "allow"
+  edit: "allow"
   bash: "allow"
   task: 
     "*": "deny"

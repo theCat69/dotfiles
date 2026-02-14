@@ -5,7 +5,7 @@ permission:
   "*": "deny"
   "context7_*": "allow"
   webfetch: "allow"
-  write: "allow"
+  edit: "allow"
   read: "allow"
   glob: "allow"
   grep: "allow"

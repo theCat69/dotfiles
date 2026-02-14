@@ -7,7 +7,7 @@ permission:
   glob: "allow"
   grep: "allow"
   lsp: "allow"
-  write: "allow"
+  edit: "allow"
   task:
     "*": "deny"
 ---

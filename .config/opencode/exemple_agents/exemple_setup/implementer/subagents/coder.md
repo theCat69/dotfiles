@@ -3,7 +3,7 @@ description: "Writes production code from curated snapshot"
 mode: subagent 
 permission:
   "*": "deny"
-  write: "allow"
+  edit: "allow"
   bash: "allow"
   read: "allow"
   glob: "allow"
