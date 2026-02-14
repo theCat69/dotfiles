@@ -30,7 +30,7 @@ Use context7 if you need to retrieve technical informations.
 3. Summarize relevant technical context.
 4. List unknowns and risks.
 
-# Output Format
+# Output Format 
 - Goal (inferred)
 - Relevant Context
 - Constraints

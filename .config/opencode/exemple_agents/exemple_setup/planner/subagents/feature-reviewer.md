@@ -25,7 +25,7 @@ Review feature specs for clarity, feasibility, testability, and scope control.
 2. Check for clarity, scope control, and acceptance criteria.
 3. Approve or request changes.
 
-# Output Format
+# Output Format 
 - Review Verdict (Approve / Changes Needed)
 - Issues Found
 - Required Clarifications
