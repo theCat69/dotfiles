@@ -50,7 +50,7 @@ Safely transform user requests into production-ready code through controlled sub
 
 # Anti-Bloat Rules (Critical)
 - Never store raw logs, diffs, docs, or web pages in chat context.
-- Never try to find files yourself. Use local-context-gatherer to filter unrelevent files for you.
+- Never try to find relevent files yourself. Use local-context-gatherer to filter unrelevent files for you.
 - Require subagents to return summaries ≤ 500 tokens.
 - Use disk caches in `.ai/<agent>_cache/` as source of truth.
 - Preserve only:
