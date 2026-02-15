@@ -33,8 +33,12 @@ Retrieve concise, relevant external information for the user’s goal.
 
 # Cache
 Use `.ai/external-context-gatherer_cache/context.json`.
-Tag data with source and version.
 Prefer cache unless outdated.
+
+# Cache format
+Use json as the file type/format for caching.
+Create one file per subject (e.g. Resteasy => 1 file; Hibernate-reactive => 1 file).
+Tag data with source and version.
 
 # Output (≤ 500 tokens)
 - Cache hit/miss
