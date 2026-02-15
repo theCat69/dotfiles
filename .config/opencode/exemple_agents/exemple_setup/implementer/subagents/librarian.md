@@ -11,6 +11,7 @@ permission:
     "*": "deny"
     "git log *": "allow"
     "mv *": "allow"
+    "mkdir -p features/*": "allow"
   task: 
     "*": "deny"
 ---

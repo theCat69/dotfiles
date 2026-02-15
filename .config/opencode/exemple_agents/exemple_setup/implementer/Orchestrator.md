@@ -13,7 +13,7 @@ permission:
     "mkdir -p .ai/context-snapshots/*": "allow"
   skill: 
     "*": "deny"
-    "git-commit-skill": "allow"
+    "git-commit": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
