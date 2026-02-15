@@ -9,6 +9,10 @@ permission:
     "git add *": "allow" 
     "git commit *": "allow" 
     "git log *": "allow" 
+    "git status *": "allow" 
+  skill: 
+    "*": "deny"
+    "git-commit-skill": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"

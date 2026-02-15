@@ -8,6 +8,9 @@ permission:
   glob: "allow"
   webfetch: "allow"
   "context7_*": "allow"
+  bash: 
+    "*": "deny"
+    "curl *": "allow"
   task: 
     "*": "deny"
 ---

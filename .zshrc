@@ -137,6 +137,15 @@ export JAVA_HOME=~/.java/current
 # IntelliJ 
 export PATH=~/.local/share/JetBrains/Toolbox/apps/intellij-idea/bin:$PATH
 export PATH=~/jetbrains-toolbox/jetbrains-toolbox-3.2.0.65851/bin:$PATH
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+# opencode
+export PATH=/home/fefou/.opencode/bin:$PATH
+export OPENCODE_EXPERIMENTAL_LSP_TOOL=true
+# Add JBang to environment
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$PATH"
 
 # Aliases
 alias ls="eza"
@@ -192,16 +201,11 @@ bindkey '^Xc' copy-command
 
 # source external completion script
 source <(ng completion script)
-
-# opencode
-export PATH=/home/fefou/.opencode/bin:$PATH
-export OPENCODE_EXPERIMENTAL_LSP_TOOL=true
-
-# Add JBang to environment
-alias j!=jbang
-export PATH="$HOME/.jbang/bin:$PATH"
+# bun completions
+[ -s "/home/fefou/.bun/_bun" ] && source "/home/fefou/.bun/_bun"
 
 # Evals 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
+
 
