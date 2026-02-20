@@ -162,6 +162,8 @@ export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 # snap app
 export PATH="$PATH:/snap/bin"
 
+. "/home/fef/.deno/env"
+
 # Aliases
 alias ls="eza"
 alias ll="eza -la"
