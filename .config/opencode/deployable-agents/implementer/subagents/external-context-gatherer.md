@@ -5,6 +5,7 @@ permission:
   "*": "deny"
   "context7_*": "allow"
   webfetch: "allow"
+  websearch: "allow"
   edit: "allow"
   read: "allow"
   glob: "allow"

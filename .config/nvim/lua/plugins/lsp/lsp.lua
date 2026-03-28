@@ -13,7 +13,7 @@ local cmd = { "MasonUpdate", "MasonUpdateAll" }
 -- Those will inherit the default capabilities and on attach if not specificy otherwise
 local servers = { 'clangd', 'rust_analyzer', 'pyright', 'lua_ls', 'yamlls', 'lemminx', 'emmet_ls',
   'kotlin_language_server', 'html', 'cssls', 'bashls', 'jsonls', 'tailwindcss', 'zls', 'dockerls', 'solidity_ls',
-  'taplo', 'angularls', 'ts_ls' }
+  'taplo', 'angularls', 'ts_ls', 'gopls' }
 
 local function config()
   require('neodev').setup({

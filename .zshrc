@@ -117,7 +117,9 @@ fi
 #
 #
 # Source other files
+# Rust
 . "$HOME/.cargo/env"
+
 export NVM_DIR="$HOME/.config/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
@@ -143,9 +145,15 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 # opencode
 export PATH=/home/fefou/.opencode/bin:$PATH
 export OPENCODE_EXPERIMENTAL_LSP_TOOL=true
+export OPENCODE_ENABLE_EXA=1 
 # Add JBang to environment
 alias j!=jbang
 export PATH="$HOME/.jbang/bin:$PATH"
+# go
+export PATH=$PATH:/usr/local/go/bin
+# rust
+export PATH=$PATH:~/dev-tools/compilers/wasm/binaryen/binaryen-version_126/bin
+
 
 # Aliases
 alias ls="eza"

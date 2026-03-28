@@ -7,6 +7,7 @@ permission:
   grep: "allow"
   glob: "allow"
   webfetch: "allow"
+  websearch: "allow"
   "context7_*": "allow"
   bash: 
     "*": "deny"

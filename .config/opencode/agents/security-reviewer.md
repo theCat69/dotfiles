@@ -1,0 +1,1 @@
+/home/fefou/dev-conf/dotfiles/.config/opencode/exemple_agents/exemple_setup/implementer/subagents/security-reviewer.md
