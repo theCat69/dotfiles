@@ -1,10 +1,11 @@
-rm ~/.config/opencode/agents/Orchestrator.md
-# rm ~/.config/opencode/agents/builder.md
-rm ~/.config/opencode/agents/coder.md
-rm ~/.config/opencode/agents/external-context-gatherer.md
-rm ~/.config/opencode/agents/librarian.md
-rm ~/.config/opencode/agents/local-context-gatherer.md
-rm ~/.config/opencode/agents/reviewer.md
-rm ~/.config/opencode/agents/security-reviewer.md
-# rm ~/.config/opencode/agents/tester.md
+TARGET_DIR="${1:-$HOME/.config/opencode/agents}"
 
+rm "$TARGET_DIR/Orchestrator.md"
+# rm "$TARGET_DIR/builder.md"
+rm "$TARGET_DIR/coder.md"
+rm "$TARGET_DIR/external-context-gatherer.md"
+rm "$TARGET_DIR/librarian.md"
+rm "$TARGET_DIR/local-context-gatherer.md"
+rm "$TARGET_DIR/reviewer.md"
+rm "$TARGET_DIR/security-reviewer.md"
+# rm "$TARGET_DIR/tester.md"

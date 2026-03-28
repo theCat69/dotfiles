@@ -1,4 +1,6 @@
-rm ~/.config/opencode/agents/Planner.md
-rm ~/.config/opencode/agents/feature-designer.md
-rm ~/.config/opencode/agents/feature-reviewer.md
-rm ~/.config/opencode/agents/context-gatherer.md
+TARGET_DIR="${1:-$HOME/.config/opencode/agents}"
+
+rm "$TARGET_DIR/Planner.md"
+rm "$TARGET_DIR/feature-designer.md"
+rm "$TARGET_DIR/feature-reviewer.md"
+rm "$TARGET_DIR/context-gatherer.md"
