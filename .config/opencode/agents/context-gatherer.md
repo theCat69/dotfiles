@@ -1,1 +1,1 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/exemple_agents/exemple_setup/planner/subagents/context-gatherer.md
+/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/planner/subagents/context-gatherer.md

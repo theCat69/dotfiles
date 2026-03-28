@@ -11,6 +11,9 @@ permission:
     "git log *": "allow" 
     "git status *": "allow" 
     "mkdir -p .ai/context-snapshots/*": "allow"
+  write: 
+    "*": "deny"
+    ".ai/context-snapshots/current.json": "allow"
   skill: 
     "*": "deny"
     "git-commit": "allow"

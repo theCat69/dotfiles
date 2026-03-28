@@ -1,1 +1,1 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/exemple_agents/exemple_setup/implementer/subagents/librarian.md
+/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/implementer/subagents/librarian.md

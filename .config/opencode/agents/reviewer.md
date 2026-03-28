@@ -1,1 +1,1 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/exemple_agents/exemple_setup/implementer/subagents/reviewer.md
+/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/implementer/subagents/reviewer.md

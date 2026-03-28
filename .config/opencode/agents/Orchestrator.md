@@ -1,1 +1,1 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/exemple_agents/exemple_setup/implementer/Orchestrator.md
+/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/implementer/Orchestrator.md

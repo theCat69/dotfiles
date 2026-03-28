@@ -1,1 +1,1 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/exemple_agents/exemple_setup/planner/Planner.md
+/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/planner/Planner.md
