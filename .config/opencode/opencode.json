@@ -11,10 +11,20 @@
         "{env:CONTEXT7_API_KEY}"
       ],
       "enabled": true
+    },
+    "youtube-transcript": {
+      "type": "local",
+      "command": [
+        "bun",
+        "run",
+        "{env:HOME}/projects/mcps/youtube-transcript/dist/index.js"
+      ],
+      "enabled": true
     }
   },
   "tools": {
-    "context7*": false
+    "context7*": false,
+    "youtube-transcript*": false
   },
   "lsp": {
     "jdtls": {

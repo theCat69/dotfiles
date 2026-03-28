@@ -9,6 +9,7 @@ permission:
   webfetch: "allow"
   websearch: "allow"
   "context7_*": "allow"
+  "youtube-transcript_*": "allow"
   bash: 
     "*": "deny"
     "curl *": "allow"
@@ -23,6 +24,7 @@ Extract relevant information from any user-provided input (files, web content, p
 Use context7 if you need to retrieve technical informations about coding.
 Use websearch if you need to retrieve fresh and accurate informations on the internet.
 Use webfetch to crawl websites if the user provide urls to look into.
+Use youtube-transcript to retrieve youtube videos transcripts.
 
 # Critical Rules
 - Don't hallucinate.
