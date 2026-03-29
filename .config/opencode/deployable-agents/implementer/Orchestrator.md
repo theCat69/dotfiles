@@ -68,9 +68,9 @@ Safely transform user requests into production-ready code through controlled sub
 3. Call external-context-gatherer (cache-first).
 4. Filter into Context Snapshot (≤ 1,000 tokens) and write to `.ai/context-snapshots/current.json`.
 5. Call coder with snapshot path + summary only.
-6. Call reviewer to review the code.
-7. Call security-reviewer to review the code for security issues.
-8. Call librarian to check for doc changed.
+6. Call reviewer with snapshot path + git diff summary. Reviewer may autonomously call external-context-gatherer for fresh best practices on external libraries or non-trivial patterns.
+7. Call security-reviewer with snapshot path + git diff summary. Security-reviewer will check the GitHub Advisory Database for CVEs in dependencies (works for all projects), and additionally check Dependabot alerts if the project is hosted on GitHub.
+8. Call librarian to check for doc changes.
 9. Summarize blocking issues and next steps.
 
 # Guidelines Access
