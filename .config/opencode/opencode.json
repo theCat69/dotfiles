@@ -29,16 +29,13 @@
         "-i",
         "--rm",
         "-e",
-        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "GITHUB_PERSONAL_ACCESS_TOKEN={env:GITHUB_TOKEN}",
         "-e",
-        "GITHUB_TOOLSETS=repos,code_security,dependabot,security_advisories",
+        "GITHUB_TOOLSETS=repos,code_security,dependabot,security_advisories,actions",
         "-e",
         "GITHUB_READ_ONLY=true",
         "ghcr.io/github/github-mcp-server"
       ],
-      "environment": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_TOKEN}"
-      },
       "enabled": true
     }
   },
