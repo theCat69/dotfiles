@@ -10,6 +10,7 @@ permission:
   bash:
     "*": "deny"
     "git log *": "allow"
+    "git status *": "allow"
     "git branch *": "allow"
     "git diff *": "allow"
     "mv *": "allow"

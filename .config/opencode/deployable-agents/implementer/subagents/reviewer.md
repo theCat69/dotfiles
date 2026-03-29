@@ -8,6 +8,7 @@ permission:
   grep: "allow"
   bash:
     "*": "deny"
+    "git status *": "allow"
     "git branch *": "allow"
     "git diff *": "allow"
   skill:

@@ -14,6 +14,7 @@ permission:
   bash:
     "*": "deny"
     "git remote -v": "allow"
+    "git status *": "allow"
 
   task:
     "*": "deny"
