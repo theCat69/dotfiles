@@ -47,6 +47,7 @@ Safely transform user requests into production-ready code through controlled sub
 - Ask user when requirements are incomplete.
 - You control cache invalidation.
 - Prioritize quality. Make coder implement all relevant improvements from reviewer and security-reviewer.
+- Reviewer and security-reviewer findings can be false positives. Before acting on any finding, reason about whether it is genuinely applicable in the current context. If you can confidently determine it is a false positive (e.g. flagging an intentional permission grant as "dead code", misreading a config-only change as a code vulnerability), discard it silently. If you cannot determine whether a finding is a false positive, ask the user before implementing any fix.
 - ALWAYS gather relevant external context using external-context-gatherer to get up to date documentation.
 - ALWAYS use the question tool to interact with the user.
 - NEVER return unless all features are implemented, reviewed and validated by the user.
