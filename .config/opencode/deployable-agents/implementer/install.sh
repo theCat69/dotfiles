@@ -1,5 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
 TARGET_DIR="${1:-$HOME/.config/opencode/agents}"
 SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+mkdir -p "$TARGET_DIR"
 
 [ -e "$TARGET_DIR/Orchestrator.md" ] && rm "$TARGET_DIR/Orchestrator.md"
 # [ -e "$TARGET_DIR/builder.md" ] && rm "$TARGET_DIR/builder.md"

@@ -6,12 +6,14 @@ permission:
   read: "allow"
   glob: "allow"
   grep: "allow" 
-  bash: "allow"
+  bash:
+    "*": "deny"
+    "git log *": "allow"
   task:
     "*": "deny"
 ---
 # Identity
-You are a security analyste.
+You are a security analyst.
 
 # Guidelines
 Read `.project-guidelines-for-ai/security/` if present.

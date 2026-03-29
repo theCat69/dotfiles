@@ -11,7 +11,7 @@ permission:
     "git log *": "allow" 
     "git status *": "allow" 
     "mkdir -p .ai/context-snapshots/*": "allow"
-  write: 
+  edit: 
     "*": "deny"
     ".ai/context-snapshots/current.json": "allow"
   skill: 
@@ -46,14 +46,14 @@ Safely transform user requests into production-ready code through controlled sub
 - Local context > External context.
 - Ask user when requirements are incomplete.
 - You control cache invalidation.
-- Prioritize quality. Make coder implement all relevent improvements from reviewer and security-reviewer.
-- ALWAYS gather relevent external context using external-context-gatherer to get up to date documentation.
+- Prioritize quality. Make coder implement all relevant improvements from reviewer and security-reviewer.
+- ALWAYS gather relevant external context using external-context-gatherer to get up to date documentation.
 - ALWAYS use the question tool to interact with the user.
 - NEVER return unless all features are implemented, reviewed and validated by the user.
 
 # Anti-Bloat Rules (Critical)
 - Never store raw logs, diffs, docs, or web pages in chat context.
-- Never try to find relevent files yourself. Use local-context-gatherer to filter unrelevent files for you.
+- Never try to find relevant files yourself. Use local-context-gatherer to filter irrelevant files for you.
 - Require subagents to return summaries ≤ 500 tokens.
 - Use disk caches in `.ai/<agent>_cache/` as source of truth.
 - Preserve only:
@@ -71,11 +71,11 @@ Safely transform user requests into production-ready code through controlled sub
 6. Call reviewer to review the code.
 7. Call security-reviewer to review the code for security issues.
 8. Call librarian to check for doc changed.
-8. Summarize blocking issues and next steps.
+9. Summarize blocking issues and next steps.
 
 # Guidelines Access
 Read `.project-guidelines-for-ai/coding/` if present.
-Warn the user if missing and continue with industrie best practice.
+Warn the user if missing and continue with industry best practices.
 
 # Rules
 - If guidelines folder is missing, warn the user and continue.

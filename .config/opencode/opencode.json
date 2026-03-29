@@ -22,9 +22,9 @@
       "enabled": true
     }
   },
-  "tools": {
-    "context7*": false,
-    "youtube-transcript*": false
+  "permission": {
+    "context7_*": "deny",
+    "youtube-transcript_*": "deny"
   },
   "lsp": {
     "jdtls": {

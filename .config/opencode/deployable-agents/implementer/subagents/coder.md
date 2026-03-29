@@ -1,6 +1,7 @@
 ---
 description: "Writes production code from curated snapshot"
-mode: subagent 
+mode: subagent
+temperature: 0.1
 permission:
   "*": "deny"
   edit: "allow"
