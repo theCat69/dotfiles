@@ -1,1 +1,1 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/implementer/subagents/external-context-gatherer.md
+/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/implementer/../shared/subagents/external-context-gatherer.md
