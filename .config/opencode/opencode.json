@@ -47,6 +47,22 @@
     "youtube-transcript_*": "deny",
     "github_*": "deny"
   },
+  "agent": {
+    "build": {
+      "permission": {
+        "context7_*": "allow",
+        "youtube-transcript_*": "allow",
+        "github_*": "allow"
+      }
+    },
+    "plan": {
+      "permission": {
+        "context7_*": "allow",
+        "youtube-transcript_*": "allow",
+        "github_*": "allow"
+      }
+    }
+  },
   "lsp": {
     "jdtls": {
       "disabled": true
