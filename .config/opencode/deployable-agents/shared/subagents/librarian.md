@@ -36,9 +36,10 @@ Check whether the calling prompt explicitly contains the phrase **"DEEP FULL REV
 - **Otherwise (default — diff-based update)**: Load the `git-diff-review` skill first to identify the upstream branch and list changed files. Update only the documentation sections relevant to those changed files.
 
 # Context Gathering
-After determining scope, gather context in this order:
-1. **Always call `local-context-gatherer`** — use it to discover existing documentation files, their structure, naming conventions, and what has changed in the codebase.
-2. **Call `external-context-gatherer` when needed** — use it to fetch documentation standards, markdown best practices, or external references that should be reflected in the docs.
+After determining scope, gather context using the following rules:
+
+- **In DEEP FULL REVIEW mode, or when the calling prompt explicitly requests it**: Call `local-context-gatherer` to discover existing documentation files, their structure, naming conventions, and what has changed in the codebase. Call `external-context-gatherer` for documentation standards, markdown best practices, or external references.
+- **Otherwise (default)**: Use your own `read`, `glob`, and `grep` tools directly to locate and inspect documentation files. Do NOT call context gatherer subagents unless explicitly instructed.
 
 # Guidelines
 Read `.project-guidelines-for-ai/documentation/`

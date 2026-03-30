@@ -32,9 +32,10 @@ Check whether the calling prompt explicitly contains the phrase **"DEEP FULL REV
 - **Otherwise (default — diff-based review)**: Load the `git-diff-review` skill first to identify the upstream branch and the list of changed files. Focus the entire review on those changed files only.
 
 # Context Gathering
-After determining scope, gather context in this order:
-1. **Always call `local-context-gatherer`** — use it to understand the local repo structure, existing patterns, conventions, and constraints relevant to the reviewed files.
-2. **Call `external-context-gatherer` when needed** — delegate to it for fresh best practices when reviewing external library usage, non-trivial design patterns, or unfamiliar APIs.
+After determining scope, gather context using the following rules:
+
+- **In DEEP FULL REVIEW mode, or when the calling prompt explicitly requests it**: Call `local-context-gatherer` to understand repo structure, patterns, and conventions. Call `external-context-gatherer` for fresh best practices on external libraries, non-trivial design patterns, or unfamiliar APIs.
+- **Otherwise (default)**: Use your own `read`, `glob`, and `grep` tools directly to inspect relevant files. Do NOT call context gatherer subagents unless explicitly instructed.
 
 # Guidelines
 Read `.project-guidelines-for-ai/coding/` for specific review criteria.
