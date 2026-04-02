@@ -159,14 +159,10 @@ export PATH="$HOME/.jbang/bin:$PATH"
 export PATH=$PATH:/usr/local/go/bin
 # rust
 export PATH=$PATH:~/dev-tools/compilers/wasm/binaryen/binaryen-version_126/bin
-# Android
-export ANDROID_HOME=$HOME/Android/Sdk
-export ANDROID_USER_HOME=$HOME/.config/.android
-export ANDROID_AVD_HOME=$HOME/.config/.android/avd
-export PATH=$PATH:$ANDROID_HOME/emulator
-export PATH=$PATH:$ANDROID_HOME/platform-tools
-# Maestro
-export PATH=$PATH:$HOME/.maestro/bin
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 
 # neovim
 export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
@@ -239,5 +235,4 @@ eval "$(zoxide init zsh)"
 # Homebrew
 [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-. "$HOME/.local/share/../bin/env"
-export PATH=$PATH:$HOME/.maestro/bin
+[ -s "/home/fef/.bun/_bun" ] && source "/home/fef/.bun/_bun"
