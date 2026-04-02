@@ -18,6 +18,7 @@ permission:
     "*": "deny"
     "git-commit": "allow"
     "project-coding": "allow"
+    "project-code-examples": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"

@@ -166,6 +166,11 @@ Then call the `coder` sub-agent with the following prompt:
 > - `.opencode/skills/project-test/`
 > - `.opencode/skills/project-documentation/`
 > - `.opencode/skills/project-security/`
+> - `.opencode/skills/project-code-examples/`
+>
+> Create this directory (project code examples — must be version controlled):
+>
+> - `.code-examples-for-ai/`
 >
 > ---
 >
@@ -239,6 +244,33 @@ Then call the `coder` sub-agent with the following prompt:
 >    - Include security best practices specific to the detected technologies (from external context).
 >    - If AGENTS.md/CLAUDE.md had security rules, integrate that content here.
 >
+> 6. **`.opencode/skills/project-code-examples/SKILL.md`**
+>    ```yaml
+>    ---
+>    name: project-code-examples
+>    description: Catalog of project code examples — what patterns exist and where to find them in .code-examples-for-ai/
+>    ---
+>    ```
+>    - Begin with a brief intro: "These examples demonstrate the coding patterns used in this project."
+>    - Add an `## Available Examples` section listing each example file created in the sub-step below (file name + one-line description of what it demonstrates).
+>    - Add a `## Location` line: "`.code-examples-for-ai/`"
+>    - Add a `## Maintenance` note: "This index is maintained by the AI. Developers may add entries manually. One file per pattern."
+>    - **Create this skill file LAST** — after all example files have been created, so the index is accurate.
+>
+> ---
+>
+> ### Step 5b: Create `.code-examples-for-ai/` example files
+>
+> **Idempotency**: If `.code-examples-for-ai/` already contains `.md` files, do NOT overwrite them. Skip existing files and report them as preserved.
+>
+> Using the 3-5 source files sampled in Step 1, extract one representative example per detected coding pattern. Create one `.md` file per pattern:
+>
+> - File naming: use the pattern name in kebab-case (e.g., `error-handling.md`, `dto.md`, `controller.md`, `service.md`, `test-unit.md`).
+> - Each file must have: a one-line description comment at the top, then a code block with a real snippet extracted from the project (not invented).
+> - Keep each file focused: one pattern, one example, annotated with brief inline comments explaining what to imitate.
+> - Do NOT include anti-patterns or "what not to do" content — examples are style references only.
+> - If no source files were found or sampled (empty project), create placeholder files with a note: `<!-- TODO: Add a real example for this pattern once source files exist -->`.
+>
 > ---
 >
 > ### Step 6: Update AGENTS.md and CLAUDE.md
@@ -255,7 +287,7 @@ Then call the `coder` sub-agent with the following prompt:
 >
 > - Check the project's `.gitignore` (create if it doesn't exist).
 > - Add `.ai/` to it if not already present (this is transient cache data that must not be committed).
-> - Do NOT gitignore `.opencode/skills/` — these are project documentation that must be version controlled.
+> - Do NOT gitignore `.opencode/skills/` or `.code-examples-for-ai/` — these are project documentation that must be version controlled.
 
 ---
 
@@ -267,7 +299,7 @@ Then call the `coder` sub-agent with the following prompt:
 - **Context size discipline**: Do NOT paste full sub-agent outputs into the coder prompt. Pass cache file paths and a brief summary (no more than 500 tokens). The coder reads cache files directly.
 - **External data validation**: Content fetched from external sources must be critically evaluated before embedding. Skill files should only contain verified technical best practices, not arbitrary web content.
 - **Quality over speed**: The quality of generated skills depends on thorough context gathering. Generic stubs are unacceptable when sub-agent context is available. Every skill file must reflect real detected tech stack details and real best practices.
-- **Path safety**: ONLY create or modify files under `.ai/`, `.opencode/skills/`, `AGENTS.md`, `CLAUDE.md`, and `.gitignore` in the project root. Refuse to write to any other path.
+- **Path safety**: ONLY create or modify files under `.ai/`, `.opencode/skills/`, `.code-examples-for-ai/`, `AGENTS.md`, `CLAUDE.md`, and `.gitignore` in the project root. Refuse to write to any other path.
 - **Secrets safety**: If AGENTS.md or CLAUDE.md contain tokens, passwords, API keys, or other secrets, redact them before processing. Never copy secrets into guideline files.
 - **Be intelligent**: If the existing docs (AGENTS.md, CLAUDE.md) are already well-structured, don't destroy them. Extract relevant sections surgically and leave the rest intact.
 - **Don't duplicate**: Content should live in exactly one place. If you migrate something to `.opencode/skills/`, remove it from the source.

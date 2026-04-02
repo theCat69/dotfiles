@@ -19,7 +19,7 @@ Call the `local-context-gatherer` sub-agent with this prompt:
 > - Key dependencies from all manifest files
 > - Existing conventions and coding patterns (sample 3–5 source files)
 > - Any security-sensitive files (env files, secret configs, auth code)
-> - All documentation files (README.md, AGENTS.md, CLAUDE.md, /docs, .opencode/skills/)
+> - All documentation files (README.md, AGENTS.md, CLAUDE.md, /docs, .opencode/skills/, .code-examples-for-ai/)
 >
 > Cache results to `.ai/local-context-gatherer_cache/context.json`.
 
@@ -83,7 +83,7 @@ Call the `librarian` sub-agent with this prompt:
 
 > **DEEP FULL REVIEW** — Audit the ENTIRE project documentation for completeness, accuracy, and consistency with the codebase. Do NOT load git-diff-review. Do NOT restrict scope to recently changed files.
 >
-> **Scope**: All documentation files — README.md, AGENTS.md, CLAUDE.md, /docs, .opencode/skills/, and any other markdown files.
+> **Scope**: All documentation files — README.md, AGENTS.md, CLAUDE.md, /docs, .opencode/skills/, .code-examples-for-ai/, and any other markdown files.
 >
 > Focus areas:
 > - Missing or outdated documentation for existing features
