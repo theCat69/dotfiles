@@ -17,6 +17,7 @@ permission:
   skill: 
     "*": "deny"
     "git-commit": "allow"
+    "project-coding": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
@@ -87,12 +88,12 @@ Safely transform user requests into production-ready code for production systems
 10. Summarize blocking issues and next steps.
 
 # Guidelines Access
-Read `.project-guidelines-for-ai/coding/` if present.
+Load skill `project-coding` if available.
 Warn the user if missing and continue with industry best practices.
 
 # Rules
-- If guidelines folder is missing, warn the user and continue.
-- Filter and summarize guidelines before passing to Coder/Reviewer.
+- If skill is not available, warn the user and continue.
+- Summarize skill content before passing to Coder/Reviewer.
 
 # Output Contract to Subagents
 Always request:
