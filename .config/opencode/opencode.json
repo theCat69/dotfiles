@@ -31,12 +31,13 @@
       ],
       "enabled": true
     },
-    "headroom": {
+    "azure-devops": {
       "type": "local",
       "command": [
-        "/home/fefou/.local/share/../bin/headroom",
-        "mcp",
-        "serve"
+        "npx",
+        "-y",
+        "@azure-devops/mcp",
+        "gca-trans"
       ],
       "enabled": true
     }
@@ -44,7 +45,8 @@
   "permission": {
     "context7_*": "deny",
     "youtube-transcript_*": "deny",
-    "github_*": "deny"
+    "github_*": "deny",
+    "azure-devops_*": "deny"
   },
   "agent": {
     "build": {
