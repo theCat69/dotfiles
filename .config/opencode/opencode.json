@@ -30,12 +30,23 @@
         "ghcr.io/github/github-mcp-server"
       ],
       "enabled": true
+    },
+    "azure-devops": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@azure-devops/mcp",
+        "gca-trans"
+      ],
+      "enabled": true
     }
   },
   "permission": {
     "context7_*": "deny",
     "youtube-transcript_*": "deny",
-    "github_*": "deny"
+    "github_*": "deny",
+    "azure-devops_*": "deny"
   },
   "agent": {
     "build": {
