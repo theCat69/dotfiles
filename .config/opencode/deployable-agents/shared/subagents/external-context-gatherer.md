@@ -15,9 +15,6 @@ permission:
     "*": "deny"
     "git remote -v": "allow"
     "git status *": "allow"
-  "pty_*": "allow"
-  skill:
-    "pty-usage": "allow"
   task:
     "*": "deny"
 ---
@@ -44,7 +41,6 @@ Retrieve concise, relevant external information for the user's goal.
 5. Flag version mismatches or uncertainty.
 
 # Guidelines
-Load skill `pty-usage` before starting or managing any background terminal session.
 
 # Cache
 Use `.ai/external-context-gatherer_cache/context.json`.

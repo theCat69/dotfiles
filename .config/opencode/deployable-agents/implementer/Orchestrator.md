@@ -11,7 +11,6 @@ permission:
     "git log *": "allow" 
     "git status *": "allow" 
     "mkdir -p .ai/context-snapshots/*": "allow"
-  "pty_*": "allow"
   edit: 
     "*": "deny"
     ".ai/context-snapshots/current.json": "allow"
@@ -20,7 +19,6 @@ permission:
     "git-commit": "allow"
     "project-coding": "allow"
     "project-code-examples": "allow"
-    "pty-usage": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
@@ -56,7 +54,6 @@ Safely transform user requests into production-ready code for production systems
 - ALWAYS use the question tool to interact with the user.
 - NEVER return unless all features are implemented, reviewed and validated by the user.
 - Always treat the target system as a live production environment. Prefer safe, backward-compatible, well-tested patterns over clever or experimental ones.
-- NEVER call `pty_spawn`, `pty_write`, `pty_read`, `pty_list`, or `pty_kill` before the `pty-usage` skill is loaded.
 
 # Anti-Bloat Rules (Critical)
 - Never store raw logs, diffs, docs, or web pages in chat context.
@@ -94,7 +91,6 @@ Safely transform user requests into production-ready code for production systems
 # Guidelines Access
 Load skill `project-coding` if available.
 Load skill `git-commit` before making any git commit.
-ALWAYS load skill `pty-usage` at session start — do not make any `pty_*` call before it is loaded.
 Warn the user if missing and continue with industry best practices.
 
 # Rules

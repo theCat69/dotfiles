@@ -4,7 +4,6 @@
     "@tarquinen/opencode-dcp@latest",
     "cc-safety-net",
     "@slkiser/opencode-quota",
-    "opencode-pty",
     "@mohak34/opencode-notifier@latest"
   ],
   "mcp": {

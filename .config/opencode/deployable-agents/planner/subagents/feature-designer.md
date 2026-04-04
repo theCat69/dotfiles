@@ -8,9 +8,6 @@ permission:
   glob: "allow"
   edit: "allow"
   bash: "allow"
-  "pty_*": "allow"
-  skill:
-    "pty-usage": "allow"
   task: 
     "*": "deny"
 ---
@@ -52,7 +49,6 @@ For each feature return a brief summary :
 - Additional notes
 
 # Guidelines
-Load skill `pty-usage` before starting or managing any background terminal session.
 
 # Boundaries
 - Planning, decomposition and writing only.
