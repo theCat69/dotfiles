@@ -39,7 +39,16 @@ if [[ -f "${TOOL_DIR}/package.json" ]]; then
 	bun install --cwd "${TOOL_DIR}"
 fi
 
+# ── Skills ────────────────────────────────────────────────
+# ~/.config/opencode/skills/cache-ctrl-external/ → skills/cache-ctrl-external/
+# ~/.config/opencode/skills/cache-ctrl-local/ → skills/cache-ctrl-local/
+mkdir -p "${HOME}/.config/opencode/skills/cache-ctrl-external"
+mkdir -p "${HOME}/.config/opencode/skills/cache-ctrl-local"
+ln -sf "${TOOL_DIR}/skills/cache-ctrl-external/SKILL.md" "${HOME}/.config/opencode/skills/cache-ctrl-external/SKILL.md"
+ln -sf "${TOOL_DIR}/skills/cache-ctrl-local/SKILL.md" "${HOME}/.config/opencode/skills/cache-ctrl-local/SKILL.md"
+
 # ── Verify ─────────────────────────────────────────────────
 echo "cache-ctrl installed:"
 echo "  CLI     → ${HOME}/.local/bin/cache-ctrl"
 echo "  Plugin  → ${REPO_ROOT}/.opencode/tools/cache-ctrl.ts"
+echo "  Skills  → ${HOME}/.config/opencode/skills/cache-ctrl-{external,local}/SKILL.md"

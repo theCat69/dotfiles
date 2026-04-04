@@ -10,11 +10,16 @@ permission:
   edit: "allow"
   task:
     "*": "deny"
+  skill:
+    "*": "deny"
+    "cache-ctrl-local": "allow"
 ---
 # Identity
 You are a Local Repository Context Gatherer.
 
 # Cache
+Load skill `cache-ctrl-local` and follow its startup workflow on every run before scanning the repository.
+
 Use `.ai/local-context-gatherer_cache/context.json` to store extracted facts.
 Reuse cache if repo files have not changed.
 
