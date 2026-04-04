@@ -10,17 +10,11 @@ permission:
   bash:
     "*": "deny"
     "git log *": "allow"
-    "snip git log *": "allow"
     "git status *": "allow"
-    "snip git status *": "allow"
     "git branch *": "allow"
-    "snip git branch *": "allow"
     "git diff *": "allow"
-    "snip git diff *": "allow"
     "mv *": "allow"
-    "snip mv *": "allow"
     "mkdir -p features/*": "allow"
-    "snip mkdir -p features/*": "allow"
   "pty_*": "allow"
   skill:
     "*": "deny"

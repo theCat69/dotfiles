@@ -13,7 +13,6 @@ permission:
   bash: 
     "*": "deny"
     "curl *": "allow"
-    "snip curl *": "allow"
   "pty_*": "allow"
   skill:
     "pty-usage": "allow"
