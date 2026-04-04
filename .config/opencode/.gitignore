@@ -1,4 +1,4 @@
 bun.lock
 node_modules
 .ai/
-
+opencode-notifier-state.json

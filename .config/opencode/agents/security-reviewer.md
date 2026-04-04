@@ -1,1 +1,1 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/implementer/../shared/subagents/security-reviewer.md
+/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/planner/../shared/subagents/security-reviewer.md

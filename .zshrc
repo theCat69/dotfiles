@@ -216,4 +216,5 @@ source <(ng completion script)
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 
-
+# Homebrew
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

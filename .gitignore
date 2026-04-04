@@ -1,0 +1,4 @@
+# Transient AI agent cache data — never commit
+.ai/
+*opencode-notifier-state.json
+.config/opencode/opencode-notifier-state.json
