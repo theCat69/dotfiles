@@ -5,6 +5,7 @@ permission:
   "*": "deny"
   "context7_*": "allow"
   "github_*": "allow"
+  "cache_ctrl_*": "allow"
   webfetch: "allow"
   websearch: "allow"
   edit: "allow"

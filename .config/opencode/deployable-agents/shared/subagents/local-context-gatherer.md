@@ -7,6 +7,7 @@ permission:
   glob: "allow"
   grep: "allow"
   lsp: "allow"
+  "cache_ctrl_*": "allow"
   edit: "allow"
   task:
     "*": "deny"
