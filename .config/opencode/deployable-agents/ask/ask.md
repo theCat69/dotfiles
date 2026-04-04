@@ -15,6 +15,8 @@ permission:
     "curl *": "allow"
     "snip curl *": "allow"
   "pty_*": "allow"
+  skill:
+    "pty-usage": "allow"
   task: 
     "*": "deny"
     "local-context-gatherer": "allow"
@@ -35,6 +37,7 @@ Use youtube-transcript to retrieve youtube videos transcripts.
 Use local-context-gatherer to extract technical context from the local repository.
 Use external-context-gatherer to fetch external technical documentation or best practices.
 Use reviewer, security-reviewer, or librarian when the user asks for a code review, security check, or documentation audit.
+Load skill `pty-usage` before starting or managing any background terminal session.
 
 # Critical Rules
 - Don't hallucinate.

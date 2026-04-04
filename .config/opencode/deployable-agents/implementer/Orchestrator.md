@@ -25,6 +25,7 @@ permission:
     "git-commit": "allow"
     "project-coding": "allow"
     "project-code-examples": "allow"
+    "pty-usage": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
@@ -96,6 +97,7 @@ Safely transform user requests into production-ready code for production systems
 
 # Guidelines Access
 Load skill `project-coding` if available.
+Load skill `pty-usage` before starting or managing any background terminal session.
 Warn the user if missing and continue with industry best practices.
 
 # Rules

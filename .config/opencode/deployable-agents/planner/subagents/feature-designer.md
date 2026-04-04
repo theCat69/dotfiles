@@ -9,6 +9,8 @@ permission:
   edit: "allow"
   bash: "allow"
   "pty_*": "allow"
+  skill:
+    "pty-usage": "allow"
   task: 
     "*": "deny"
 ---
@@ -51,4 +53,3 @@ For each feature return a brief summary :
 
 # Boundaries
 - Planning, decomposition and writing only.
-

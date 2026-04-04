@@ -18,6 +18,8 @@ permission:
     "git status *": "allow"
     "snip git status *": "allow"
   "pty_*": "allow"
+  skill:
+    "pty-usage": "allow"
   task:
     "*": "deny"
 ---
