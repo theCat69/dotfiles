@@ -15,6 +15,8 @@ permission:
     "java": "allow"
     "angular": "allow"
     "quarkus": "allow"
+    "project-coding": "allow"
+    "project-code-examples": "allow"
   task: 
     "*": "deny"
 ---
@@ -57,6 +59,8 @@ For each feature return a brief summary :
 
 # Guidelines
 Load skill `general-coding` if available. Use its principles (SRP, testability, cohesion, composition over inheritance, explicit error handling) to ensure each feature is designed for clean, production-grade implementation.
+Load skill `project-coding` if available. Use it to align feature tasks with project-specific conventions: Lua/Zsh/TypeScript style rules, naming conventions, module patterns, and commit format.
+Load skill `project-code-examples` if available. Reference existing patterns when describing implementation tasks so features are grounded in real project code.
 If the calling prompt indicates the stack includes TypeScript, load skill `typescript`.
 If the calling prompt indicates the stack includes Angular, load skill `angular`.
 If the calling prompt indicates the stack includes Java, load skill `java`.
