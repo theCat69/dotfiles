@@ -18,7 +18,12 @@ permission:
     "*": "deny"
     "git-commit": "allow"
     "project-coding": "allow"
+    "general-coding": "allow"
     "project-code-examples": "allow"
+    "typescript": "allow"
+    "java": "allow"
+    "angular": "allow"
+    "quarkus": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
@@ -69,6 +74,14 @@ Safely transform user requests into production-ready code for production systems
 # Workflow
 1. Restate goal briefly.
 2. Call local-context-gatherer (cache-first).
+2b. **Detect stack from gathered context:**
+   - `package.json` containing `@angular/core` → stack: `[angular, typescript]`
+   - `package.json` without Angular → stack: `[typescript]`
+   - `pom.xml` or `build.gradle` containing `quarkus` → stack: `[quarkus, java]`
+   - `pom.xml` or `build.gradle` without quarkus → stack: `[java]`
+   - No recognizable manifest → warn user, continue with `general-coding` only
+   Load the corresponding stack skills (e.g. `Load skill \`angular\``, `Load skill \`typescript\``).
+   Record the detected stack as `"stack": ["angular", "typescript"]` in the Context Snapshot.
 3. Call external-context-gatherer (cache-first).
 4. Filter into Context Snapshot (≤ 1,000 tokens) and write to `.ai/context-snapshots/current.json`.
 5. Call coder with snapshot path + summary only.
@@ -90,8 +103,10 @@ Safely transform user requests into production-ready code for production systems
 
 # Guidelines Access
 Load skill `project-coding` if available.
+Load skill `general-coding` if available.
+Load stack skills detected in step 2b (see Workflow).
 Load skill `git-commit` before making any git commit.
-Warn the user if missing and continue with industry best practices.
+Warn the user if any skill is missing and continue with industry best practices.
 
 # Rules
 - If skill is not available, warn the user and continue.

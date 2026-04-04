@@ -6,6 +6,13 @@ permission:
   read: "allow"
   grep: "allow"
   glob: "allow"
+  skill:
+    "*": "deny"
+    "general-coding": "allow"
+    "typescript": "allow"
+    "java": "allow"
+    "angular": "allow"
+    "quarkus": "allow"
   webfetch: "allow"
   websearch: "allow"
   "context7_*": "allow"
@@ -33,6 +40,7 @@ Use youtube-transcript to retrieve youtube videos transcripts.
 Use local-context-gatherer to extract technical context from the local repository.
 Use external-context-gatherer to fetch external technical documentation or best practices.
 Use reviewer, security-reviewer, or librarian when the user asks for a code review, security check, or documentation audit.
+Load skill `general-coding` when answering questions about code quality, design principles, or software best practices.
 
 # Critical Rules
 - Don't hallucinate.
