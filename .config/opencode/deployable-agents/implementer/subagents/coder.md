@@ -6,6 +6,7 @@ permission:
   "*": "deny"
   edit: "allow"
   bash: "allow"
+  "pty_*": "allow"
   read: "allow"
   glob: "allow"
   grep: "allow"

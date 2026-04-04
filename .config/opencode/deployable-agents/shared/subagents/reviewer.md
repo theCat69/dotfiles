@@ -9,8 +9,12 @@ permission:
   bash:
     "*": "deny"
     "git status *": "allow"
+    "snip git status *": "allow"
     "git branch *": "allow"
+    "snip git branch *": "allow"
     "git diff *": "allow"
+    "snip git diff *": "allow"
+  "pty_*": "allow"
   skill:
     "*": "deny"
     "git-diff-review": "allow"

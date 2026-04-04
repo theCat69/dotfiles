@@ -14,8 +14,10 @@ permission:
   bash:
     "*": "deny"
     "git remote -v": "allow"
+    "snip git remote -v": "allow"
     "git status *": "allow"
-
+    "snip git status *": "allow"
+  "pty_*": "allow"
   task:
     "*": "deny"
 ---

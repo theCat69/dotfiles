@@ -8,6 +8,7 @@ permission:
   glob: "allow"
   edit: "allow"
   bash: "allow"
+  "pty_*": "allow"
   task: 
     "*": "deny"
 ---

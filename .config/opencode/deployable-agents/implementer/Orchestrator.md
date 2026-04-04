@@ -7,10 +7,16 @@ permission:
   bash:
     "*": "deny"
     "git add *": "allow" 
+    "snip git add *": "allow"
     "git commit *": "allow" 
+    "snip git commit *": "allow"
     "git log *": "allow" 
+    "snip git log *": "allow"
     "git status *": "allow" 
+    "snip git status *": "allow"
     "mkdir -p .ai/context-snapshots/*": "allow"
+    "snip mkdir -p .ai/context-snapshots/*": "allow"
+  "pty_*": "allow"
   edit: 
     "*": "deny"
     ".ai/context-snapshots/current.json": "allow"

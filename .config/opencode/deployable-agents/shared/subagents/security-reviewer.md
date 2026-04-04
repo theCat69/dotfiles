@@ -10,10 +10,16 @@ permission:
   bash:
     "*": "deny"
     "git log *": "allow"
+    "snip git log *": "allow"
     "git status *": "allow"
+    "snip git status *": "allow"
     "git remote -v": "allow"
+    "snip git remote -v": "allow"
     "git branch *": "allow"
+    "snip git branch *": "allow"
     "git diff *": "allow"
+    "snip git diff *": "allow"
+  "pty_*": "allow"
   skill:
     "*": "deny"
     "git-diff-review": "allow"

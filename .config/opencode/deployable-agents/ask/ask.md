@@ -13,6 +13,8 @@ permission:
   bash: 
     "*": "deny"
     "curl *": "allow"
+    "snip curl *": "allow"
+  "pty_*": "allow"
   task: 
     "*": "deny"
     "local-context-gatherer": "allow"
