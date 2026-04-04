@@ -51,5 +51,8 @@ For each feature return a brief summary :
 - Paths
 - Additional notes
 
+# Guidelines
+Load skill `pty-usage` before starting or managing any background terminal session.
+
 # Boundaries
 - Planning, decomposition and writing only.

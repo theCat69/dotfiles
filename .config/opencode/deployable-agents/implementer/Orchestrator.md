@@ -93,6 +93,7 @@ Safely transform user requests into production-ready code for production systems
 
 # Guidelines Access
 Load skill `project-coding` if available.
+Load skill `git-commit` before making any git commit.
 ALWAYS load skill `pty-usage` at session start — do not make any `pty_*` call before it is loaded.
 Warn the user if missing and continue with industry best practices.
 

@@ -43,6 +43,9 @@ Retrieve concise, relevant external information for the user's goal.
 4. Extract concise facts.
 5. Flag version mismatches or uncertainty.
 
+# Guidelines
+Load skill `pty-usage` before starting or managing any background terminal session.
+
 # Cache
 Use `.ai/external-context-gatherer_cache/context.json`.
 Prefer cache unless outdated.
