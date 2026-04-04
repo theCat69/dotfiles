@@ -10,6 +10,7 @@ permission:
     "git commit *": "allow" 
     "git log *": "allow" 
     "git status *": "allow" 
+    "mkdir -p .ai/context-snapshots": "allow"
     "mkdir -p .ai/context-snapshots/*": "allow"
   edit: 
     "*": "deny"

@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "topic": "test local scan",
+  "description": "A test local cache entry",
+  "tracked_files": [
+    { "path": "test-file.ts", "mtime": 1735689600000, "hash": "abc123def456" }
+  ]
+}

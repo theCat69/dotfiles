@@ -17,6 +17,8 @@ These examples demonstrate the coding patterns used in this project.
 | `lua-autocmd.md` | `vim.api.nvim_create_autocmd` with named augroup (`clear = true`) |
 | `zsh-aliases-and-path.md` | Zsh alias types (drop-in, suffix, global, function) and `PATH` extension |
 | `shell-install-script.md` | Idempotent `ln -sf` symlink installer with `$(pwd)`-relative paths |
+| `typescript-result-pattern.md` | `Result<T, E>` discriminated union with `ErrorCode` enum — no-throw error propagation |
+| `typescript-zod-safeparse-boundary.md` | Zod `safeParse()` at I/O boundaries — replaces unsafe `as T` casts when reading JSON from disk |
 
 ## Location
 
