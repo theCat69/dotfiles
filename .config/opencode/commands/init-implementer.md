@@ -287,6 +287,7 @@ Then call the `coder` sub-agent with the following prompt:
 >
 > - Check the project's `.gitignore` (create if it doesn't exist).
 > - Add `.ai/` to it if not already present (this is transient cache data that must not be committed).
+> - Add `.opencode/package-lock.json` to it if not already present (this is opencode autoinstalling custom tools on startup. As it is autoupdating we should not commit any).
 > - Do NOT gitignore `.opencode/skills/` or `.code-examples-for-ai/` — these are project documentation that must be version controlled.
 
 ---
