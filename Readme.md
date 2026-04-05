@@ -159,6 +159,22 @@ Vim emulation for IntelliJ IDEA and other JetBrains IDEs. Config is in `.config/
 
 ---
 
+## 📚 Further Reading
+
+Each tool's configuration directory contains its own README with details on settings, keymaps, and customisation:
+
+| Tool | README | Description |
+|---|---|---|
+| Neovim | [`.config/nvim/`](.config/nvim/README.md) | Full IDE config: LSP, DAP, Treesitter, AI, theme |
+| Ghostty | [`.config/ghostty/`](.config/ghostty/README.md) | Terminal theme, font size, and split-resize keybindings |
+| gitui | [`.config/gitui/`](.config/gitui/README.md) | Catppuccin theme variants and custom keybindings |
+| k9s | [`.config/k9s/`](.config/k9s/README.md) | Gruvbox skin and custom resource aliases |
+| bat | [`.config/bat/`](.config/bat/README.md) | GitHub theme and style flags |
+| IdeaVim | [`.config/ideavimrc/`](.config/ideavimrc/README.md) | Leader-key bindings for JetBrains IDE actions |
+| opencode | [`.config/opencode/`](.config/opencode/README.md) | Agent pipeline, MCP servers, plugins, and custom LSP |
+
+---
+
 ## ⚠️ Notes & Caveats
 
 - **`.gitconfig` is not symlinked** — it contains my name, email, and signing key. You'll need your own.
