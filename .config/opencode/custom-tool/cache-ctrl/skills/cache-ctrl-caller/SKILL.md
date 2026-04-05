@@ -39,7 +39,7 @@ Check whether tracked repo files have changed since the last scan.
 | `status: "changed"` | Files changed. Call local-context-gatherer to re-scan. |
 | File absent / `status: "unchanged"` with empty `tracked_files` | Cold start. Call local-context-gatherer. |
 
-> **⚠ Cache is non-exhaustive**: `status: "unchanged"` only confirms that previously-tracked files have not changed. It does **not** detect new files added to the repository or files that were deleted. Always use `glob`/`grep` for comprehensive file discovery — never assume the cached file list is complete.
+> **ℹ New/deleted file detection**: `check-files` now returns `new_git_files` and `deleted_git_files` (`string[]`). If either is non-empty, `status` is set to `"changed"`. `new_git_files` lists git-tracked files not yet in `tracked_files`; `deleted_git_files` lists git-tracked files removed from the working tree. Both fields are `[]` when git is unavailable or the directory is not a git repo.
 
 To **force a full re-scan** (e.g. user just made significant changes):
 **Tier 1:** Call `cache_ctrl_invalidate` with `agent: "local"`.

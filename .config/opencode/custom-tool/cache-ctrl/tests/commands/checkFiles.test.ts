@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtemp, writeFile, mkdir, stat, utimes } from "node:fs/promises";
+import { mkdtemp, writeFile, mkdir, stat, utimes, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { checkFilesCommand } from "../../src/commands/checkFiles.js";
 
 const LOCAL_DIR = join(".ai", "local-context-gatherer_cache");
@@ -59,6 +60,8 @@ describe("checkFilesCommand", () => {
     expect(result.value.changed_files).toHaveLength(0);
     expect(result.value.unchanged_files).toHaveLength(0);
     expect(result.value.missing_files).toHaveLength(0);
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
   });
 
   it("returns unchanged when mtime matches", async () => {
@@ -72,6 +75,8 @@ describe("checkFilesCommand", () => {
     if (!result.ok) return;
     expect(result.value.status).toBe("unchanged");
     expect(result.value.unchanged_files).toContain("tracked.ts");
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
   });
 
   it("returns changed when mtime differs and no hash stored", async () => {
@@ -86,6 +91,8 @@ describe("checkFilesCommand", () => {
     expect(result.value.status).toBe("changed");
     expect(result.value.changed_files[0]!.path).toBe("tracked.ts");
     expect(result.value.changed_files[0]!.reason).toBe("mtime");
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
   });
 
   it("returns unchanged when mtime differs but hash matches (touch-only change)", async () => {
@@ -104,6 +111,8 @@ describe("checkFilesCommand", () => {
     if (!result.ok) return;
     expect(result.value.status).toBe("unchanged");
     expect(result.value.unchanged_files).toContain("tracked.ts");
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
   });
 
   it("returns changed with reason=hash when mtime and hash both differ", async () => {
@@ -117,6 +126,8 @@ describe("checkFilesCommand", () => {
     if (!result.ok) return;
     expect(result.value.status).toBe("changed");
     expect(result.value.changed_files[0]!.reason).toBe("hash");
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
   });
 
   it("reports missing files in both missing_files and changed_files", async () => {
@@ -127,6 +138,8 @@ describe("checkFilesCommand", () => {
     expect(result.value.status).toBe("changed");
     expect(result.value.missing_files).toContain("does-not-exist.ts");
     expect(result.value.changed_files[0]!.reason).toBe("missing");
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
   });
 
   it("rejects path traversal attempts — treated as missing", async () => {
@@ -136,6 +149,8 @@ describe("checkFilesCommand", () => {
     if (!result.ok) return;
     // Path traversal → missing
     expect(result.value.missing_files).toContain("../../etc/passwd");
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
   });
 
   it("handles a mix of changed, unchanged, and missing files", async () => {
@@ -159,5 +174,64 @@ describe("checkFilesCommand", () => {
     expect(result.value.unchanged_files).toContain("unchanged.ts");
     expect(result.value.changed_files.map((f) => f.path)).toContain("changed.ts");
     expect(result.value.missing_files).toContain("missing.ts");
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
+  });
+});
+
+function initGitRepo(dir: string): void {
+  execFileSync("git", ["init"], { cwd: dir });
+  execFileSync("git", ["config", "user.email", "test@test.com"], { cwd: dir });
+  execFileSync("git", ["config", "user.name", "Test"], { cwd: dir });
+}
+
+describe("git file detection", () => {
+  it("non-git dir → new_git_files and deleted_git_files are []", async () => {
+    const trackedPath = join(tmpDir, "tracked.ts");
+    await writeFile(trackedPath, "export const x = 1;");
+    const mtime = await getMtime(trackedPath);
+
+    await writeLocalCache([{ path: "tracked.ts", mtime }]);
+    const result = await checkFilesCommand();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.new_git_files).toEqual([]);
+    expect(result.value.deleted_git_files).toEqual([]);
+  });
+
+  it("committed file not in tracked_files → appears in new_git_files", async () => {
+    initGitRepo(tmpDir);
+    const filePath = join(tmpDir, "file.ts");
+    await writeFile(filePath, "export const x = 1;");
+    execFileSync("git", ["add", "."], { cwd: tmpDir });
+    execFileSync("git", ["commit", "-m", "init"], { cwd: tmpDir });
+
+    // Cache has empty tracked_files — file.ts is known to git but not cached
+    await writeLocalCache([]);
+    const result = await checkFilesCommand();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.new_git_files).toContain("file.ts");
+    expect(result.value.status).toBe("changed");
+  });
+
+  it("committed+deleted file → appears in deleted_git_files", async () => {
+    initGitRepo(tmpDir);
+    const filePath = join(tmpDir, "file.ts");
+    await writeFile(filePath, "export const x = 1;");
+    execFileSync("git", ["add", "."], { cwd: tmpDir });
+    execFileSync("git", ["commit", "-m", "init"], { cwd: tmpDir });
+
+    // Delete from working tree only (not via git rm)
+    await rm(filePath);
+
+    const mtime = 1_000_000; // arbitrary — file is gone, mtime won't be checked
+    await writeLocalCache([{ path: "file.ts", mtime }]);
+    const result = await checkFilesCommand();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.deleted_git_files).toContain("file.ts");
+    expect(result.value.missing_files).toContain("file.ts");
+    expect(result.value.status).toBe("changed");
   });
 });

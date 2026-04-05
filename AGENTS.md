@@ -19,7 +19,7 @@ All detailed coding, build, test, documentation, and security guidelines live in
 .opencode/skills/
 ├── project-coding/SKILL.md        — Coding style, naming, patterns, architecture
 ├── project-build/SKILL.md         — Install commands, prerequisites, environment setup
-├── project-test/SKILL.md          — Testing with BATS, bun test, ShellCheck
+├── project-test/SKILL.md          — Testing with BATS, bun, ShellCheck
 ├── project-documentation/SKILL.md — Comment style, README format, changelog
 ├── project-security/SKILL.md      — Secrets, input validation, dependency security
 └── project-code-examples/SKILL.md — Index of code pattern examples

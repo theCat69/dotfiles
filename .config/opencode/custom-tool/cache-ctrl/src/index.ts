@@ -127,6 +127,7 @@ const COMMAND_HELP: Record<CommandName, CommandHelp> = {
       "    (none)",
       "",
       "  Output: List of files whose mtime or hash differs from the stored baseline.",
+      "  Also reports new_git_files (git-tracked files absent from cache) and deleted_git_files.",
     ].join("\n"),
   },
   search: {

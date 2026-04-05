@@ -1,9 +1,13 @@
+import { posix, sep } from "node:path";
 import { findRepoRoot, readCache } from "../cache/cacheManager.js";
 import { resolveLocalCachePath } from "../cache/localCache.js";
 import { compareTrackedFile } from "../files/changeDetector.js";
+import { getGitTrackedFiles, getGitDeletedFiles } from "../files/gitFiles.js";
 import { LocalCacheFileSchema } from "../types/cache.js";
 import { ErrorCode, type Result } from "../types/result.js";
 import type { CheckFilesResult } from "../types/commands.js";
+
+const toPosix = (p: string) => p.split(sep).join(posix.sep);
 
 export async function checkFilesCommand(): Promise<Result<CheckFilesResult["value"]>> {
   try {
@@ -19,18 +23,6 @@ export async function checkFilesCommand(): Promise<Result<CheckFilesResult["valu
     }
     const data = parseResult.data;
     const trackedFiles = data.tracked_files;
-
-    if (trackedFiles.length === 0) {
-      return {
-        ok: true,
-        value: {
-          status: "unchanged",
-          changed_files: [],
-          unchanged_files: [],
-          missing_files: [],
-        },
-      };
-    }
 
     const changedFiles: Array<{ path: string; reason: "mtime" | "hash" | "missing" }> = [];
     const unchangedFiles: string[] = [];
@@ -48,17 +40,32 @@ export async function checkFilesCommand(): Promise<Result<CheckFilesResult["valu
       }
     }
 
+    const [gitTrackedFiles, deletedGitFiles] = await Promise.all([
+      getGitTrackedFiles(repoRoot),
+      getGitDeletedFiles(repoRoot),
+    ]);
+    const cachedPaths = new Set(trackedFiles.map((f) => toPosix(f.path)));
+    const newGitFiles = gitTrackedFiles.filter((p) => !cachedPaths.has(toPosix(p)));
+
     return {
       ok: true,
       value: {
-        status: changedFiles.length > 0 || missingFiles.length > 0 ? "changed" : "unchanged",
+        status:
+          changedFiles.length > 0 ||
+          missingFiles.length > 0 ||
+          newGitFiles.length > 0 ||
+          deletedGitFiles.length > 0
+            ? "changed"
+            : "unchanged",
         changed_files: changedFiles,
         unchanged_files: unchangedFiles,
         missing_files: missingFiles,
+        new_git_files: newGitFiles,
+        deleted_git_files: deletedGitFiles,
       },
     };
   } catch (err) {
-    const error = err as Error;
-    return { ok: false, error: error.message, code: ErrorCode.UNKNOWN };
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: msg, code: ErrorCode.UNKNOWN };
   }
 }
