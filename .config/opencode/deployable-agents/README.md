@@ -317,40 +317,167 @@ In deep review mode, `local-context-gatherer` and `external-context-gatherer` ma
 
 ---
 
-## Installation
+## Installation Tutorial
 
-### Install all bundles
+### Requirements
+
+Ensure the following are available before starting:
+
+| Tool | Required | Why |
+|---|---|---|
+| [`opencode`](https://opencode.ai) | ✅ | The AI coding tool these agents run on |
+| `git` | ✅ | To clone this repository |
+| `bun` in `$PATH` | ⚠️ Recommended | Required for the `cache-ctrl` plugin and CLI |
+| `~/.local/bin` in `$PATH` | ⚠️ Recommended | Required for the `cache-ctrl` CLI binary |
+| Docker (running) | ❌ Optional | Required by the GitHub MCP server |
+| `GITHUB_TOKEN` env var | ❌ Optional | PAT with `public_repo` + `security_events` read access — enables GitHub MCP |
+| `CONTEXT7_API_KEY` env var | ❌ Optional | API key for context7 MCP — enables up-to-date library documentation |
+
+---
+
+### Step 1 — Set up opencode configuration
+
+Choose how you want to make the opencode configuration available at `~/.config/opencode/`.
+
+#### Option A — Symlink the opencode folder (recommended)
+
+Best when using this as your primary dotfiles setup. All future updates to this repository are reflected immediately — no reinstall needed.
 
 ```bash
-bash install-all.sh
+# Clone the repository
+git clone https://github.com/<user>/dotfiles ~/dotfiles
+
+# Symlink only the opencode folder
+ln -sf ~/dotfiles/.config/opencode ~/.config/opencode
+```
+
+> This symlinks **only** `.config/opencode/` — nothing else from the dotfiles repository. Everything under it (opencode.json, global skills, slash commands, custom tools) stays in sync with the repository automatically.
+
+#### Option B — Copy only the needed files
+
+Best when you want a standalone setup, or when you prefer to customize the configuration independently of this repository.
+
+```bash
+# Clone the repository
+git clone https://github.com/<user>/dotfiles ~/dotfiles
+
+# Create the config directories
+mkdir -p ~/.config/opencode/skills ~/.config/opencode/commands
+
+# Copy the main configuration file
+cp ~/dotfiles/.config/opencode/opencode.json ~/.config/opencode/opencode.json
+
+# Copy global skills (coding guidelines loaded by agents)
+cp -r ~/dotfiles/.config/opencode/skills/. ~/.config/opencode/skills/
+
+# Copy slash commands (including /init-implementer)
+cp -r ~/dotfiles/.config/opencode/commands/. ~/.config/opencode/commands/
+```
+
+> After copying, edit `~/.config/opencode/opencode.json` to adjust MCP servers, plugins, and API keys to your setup.
+
+---
+
+### Step 2 — Install deployable agents
+
+Run the install script to register all agent bundles.
+
+#### Globally (recommended)
+
+Installs all bundles to the default opencode agents directory (`~/.config/opencode/agents/`):
+
+```bash
+bash ~/.config/opencode/deployable-agents/install-all.sh
+```
+
+> **Option A (symlink)**: the script is already at `~/.config/opencode/deployable-agents/install-all.sh`.  
+> **Option B (copy)**: run the script from the cloned repository instead:  
+> `bash ~/dotfiles/.config/opencode/deployable-agents/install-all.sh`
+
+#### To a custom agents directory
+
+Pass a target path as the first argument:
+
+```bash
+bash ~/.config/opencode/deployable-agents/install-all.sh /path/to/custom/agents/dir
+```
+
+To install a single bundle only:
+
+```bash
+bash ~/.config/opencode/deployable-agents/ask/install.sh
+bash ~/.config/opencode/deployable-agents/implementer/install.sh
+bash ~/.config/opencode/deployable-agents/planner/install.sh
+```
+
+> Install scripts create **symlinks** — not copies. Editing any source file in the repository is immediately reflected in the installed agents without reinstalling.
+
+---
+
+### Step 3 — (Optional) Install cache-ctrl
+
+`cache-ctrl` is strongly recommended. It caches expensive context-gathering operations so agents do not re-fetch the same information on every run.
+
+See the full installation instructions in:
+
+📄 [`custom-tool/cache-ctrl/README.md`](../custom-tool/cache-ctrl/README.md#installation)
+
+Quick install:
+
+```bash
+cd ~/.config/opencode/custom-tool/cache-ctrl && zsh install.sh
+```
+
+**Prerequisites**: `bun` must be in `$PATH`, `~/.local/bin` must be in `$PATH`.
+
+---
+
+### Step 4 — Initialize a project
+
+Navigate to the **root directory of the project** you want to work on, open opencode, and run:
+
+```
+/init-implementer
+```
+
+This command will:
+
+1. Deep-scan your project structure and detect the tech stack
+2. Fetch external best practices for the detected technologies
+3. Generate project-specific skill files in `.opencode/skills/`
+4. Create code pattern examples in `.code-examples-for-ai/`
+5. Update `AGENTS.md` to reference the new skill structure
+6. Add `.ai/` to `.gitignore` (transient cache — do not commit)
+
+> Pass a tech stack hint as an optional argument: `/init-implementer typescript react`  
+> If no argument is given, full auto-detection runs with no bias.
+
+---
+
+### Installation complete 🎉
+
+Once `/init-implementer` finishes, your project is fully set up. You can now start using:
+
+| Agent | How to access | Purpose |
+|---|---|---|
+| **Orchestrator** | Open opencode → select `Orchestrator` | Transforms requests into reviewed, production-ready code |
+| **Planner** | Open opencode → select `Planner` | Turns ideas into concrete, reviewed feature specs |
+| **Ask** | Open opencode → select `Ask` | Answers questions with full codebase context |
+
+---
+
+### Uninstall
+
+```bash
+# Uninstall all bundles
+bash ~/.config/opencode/deployable-agents/uninstall-all.sh
 # or with a custom target:
-bash install-all.sh /path/to/custom/agents/dir
-```
+bash ~/.config/opencode/deployable-agents/uninstall-all.sh /path/to/custom/agents/dir
 
-Default target: `~/.config/opencode/agents`
-
-### Install a single bundle
-
-```bash
-bash ask/install.sh
-bash implementer/install.sh
-bash planner/install.sh
-```
-
-### Uninstall all bundles
-
-```bash
-bash uninstall-all.sh
-# or with a custom target:
-bash uninstall-all.sh /path/to/custom/agents/dir
-```
-
-### Uninstall a single bundle
-
-```bash
-bash ask/uninstall.sh
-bash implementer/uninstall.sh
-bash planner/uninstall.sh
+# Uninstall a single bundle
+bash ~/.config/opencode/deployable-agents/ask/uninstall.sh
+bash ~/.config/opencode/deployable-agents/implementer/uninstall.sh
+bash ~/.config/opencode/deployable-agents/planner/uninstall.sh
 ```
 
 Uninstall only removes **symlinks** (`-L` guard) — source files are never touched.
@@ -386,6 +513,54 @@ Subagents that perform expensive operations cache results under `.ai/<agent-name
 The Orchestrator's Context Snapshot is written to `.ai/context-snapshots/current.json`.
 
 Cache entries are tagged with source and version. Agents prefer the cache unless repo files have changed or the cache is explicitly invalidated.
+
+Full cache file schemas, CLI reference, and agent integration patterns are documented in [`cache-ctrl/README.md`](../custom-tool/cache-ctrl/README.md).
+
+### cache-ctrl tool availability
+
+The caching strategy depends on which form of `cache-ctrl` is available at runtime. There are three possible states:
+
+#### 1. Plugin available (preferred)
+
+The `cache_ctrl.ts` plugin is installed (symlinked to `.opencode/tools/cache-ctrl.ts`) and opencode has auto-discovered it. The agent has the `cache_ctrl_*` tool family in its permission list.
+
+Agents call plugin tools **directly** — no `bash` permission required:
+
+```
+cache_ctrl_list       → check staleness before fetching
+cache_ctrl_check_files → detect changed local files
+cache_ctrl_check_freshness → HTTP HEAD check on borderline entries
+cache_ctrl_search     → find existing entries by keyword
+cache_ctrl_inspect    → read a full cache entry
+cache_ctrl_invalidate → mark an entry stale
+cache_ctrl_write      → write a validated entry (schema-enforced)
+```
+
+This is the recommended path. Schema validation, advisory locking, and atomic writes are all enforced automatically.
+
+#### 2. CLI available, plugin absent
+
+The `cache-ctrl` binary is on PATH (`~/.local/bin/cache-ctrl`) but the plugin is not loaded (not installed, or the agent lacks `cache_ctrl_*` permission). The agent must have `bash` permission for the specific `cache-ctrl *` commands it needs.
+
+Agents call the CLI via bash — identical semantics, same output format:
+
+```bash
+cache-ctrl list --agent external --pretty
+cache-ctrl check-files --pretty
+cache-ctrl invalidate external <subject>
+cache-ctrl write external <subject> --data '<json>'
+```
+
+All error codes, schema validation, and locking guarantees are identical to the plugin path. The only difference is that each call starts a new Bun process (slightly slower).
+
+#### 3. Neither available (degraded)
+
+Neither the plugin nor the CLI is installed. The agent must operate in **degraded mode**:
+
+- **Read**: Open and parse `.ai/*_cache/*.json` directly using the `read` tool. Treat any entry with an empty `fetched_at` / `timestamp`, or one older than 24 hours, as stale.
+- **Write**: Use the `write` tool to write JSON directly to the cache path. Include all required schema fields manually (`subject`, `fetched_at`, `sources`, `header_metadata` for external; `timestamp`, `tracked_files` for local). Advisory locking and schema validation are bypassed — write carefully.
+- **Staleness detection**: For local cache, manually `stat` or `read` each file listed in `tracked_files[]` and compare `mtime`. For external cache, skip HTTP freshness checking entirely and rely on the 24-hour TTL heuristic only.
+- **Action**: Warn the user that `cache-ctrl` is not installed and recommend running `zsh install.sh` from `custom-tool/cache-ctrl/` for reliable caching.
 
 ---
 

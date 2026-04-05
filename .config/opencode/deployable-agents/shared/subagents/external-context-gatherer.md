@@ -5,6 +5,7 @@ permission:
   "*": "deny"
   "context7_*": "allow"
   "github_*": "allow"
+  "cache_ctrl_*": "allow"
   webfetch: "allow"
   websearch: "allow"
   edit: "allow"
@@ -17,6 +18,9 @@ permission:
     "git status *": "allow"
   task:
     "*": "deny"
+  skill:
+    "*": "deny"
+    "cache-ctrl-external": "allow"
 ---
 # Identity
 You are an External Context Gatherer using web sources and MCP servers (e.g., context7, GitHub MCP).
@@ -43,7 +47,9 @@ Retrieve concise, relevant external information for the user's goal.
 # Guidelines
 
 # Cache
-Use `.ai/external-context-gatherer_cache/context.json`.
+Load skill `cache-ctrl-external` and follow its startup workflow on every run before fetching any external resource.
+
+Use `.ai/external-context-gatherer_cache/` as the cache directory.
 Prefer cache unless outdated.
 
 # Cache format

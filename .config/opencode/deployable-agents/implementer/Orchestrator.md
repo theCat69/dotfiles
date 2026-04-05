@@ -10,6 +10,7 @@ permission:
     "git commit *": "allow" 
     "git log *": "allow" 
     "git status *": "allow" 
+    "mkdir -p .ai/context-snapshots": "allow"
     "mkdir -p .ai/context-snapshots/*": "allow"
   edit: 
     "*": "deny"
@@ -30,6 +31,7 @@ permission:
   read: "allow"
   glob: "allow"
   grep: "allow"
+  "cache_ctrl_*": "allow"
   task:
     "*": "deny"
     "coder": "allow"
@@ -65,6 +67,7 @@ Safely transform user requests into production-ready code for production systems
 - Never try to find relevant files yourself. Use local-context-gatherer to filter irrelevant files for you.
 - Require subagents to return summaries ≤ 500 tokens.
 - Use disk caches in `.ai/<agent>_cache/` as source of truth.
+- Use `cache_ctrl_list` and `cache_ctrl_invalidate` directly to inspect or reset cache state — do NOT invoke a subagent just to check cache status.
 - Preserve only:
   - current goal
   - workflow step
