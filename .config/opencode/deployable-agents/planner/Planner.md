@@ -8,6 +8,7 @@ permission:
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
+  "cache_ctrl_*": "allow"
   skill:
     "*": "deny"
     "general-coding": "allow"

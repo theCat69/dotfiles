@@ -10,13 +10,14 @@ Each bundle is an independent set of agent definition files that can be symlinke
 opencode discovers agents by scanning `~/.config/opencode/agents/*.md`.  
 Each `.md` file is a **agent definition**: a Markdown document with a YAML front-matter block that declares identity, mode, permissions, and capabilities.
 
-This repository pre-packages **three bundles** plus a **shared library** of reusable subagents.  
+This repository pre-packages **four bundles** plus a **shared library** of reusable subagents.  
 Installing a bundle symlinks all its files into the agents directory — no copying, so updates in the source are reflected instantly.
 
 ```
 deployable-agents/               ← this directory
 ├── install-all.sh               ← install every bundle at once
 ├── ask/                         ← "ask" bundle
+├── builder/                     ← "builder" bundle
 ├── implementer/                 ← "implementer" bundle
 ├── planner/                     ← "planner" bundle
 └── shared/                      ← shared subagents (used by all bundles)
@@ -259,6 +260,43 @@ The coder **never calls subagents** (`task: "deny"`).
 
 ---
 
+### `builder` — Single-agent implementation assistant
+
+A lightweight implementation agent that writes code directly. No multi-agent overhead for medium-complexity tasks.
+
+**Agents installed:**
+
+| File | Mode | Role |
+|---|---|---|
+| `builder.md` | primary | Main agent — writes code directly, optional context gathering and review |
+| `reviewer.md` | subagent | Code quality reviewer (shared) |
+| `security-reviewer.md` | subagent | Security auditor (shared) |
+| `librarian.md` | subagent | Documentation keeper (shared) |
+| `local-context-gatherer.md` | subagent | Repo context extractor (shared) |
+| `external-context-gatherer.md` | subagent | Web/MCP context fetcher (shared) |
+
+**Workflow:**
+
+```
+Direct mode (default):
+  1. Load skills → write code → commit
+
+Pipeline mode (optional, for complex/risk-sensitive tasks):
+  1. Gather local context  (local-context-gatherer, cache-first)
+  2. Detect stack → load stack skills
+  3. Optionally gather external context  (external-context-gatherer, cache-first)
+  4. Write code directly (no coder delegation)
+  5. Review  (reviewer ← git diff)
+  6. Security audit  (security-reviewer ← git diff)
+  7. Security triage loop
+  8. Update docs  (librarian)
+  9. Summarize → await user validation
+```
+
+The Builder **writes all code itself** — it never delegates to a coder subagent. Use it instead of Orchestrator when a single-agent workflow is sufficient.
+
+---
+
 ### `planner` — Feature planning orchestrator
 
 Turns vague ideas into concrete, production-ready feature specs through iterative clarification.
@@ -406,6 +444,7 @@ To install a single bundle only:
 
 ```bash
 bash ~/.config/opencode/deployable-agents/ask/install.sh
+bash ~/.config/opencode/deployable-agents/builder/install.sh
 bash ~/.config/opencode/deployable-agents/implementer/install.sh
 bash ~/.config/opencode/deployable-agents/planner/install.sh
 ```
@@ -461,6 +500,7 @@ Once `/init-implementer` finishes, your project is fully set up. You can now sta
 | Agent | How to access | Purpose |
 |---|---|---|
 | **Orchestrator** | Open opencode → select `Orchestrator` | Transforms requests into reviewed, production-ready code |
+| **Builder** | Open opencode → select `Builder` | Writes code directly with optional context gathering and review |
 | **Planner** | Open opencode → select `Planner` | Turns ideas into concrete, reviewed feature specs |
 | **Ask** | Open opencode → select `Ask` | Answers questions with full codebase context |
 
@@ -476,6 +516,7 @@ bash ~/.config/opencode/deployable-agents/uninstall-all.sh /path/to/custom/agent
 
 # Uninstall a single bundle
 bash ~/.config/opencode/deployable-agents/ask/uninstall.sh
+bash ~/.config/opencode/deployable-agents/builder/uninstall.sh
 bash ~/.config/opencode/deployable-agents/implementer/uninstall.sh
 bash ~/.config/opencode/deployable-agents/planner/uninstall.sh
 ```

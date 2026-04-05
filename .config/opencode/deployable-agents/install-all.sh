@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Defaults to $HOME/.config/opencode/agents (same default as each install.sh).
 TARGET_DIR="${1:-$HOME/.config/opencode/agents}"
 
-agents=(ask implementer planner)
+agents=(ask builder implementer planner)
 
 for agent in "${agents[@]}"; do
 	installer="$SCRIPT_DIR/$agent/install.sh"
