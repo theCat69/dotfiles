@@ -10,5 +10,5 @@
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "plugin.ts", "tests/**/*"]
+  "include": ["src/**/*", "cache_ctrl.ts", "tests/**/*"]
 }

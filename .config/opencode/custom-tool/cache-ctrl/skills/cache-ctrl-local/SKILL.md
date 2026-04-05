@@ -5,29 +5,51 @@ description: How to use cache-ctrl to detect file changes and manage the local c
 
 # cache-ctrl — Local Cache Usage
 
-The `cache_ctrl_*` plugin tools manage `.ai/local-context-gatherer_cache/context.json`. Use them on every run to avoid redundant full-repo scans.
+Manage `.ai/local-context-gatherer_cache/context.json` to avoid redundant full-repo scans.
+Three tiers of access — use the best one available.
+
+## Availability Detection (run once at startup)
+
+1. Call `cache_ctrl_check_files` (built-in tool).
+   - Success → **use Tier 1** for all operations below.
+   - Failure (tool not found / permission denied) → continue to step 2.
+2. Run `bash: "which cache-ctrl"`.
+   - Exit 0 → **use Tier 2** for all operations below.
+   - Not found → **use Tier 3** for all operations below.
+
+---
 
 ## Startup Workflow
 
 ### 1. Check if tracked files changed
 
-Call `cache_ctrl_check_files` (no parameters).
+**Tier 1:** Call `cache_ctrl_check_files` (no parameters).
+**Tier 2:** `cache-ctrl check-files`
+**Tier 3:** `read` `.ai/local-context-gatherer_cache/context.json`.
+  - File absent → cold start, proceed to scan.
+  - File present → check `timestamp`. If older than 1 hour, treat as stale and re-scan. Otherwise treat as fresh.
 
+Result interpretation (Tier 1 & 2):
 - `status: "unchanged"` → **skip scanning, return cached context**.
-- `status: "changed"` → files have changed, proceed to re-scan.
-- `status: "unchanged"` with empty `tracked_files` → cold start (no prior scan), proceed to scan.
+- `status: "changed"` → files changed, proceed to re-scan.
+- `status: "unchanged"` with empty `tracked_files` → cold start, proceed to scan.
 
-Optionally call `cache_ctrl_invalidate` with `agent: "local"` to explicitly mark the entry stale before writing the new one.
+### 2. Invalidate before writing (optional)
 
-### 2. Write cache after scanning
+**Tier 1:** Call `cache_ctrl_invalidate` with `agent: "local"`.
+**Tier 2:** `cache-ctrl invalidate local`
+**Tier 3:** Skip — overwriting the file in step 3 is sufficient.
 
-Write the cache file directly via the `edit` tool to `.ai/local-context-gatherer_cache/context.json`. The file MUST include:
+### 3. Write cache after scanning
+
+Write the cache file directly via the `edit` tool to `.ai/local-context-gatherer_cache/context.json`.
+All tiers write the same JSON schema:
 
 ```jsonc
 {
   "timestamp": "<ISO 8601 now>",
   "topic": "<description of what was scanned>",
-  "description": "<one-line summary>",  // required for cache_ctrl_search
+  "description": "<one-line summary>",
   "tracked_files": [
     {
       "path": "<repo-relative or absolute path>",
@@ -38,23 +60,30 @@ Write the cache file directly via the `edit` tool to `.ai/local-context-gatherer
 }
 ```
 
-**`tracked_files` is mandatory.** Without it, `cache_ctrl_check_files` cannot detect future changes and will always report `unchanged`. Every file read during the scan MUST be recorded here.
+**`tracked_files` is mandatory** for Tier 1/2 change detection. Every file read during the scan MUST be recorded here. Tier 3 relies on `timestamp` instead, so `tracked_files` is still recommended but detection precision is lower.
 
-### 3. Confirm cache (optional)
+### 4. Confirm cache (optional)
 
-Call `cache_ctrl_list` with `agent: "local"` to confirm the entry was written. Note: local entries always show `is_stale: true` in list output — this is expected by design. Use `cache_ctrl_check_files` for authoritative change detection, not `list`.
+**Tier 1:** Call `cache_ctrl_list` with `agent: "local"` to confirm the entry was written.
+**Tier 2:** `cache-ctrl list --agent local`
+**Tier 3:** `read` `.ai/local-context-gatherer_cache/context.json` and verify `timestamp` is current.
 
-## Tool Reference
+Note: local entries always show `is_stale: true` in Tier 1/2 list output — this is expected. Use `cache_ctrl_check_files` (Tier 1/2) or timestamp comparison (Tier 3) for authoritative change detection.
 
-| Tool | When to use |
-|---|---|
-| `cache_ctrl_check_files` | Startup: detect if any tracked file changed |
-| `cache_ctrl_invalidate` | Mark current cache stale before writing a new one |
-| `cache_ctrl_list` | Confirm entry exists after writing |
-| `cache_ctrl_inspect` | Debug: view full content of the local cache entry |
+---
+
+## Tool / Command Reference
+
+| Operation | Tier 1 (built-in) | Tier 2 (CLI) | Tier 3 (manual) |
+|---|---|---|---|
+| Detect file changes | `cache_ctrl_check_files` | `cache-ctrl check-files` | read `context.json`, check `timestamp` |
+| Invalidate cache | `cache_ctrl_invalidate` | `cache-ctrl invalidate local` | overwrite file in next step |
+| Confirm written | `cache_ctrl_list` | `cache-ctrl list --agent local` | `read` file, check `timestamp` |
+| View full entry | `cache_ctrl_inspect` | `cache-ctrl inspect local context` | `read` file directly |
 
 ## Cache Location
 
 `.ai/local-context-gatherer_cache/context.json` — single file, no per-subject splitting.
 
-No time-based TTL. Freshness is determined entirely by `cache_ctrl_check_files`.
+No time-based TTL for Tier 1/2. Freshness determined by `cache_ctrl_check_files`.
+Tier 3 uses a 1-hour `timestamp` TTL as a rough proxy.

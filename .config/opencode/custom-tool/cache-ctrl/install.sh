@@ -2,7 +2,7 @@
 #
 # Installs cache-ctrl as:
 #   1. A global CLI command at ~/.local/bin/cache-ctrl
-#   2. An opencode plugin tool at .opencode/tools/cache-ctrl.ts
+#   2. Opencode custom tools at .opencode/tools/cache_ctrl.ts
 #
 # Run from: .config/opencode/custom-tool/cache-ctrl/
 # Usage: zsh install.sh
@@ -29,9 +29,11 @@ mkdir -p "${REPO_ROOT}/.opencode/tools"
 ln -sf "${TOOL_DIR}/src/index.ts" "${HOME}/.local/bin/cache-ctrl"
 chmod +x "${TOOL_DIR}/src/index.ts"
 
-# ── opencode plugin symlink ────────────────────────────────
-# .opencode/tools/cache-ctrl.ts → <cache-ctrl-dir>/plugin.ts
-ln -sf "${TOOL_DIR}/plugin.ts" "${REPO_ROOT}/.opencode/tools/cache-ctrl.ts"
+# ── opencode custom tool symlink ───────────────────────────────────────────
+# .opencode/tools/cache_ctrl.ts → <cache-ctrl-dir>/cache_ctrl.ts
+# Tool names: cache_ctrl_search, cache_ctrl_list, cache_ctrl_inspect,
+#             cache_ctrl_invalidate, cache_ctrl_check_freshness, cache_ctrl_check_files
+ln -sf "${TOOL_DIR}/cache_ctrl.ts" "${REPO_ROOT}/.opencode/tools/cache_ctrl.ts"
 
 # ── Install dependencies ───────────────────────────────────
 # bun install is idempotent — safe to re-run
@@ -50,5 +52,5 @@ ln -sf "${TOOL_DIR}/skills/cache-ctrl-local/SKILL.md" "${HOME}/.config/opencode/
 # ── Verify ─────────────────────────────────────────────────
 echo "cache-ctrl installed:"
 echo "  CLI     → ${HOME}/.local/bin/cache-ctrl"
-echo "  Plugin  → ${REPO_ROOT}/.opencode/tools/cache-ctrl.ts"
+echo "  Tools   → ${REPO_ROOT}/.opencode/tools/cache_ctrl.ts"
 echo "  Skills  → ${HOME}/.config/opencode/skills/cache-ctrl-{external,local}/SKILL.md"
