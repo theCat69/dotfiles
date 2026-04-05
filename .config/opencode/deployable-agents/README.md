@@ -387,6 +387,54 @@ The Orchestrator's Context Snapshot is written to `.ai/context-snapshots/current
 
 Cache entries are tagged with source and version. Agents prefer the cache unless repo files have changed or the cache is explicitly invalidated.
 
+Full cache file schemas, CLI reference, and agent integration patterns are documented in [`cache-ctrl/README.md`](../custom-tool/cache-ctrl/README.md).
+
+### cache-ctrl tool availability
+
+The caching strategy depends on which form of `cache-ctrl` is available at runtime. There are three possible states:
+
+#### 1. Plugin available (preferred)
+
+The `cache_ctrl.ts` plugin is installed (symlinked to `.opencode/tools/cache-ctrl.ts`) and opencode has auto-discovered it. The agent has the `cache_ctrl_*` tool family in its permission list.
+
+Agents call plugin tools **directly** — no `bash` permission required:
+
+```
+cache_ctrl_list       → check staleness before fetching
+cache_ctrl_check_files → detect changed local files
+cache_ctrl_check_freshness → HTTP HEAD check on borderline entries
+cache_ctrl_search     → find existing entries by keyword
+cache_ctrl_inspect    → read a full cache entry
+cache_ctrl_invalidate → mark an entry stale
+cache_ctrl_write      → write a validated entry (schema-enforced)
+```
+
+This is the recommended path. Schema validation, advisory locking, and atomic writes are all enforced automatically.
+
+#### 2. CLI available, plugin absent
+
+The `cache-ctrl` binary is on PATH (`~/.local/bin/cache-ctrl`) but the plugin is not loaded (not installed, or the agent lacks `cache_ctrl_*` permission). The agent must have `bash` permission for the specific `cache-ctrl *` commands it needs.
+
+Agents call the CLI via bash — identical semantics, same output format:
+
+```bash
+cache-ctrl list --agent external --pretty
+cache-ctrl check-files --pretty
+cache-ctrl invalidate external <subject>
+cache-ctrl write external <subject> --data '<json>'
+```
+
+All error codes, schema validation, and locking guarantees are identical to the plugin path. The only difference is that each call starts a new Bun process (slightly slower).
+
+#### 3. Neither available (degraded)
+
+Neither the plugin nor the CLI is installed. The agent must operate in **degraded mode**:
+
+- **Read**: Open and parse `.ai/*_cache/*.json` directly using the `read` tool. Treat any entry with an empty `fetched_at` / `timestamp`, or one older than 24 hours, as stale.
+- **Write**: Use the `write` tool to write JSON directly to the cache path. Include all required schema fields manually (`subject`, `fetched_at`, `sources`, `header_metadata` for external; `timestamp`, `tracked_files` for local). Advisory locking and schema validation are bypassed — write carefully.
+- **Staleness detection**: For local cache, manually `stat` or `read` each file listed in `tracked_files[]` and compare `mtime`. For external cache, skip HTTP freshness checking entirely and rely on the 24-hour TTL heuristic only.
+- **Action**: Warn the user that `cache-ctrl` is not installed and recommend running `zsh install.sh` from `custom-tool/cache-ctrl/` for reliable caching.
+
 ---
 
 ## Anti-bloat contract
