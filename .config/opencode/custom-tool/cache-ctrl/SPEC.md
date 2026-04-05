@@ -1,6 +1,6 @@
 # cache-ctrl — Feature Specification
 
-> **Status**: Draft — ready for implementation  
+> **Status**: Implemented  
 > **Root path**: `.config/opencode/custom-tool/cache-ctrl/`  
 > **Runtime**: TypeScript + Bun  
 > **Tests**: Vitest  
@@ -40,9 +40,10 @@ Two subagents (`external-context-gatherer` and `local-context-gatherer`) each ma
                      │                    │
          ┌───────────▼────────────────────▼──────────┐
          │              Command Layer                  │
-         │  src/commands/{list, inspect, flush,        │
-         │   invalidate, touch, prune,                 │
-         │   checkFreshness, checkFiles, search}.ts    │
+          │  src/commands/{list, inspect, flush,        │
+          │   invalidate, touch, prune,                 │
+          │   checkFreshness, checkFiles, search,       │
+          │   write}.ts                                 │
          └───────────┬────────────────────────────────┘
                      │
          ┌───────────▼────────────────────────────────┐
@@ -104,7 +105,8 @@ Two subagents (`external-context-gatherer` and `local-context-gatherer`) each ma
 │   │   ├── prune.ts                # prune — invalidate/flush entries older than duration
 │   │   ├── checkFreshness.ts       # check-freshness — HTTP HEAD per source URL
 │   │   ├── checkFiles.ts           # check-files — mtime/hash comparison
-│   │   └── search.ts               # search — ranked keyword search
+│   │   ├── search.ts               # search — ranked keyword search
+│   │   └── write.ts                # write — validated cache entry write
 │   │
 │   ├── cache/
 │   │   ├── cacheManager.ts         # readCache, writeCache, lockFile, unlockFile, listFiles
@@ -120,7 +122,7 @@ Two subagents (`external-context-gatherer` and `local-context-gatherer`) each ma
 │   └── search/
 │       └── keywordSearch.ts        # scoreEntry, rankResults, normalizeKeyword
 │
-├── plugin.ts                       # opencode plugin — registers tool() calls via @opencode-ai/plugin
+├── cache_ctrl.ts                       # opencode plugin — registers tool() calls via @opencode-ai/plugin
 │
 └── tests/
     ├── fixtures/
@@ -652,39 +654,35 @@ Internally: reads the existing file (if any), `JSON.parse`s it, spread-merges `u
 
 ### 6.6 opencode Plugin Tool Integration
 
-**Entry point**: `plugin.ts` (symlinked to `.opencode/tools/cache-ctrl.ts`)
+**Entry point**: `cache_ctrl.ts` (symlinked to `.opencode/tools/cache-ctrl.ts`)
 
 **Framework**: `@opencode-ai/plugin` (version `1.3.13`, already installed in the workspace)
 
-The plugin registers 6 tools using the `tool()` function. All argument schemas use Zod. All tools call the same command functions used by the CLI — no duplicated logic.
+The plugin registers 7 tools using the `tool()` function. All argument schemas use Zod. All tools call the same command functions used by the CLI — no duplicated logic.
 
-**Module shape** (`plugin.ts` skeleton):
+**Module shape** (`cache_ctrl.ts` skeleton):
 
 ```typescript
-import type { Plugin, Hooks } from "@opencode-ai/plugin";
 import { tool } from "@opencode-ai/plugin";
 import { z } from "zod";
 // command imports ...
 
-export const server: Plugin = {
-  hooks: {
-    tool: {
-      cache_ctrl_search: tool({
-        description: "Search all cache entries by keyword. Returns ranked list with agent type, subject, description, and staleness info.",
-        parameters: z.object({ keywords: z.array(z.string().min(1)).min(1) }),
-        execute: async ({ keywords }) => { /* calls search command */ },
-      }),
-      cache_ctrl_list: tool({ /* ... */ }),
-      cache_ctrl_inspect: tool({ /* ... */ }),
-      cache_ctrl_invalidate: tool({ /* ... */ }),
-      cache_ctrl_check_freshness: tool({ /* ... */ }),
-      cache_ctrl_check_files: tool({ /* ... */ }),
-    } satisfies Hooks["tool"],
-  },
-};
+const AgentRequiredSchema = z.enum(["external", "local"]);
+
+export const search = tool({
+  description: "Search all cache entries by keyword. Returns ranked list with agent type, subject, description, and staleness info.",
+  args: { keywords: z.array(z.string().min(1)).min(1) },
+  async execute(args) { /* calls search command */ },
+});
+export const list = tool({ /* ... */ });
+export const inspect = tool({ /* ... */ });
+export const invalidate = tool({ /* ... */ });
+export const check_freshness = tool({ /* ... */ });
+export const check_files = tool({ /* ... */ });
+export const write = tool({ /* ... */ });
 ```
 
-> Tools are nested under `hooks.tool` as named keys inside the returned `Hooks` object. The module must export a named `server` constant of type `Plugin`, matching the `PluginModule` contract from `@opencode-ai/plugin`. This is a named export, not a default export.
+> Tools are exported as individual named constants using the `tool()` helper from `@opencode-ai/plugin`. Each named export becomes a tool registered by opencode. There is no `server` wrapper object — the file uses flat named exports, not a `Plugin`/`Hooks` nested structure.
 
 ```typescript
 // All Zod schemas for tool args:
@@ -738,7 +736,7 @@ See Section 10 for the full `install.sh` spec.
 **Summary of symlinks created**:
 1. `~/.local/bin/cache-ctrl` → `<repo>/.config/opencode/custom-tool/cache-ctrl/src/index.ts`  
    Makes `cache-ctrl` available as a global shell command (Bun executes TypeScript directly).
-2. `<repo>/.opencode/tools/cache-ctrl.ts` → `<repo>/.config/opencode/custom-tool/cache-ctrl/plugin.ts`  
+2. `<repo>/.opencode/tools/cache-ctrl.ts` → `<repo>/.config/opencode/custom-tool/cache-ctrl/cache_ctrl.ts`  
    Registers the plugin with opencode's tool discovery path.
 
 ---
@@ -1075,7 +1073,7 @@ The install script checks for the following before creating symlinks:
 | From (symlink location) | To (real file in repo) | Purpose |
 |---|---|---|
 | `~/.local/bin/cache-ctrl` | `$(pwd)/src/index.ts` | Global CLI command |
-| `$(pwd)/../../.opencode/tools/cache-ctrl.ts` | `$(pwd)/plugin.ts` | opencode plugin registration |
+| `$(pwd)/../../.opencode/tools/cache-ctrl.ts` | `$(pwd)/cache_ctrl.ts` | opencode plugin registration |
 
 > **Note**: The install script is executed from within `.config/opencode/custom-tool/cache-ctrl/`. `$(pwd)` refers to the `cache-ctrl/` directory. The `.opencode/tools/` path resolves to `<repo-root>/.opencode/tools/` via `$(pwd)/../../.opencode/tools/`.
 
@@ -1114,8 +1112,8 @@ mkdir -p "${REPO_ROOT}/.opencode/tools"
 ln -sf "${TOOL_DIR}/src/index.ts" "${HOME}/.local/bin/cache-ctrl"
 
 # ── opencode plugin symlink ────────────────────────────────
-# .opencode/tools/cache-ctrl.ts → <cache-ctrl-dir>/plugin.ts
-ln -sf "${TOOL_DIR}/plugin.ts" "${REPO_ROOT}/.opencode/tools/cache-ctrl.ts"
+# .opencode/tools/cache-ctrl.ts → <cache-ctrl-dir>/cache_ctrl.ts
+ln -sf "${TOOL_DIR}/cache_ctrl.ts" "${REPO_ROOT}/.opencode/tools/cache-ctrl.ts"
 
 # ── Install dependencies ───────────────────────────────────
 # bun install is idempotent — safe to re-run
@@ -1160,7 +1158,7 @@ This allows it to be executed directly as a shell script when symlinked to `~/.l
     "exactOptionalPropertyTypes": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "plugin.ts", "tests/**/*"]
+  "include": ["src/**/*", "cache_ctrl.ts", "tests/**/*"]
 }
 ```
 

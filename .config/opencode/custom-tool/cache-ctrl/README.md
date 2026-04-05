@@ -16,7 +16,7 @@ zsh install.sh
 
 This creates two symlinks:
 - `~/.local/bin/cache-ctrl` → `src/index.ts` — global CLI command (executed directly by Bun)
-- `.opencode/tools/cache-ctrl.ts` → `plugin.ts` — auto-discovered by opencode as a native plugin
+- `.opencode/tools/cache-ctrl.ts` → `cache_ctrl.ts` — auto-discovered by opencode as a native plugin
 
 **Prerequisites**: `bun` must be in `PATH`. `~/.local/bin` must be in your `PATH` (it is by default on this setup).
 
@@ -26,14 +26,15 @@ This creates two symlinks:
 
 ```
 CLI (cache-ctrl)          opencode Plugin
-src/index.ts              plugin.ts
+src/index.ts              cache_ctrl.ts
      │                         │
      └──────────┬──────────────┘
-                │
-         Command Layer
+               │
+        Command Layer
    src/commands/{list, inspect, flush,
     invalidate, touch, prune,
-    checkFreshness, checkFiles, search}.ts
+    checkFreshness, checkFiles, search,
+    write}.ts
                 │
           Core Services
    cacheManager  ← read/write + advisory lock
@@ -301,7 +302,7 @@ Writes a validated cache entry to disk. The `--data` argument must be a valid JS
 
 ## opencode Plugin Tools
 
-The plugin (`plugin.ts`) is auto-discovered via `.opencode/tools/cache-ctrl.ts` and registers 6 tools that call the same command functions as the CLI:
+The plugin (`cache_ctrl.ts`) is auto-discovered via `.opencode/tools/cache-ctrl.ts` and registers 7 tools that call the same command functions as the CLI:
 
 | Tool | Description |
 |---|---|
@@ -382,6 +383,7 @@ cache-ctrl invalidate local
   "timestamp": "2026-04-04T12:00:00Z",   // "" when invalidated
   "topic": "neovim plugin configuration",
   "description": "Scan of nvim lua plugins",
+  "cache_miss_reason": "files changed",  // optional: why the previous cache was discarded
   "tracked_files": [
     { "path": "lua/plugins/ui/bufferline.lua", "mtime": 1743768000000, "hash": "sha256hex..." }
   ]
@@ -404,6 +406,7 @@ cache-ctrl invalidate local
 | `INVALID_AGENT` | Unknown agent type |
 | `INVALID_ARGS` | Missing or invalid CLI arguments |
 | `CONFIRMATION_REQUIRED` | `flush` called without `--confirm` |
+| `VALIDATION_ERROR` | Schema validation failed (e.g., missing required field or type mismatch in `write`) |
 | `NO_MATCH` | No cache file matched the keyword |
 | `AMBIGUOUS_MATCH` | Multiple files with identical top score |
 | `HTTP_REQUEST_FAILED` | Network error during HEAD request |
