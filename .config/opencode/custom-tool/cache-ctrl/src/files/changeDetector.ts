@@ -1,4 +1,4 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile, stat, lstat } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve, isAbsolute } from "node:path";
 import type { TrackedFile } from "../types/cache.js";
@@ -64,4 +64,32 @@ export function resolveTrackedFilePath(inputPath: string, repoRoot: string): str
     return null; // path traversal rejected
   }
   return resolved;
+}
+
+/**
+ * Resolves real mtimes from the filesystem for a list of tracked file entries.
+ * For each entry: if the path is valid and the file exists, injects the real mtimeMs.
+ * Falls back to the provided mtime (or 0) on path traversal rejection or missing file.
+ * Never throws — always returns gracefully.
+ */
+export async function resolveTrackedFileMtimes(
+  files: Array<{ path: string; mtime?: number; hash?: string }>,
+  repoRoot: string,
+): Promise<TrackedFile[]> {
+  return Promise.all(
+    files.map(async (file) => {
+      const absolutePath = resolveTrackedFilePath(file.path, repoRoot);
+      if (absolutePath === null) {
+        return { path: file.path, mtime: file.mtime ?? 0, ...(file.hash !== undefined ? { hash: file.hash } : {}) };
+      }
+      try {
+        const fileStat = await lstat(absolutePath);
+        return { path: file.path, mtime: fileStat.mtimeMs, ...(file.hash !== undefined ? { hash: file.hash } : {}) };
+      } catch (err) {
+        const error = err as NodeJS.ErrnoException;
+        if (error.code !== "ENOENT") throw err;
+        return { path: file.path, mtime: file.mtime ?? 0, ...(file.hash !== undefined ? { hash: file.hash } : {}) };
+      }
+    }),
+  );
 }

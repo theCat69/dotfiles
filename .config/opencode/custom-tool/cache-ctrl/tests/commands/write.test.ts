@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { mkdtemp, readFile, mkdir } from "node:fs/promises";
+import { mkdtemp, readFile, mkdir, writeFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { writeCommand } from "../../src/commands/write.js";
@@ -121,7 +121,61 @@ describe("writeCommand", () => {
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     expect(parsed["timestamp"]).toBe("2026-04-05T12:00:00.000Z");
     expect(parsed["topic"]).toBe("updated topic");
-    expect(parsed["extra_field"]).toBe("preserved");
+    expect(parsed["extra_field"]).toBeUndefined();
+
+    vi.useRealTimers();
+  });
+
+  it("auto-populates real mtime for tracked_files on local write", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    // Create a real file to track
+    const trackedPath = join(tmpDir, "some-real-file.ts");
+    await writeFile(trackedPath, "export const x = 1;");
+    const realStat = await stat(trackedPath);
+    const realMtime = realStat.mtimeMs;
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "mtime test",
+        description: "testing mtime auto-pop",
+        tracked_files: [{ path: trackedPath, mtime: 1 }], // wrong mtime
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number }>;
+    expect(files[0]?.mtime).toBe(realMtime);
+
+    vi.useRealTimers();
+  });
+
+  it("keeps fallback mtime when tracked file does not exist", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "fallback mtime test",
+        description: "testing fallback",
+        tracked_files: [{ path: "nonexistent/file.ts", mtime: 999 }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number }>;
+    expect(files[0]?.mtime).toBe(999);
 
     vi.useRealTimers();
   });

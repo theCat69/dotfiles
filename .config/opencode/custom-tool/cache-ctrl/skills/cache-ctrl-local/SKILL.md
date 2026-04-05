@@ -46,6 +46,8 @@ Result interpretation (Tier 1 & 2):
 
 **Always use the write tool/command — never write cache files directly via `edit`.** Direct writes bypass schema validation and can silently corrupt the cache format.
 
+> **Write is replace, not merge**: Each local write fully replaces the cache file. Any fields not included in the new content will be absent from the written file. Do not rely on previous writes to preserve fields — include all intended data in every write call.
+
 **Tier 1:** Call `cache_ctrl_write` with:
 ```json
 {
@@ -54,7 +56,7 @@ Result interpretation (Tier 1 & 2):
     "topic": "<description of what was scanned>",
     "description": "<one-liner summary>",
     "tracked_files": [
-      { "path": "<repo-relative or absolute path>", "mtime": 1743768000000, "hash": "<sha256-hex>" }
+      { "path": "<repo-relative or absolute path>", "hash": "<sha256-hex>" }
     ]
   }
 }
@@ -76,8 +78,10 @@ All fields are validated on write. Unknown extra fields are allowed and preserve
 | `topic` | `string` | ✅ | Human description of what was scanned |
 | `description` | `string` | ✅ | One-liner for keyword search |
 | `cache_miss_reason` | `string` | ➕ optional | Why the previous cache was discarded |
-| `tracked_files` | `Array<{ path: string; mtime: number; hash?: string }>` | ✅ | **Mandatory** for `check-files` to work. `mtime` is Unix ms (`Date.getTime()`). `hash` is SHA-256 hex |
+| `tracked_files` | `Array<{ path: string; mtime?: number; hash?: string }>` | ✅ | **Mandatory** for `check-files` to work. `mtime` is auto-populated by the write command using real filesystem `stat()` — agent does not need to provide it. `hash` is optional SHA-256 hex (agent-provided, kept as-is). |
 | *(any other fields)* | `unknown` | ➕ optional | Preserved unchanged |
+
+> **`mtime` is auto-set** by the write command using real filesystem `stat()` for each path in `tracked_files`. Do not include `mtime` — it will be populated server-side. Only `path` is required per entry.
 
 **Minimal valid agent-supplied content** (what you pass to `cache_ctrl_write`):
 ```json
@@ -85,7 +89,7 @@ All fields are validated on write. Unknown extra fields are allowed and preserve
   "topic": "neovim plugin configuration scan",
   "description": "Full scan of lua/plugins tree for neovim lazy.nvim setup",
   "tracked_files": [
-    { "path": "lua/plugins/ui/bufferline.lua", "mtime": 1743768000000, "hash": "a1b2c3..." }
+    { "path": "lua/plugins/ui/bufferline.lua", "hash": "a1b2c3..." }
   ]
 }
 ```
@@ -111,6 +115,16 @@ Note: local entries always show `is_stale: true` in Tier 1/2 list output — thi
 | Confirm written | `cache_ctrl_list` | `cache-ctrl list --agent local` | `read` file, check `timestamp` |
 | View full entry | `cache_ctrl_inspect` | `cache-ctrl inspect local context` | `read` file directly |
 | Write cache | `cache_ctrl_write` | `cache-ctrl write local --data '<json>'` | ❌ not available |
+
+## server_time in Responses
+
+Every `cache_ctrl_*` tool call returns a `server_time` field at the outer JSON level:
+
+```json
+{ "ok": true, "value": { ... }, "server_time": "2026-04-05T12:34:56.789Z" }
+```
+
+Use this to assess how stale stored timestamps are — you do not need `bash` or system access to know the current time.
 
 ## Cache Location
 

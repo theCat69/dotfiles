@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { compareTrackedFile, computeFileHash } from "../../src/files/changeDetector.js";
+import { compareTrackedFile, computeFileHash, resolveTrackedFileMtimes } from "../../src/files/changeDetector.js";
 
 let origCwd: string;
 let tmpDir: string;
@@ -108,5 +108,54 @@ describe("changeDetector", () => {
     const hash2 = await computeFileHash(filePath);
     expect(hash1).toBe(hash2);
     expect(hash1).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe("resolveTrackedFileMtimes", () => {
+  it("injects real mtime for existing file", async () => {
+    const filePath = join(tmpDir, "tracked.ts");
+    await writeFile(filePath, "export const y = 2;");
+
+    const { stat } = await import("node:fs/promises");
+    const realStat = await stat(filePath);
+    const realMtime = realStat.mtimeMs;
+
+    const result = await resolveTrackedFileMtimes(
+      [{ path: filePath, mtime: 1 }],
+      tmpDir,
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.mtime).toBe(realMtime);
+  });
+
+  it("falls back to provided mtime for missing file", async () => {
+    const result = await resolveTrackedFileMtimes(
+      [{ path: "missing/file.ts", mtime: 12345 }],
+      tmpDir,
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.mtime).toBe(12345);
+  });
+
+  it("falls back to 0 for path traversal attempt", async () => {
+    const result = await resolveTrackedFileMtimes(
+      [{ path: "../../etc/passwd" }],
+      tmpDir,
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.mtime).toBe(0);
+  });
+
+  it("falls back to provided mtime (not 0) for path traversal when mtime is given", async () => {
+    const result = await resolveTrackedFileMtimes(
+      [{ path: "../../etc/passwd", mtime: 999 }],
+      tmpDir,
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.mtime).toBe(999);
   });
 });

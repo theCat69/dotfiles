@@ -11,6 +11,11 @@ import { ErrorCode } from "./src/types/result.js";
 
 const AgentRequiredSchema = z.enum(["external", "local"]);
 
+function withServerTime(result: unknown): string {
+  const base = result !== null && typeof result === "object" ? result : {};
+  return JSON.stringify({ ...base, server_time: new Date().toISOString() });
+}
+
 export const search = tool({
   description: "Search all cache entries by keyword. Returns ranked list with agent type, subject, description, and staleness info.",
   args: {
@@ -19,10 +24,10 @@ export const search = tool({
   async execute(args) {
     try {
       const result = await searchCommand({ keywords: args.keywords });
-      return JSON.stringify(result);
+      return withServerTime(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
+      return withServerTime({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -35,10 +40,10 @@ export const list = tool({
   async execute(args) {
     try {
       const result = await listCommand({ agent: args.agent });
-      return JSON.stringify(result);
+      return withServerTime(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
+      return withServerTime({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -52,10 +57,10 @@ export const inspect = tool({
   async execute(args) {
     try {
       const result = await inspectCommand({ agent: args.agent, subject: args.subject });
-      return JSON.stringify(result);
+      return withServerTime(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
+      return withServerTime({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -72,10 +77,10 @@ export const invalidate = tool({
         agent: args.agent,
         ...(args.subject !== undefined ? { subject: args.subject } : {}),
       });
-      return JSON.stringify(result);
+      return withServerTime(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
+      return withServerTime({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -92,10 +97,10 @@ export const check_freshness = tool({
         subject: args.subject,
         ...(args.url !== undefined ? { url: args.url } : {}),
       });
-      return JSON.stringify(result);
+      return withServerTime(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
+      return withServerTime({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -106,17 +111,17 @@ export const check_files = tool({
   async execute(_args) {
     try {
       const result = await checkFilesCommand();
-      return JSON.stringify(result);
+      return withServerTime(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
+      return withServerTime({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
 
 export const write = tool({
   description:
-    "Write a validated cache entry to disk. Validates the content object against the ExternalCacheFile or LocalCacheFile schema before writing. Returns VALIDATION_ERROR if required fields are missing or have wrong types. For 'external': subject arg is required and must match content.subject (or will be injected if absent). For 'local': omit subject; timestamp is auto-set to current UTC time — do not include it in content. Uses atomic write-with-merge — existing unknown fields in the file are preserved. Call cache_ctrl_schema or read the skill to see required fields before calling this.",
+    "Write a validated cache entry to disk. Validates the content object against the ExternalCacheFile or LocalCacheFile schema before writing. Returns VALIDATION_ERROR if required fields are missing or have wrong types. For 'external': subject arg is required and must match content.subject (or will be injected if absent). For 'local': omit subject; timestamp is auto-set to current UTC time — do not include it in content. For 'local': uses atomic write-with-replace — the file is fully overwritten on every write; do not rely on previous writes to preserve extra fields. For 'external': uses atomic write-with-merge — existing unknown fields in the file are preserved. Call cache_ctrl_schema or read the skill to see required fields before calling this.",
   args: {
     agent: AgentRequiredSchema,
     subject: z.string().min(1).optional(),
@@ -129,10 +134,10 @@ export const write = tool({
         subject: args.subject,
         content: args.content,
       });
-      return JSON.stringify(result);
+      return withServerTime(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
+      return withServerTime({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });

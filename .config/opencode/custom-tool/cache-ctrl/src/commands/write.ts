@@ -4,6 +4,7 @@ import { ErrorCode, type Result } from "../types/result.js";
 import type { WriteArgs, WriteResult } from "../types/commands.js";
 import { writeCache, findRepoRoot, resolveCacheDir } from "../cache/cacheManager.js";
 import { validateSubject } from "../utils/validate.js";
+import { resolveTrackedFileMtimes } from "../files/changeDetector.js";
 
 export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult["value"]>> {
   try {
@@ -46,7 +47,20 @@ export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult[
 
     // local — auto-inject server-side timestamp; agent must not control this field
     const contentWithTimestamp = { ...args.content, timestamp: new Date().toISOString() };
-    const parsed = LocalCacheFileSchema.safeParse(contentWithTimestamp);
+    let processedContent: Record<string, unknown> = contentWithTimestamp;
+
+    // Resolve real mtimes for tracked_files if present
+    const rawTrackedFiles = contentWithTimestamp["tracked_files"];
+    if (Array.isArray(rawTrackedFiles)) {
+      const validEntries = rawTrackedFiles.filter(
+        (entry): entry is { path: string; mtime?: number; hash?: string } =>
+          entry !== null && typeof entry === "object" && typeof (entry as Record<string, unknown>)["path"] === "string",
+      );
+      const resolved = await resolveTrackedFileMtimes(validEntries, repoRoot);
+      processedContent = { ...contentWithTimestamp, tracked_files: resolved };
+    }
+
+    const parsed = LocalCacheFileSchema.safeParse(processedContent);
     if (!parsed.success) {
       const message = parsed.error.issues.map((i) => i.message).join("; ");
       return { ok: false, error: `Validation failed: ${message}`, code: ErrorCode.VALIDATION_ERROR };
@@ -55,7 +69,7 @@ export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult[
     // resolve local path
     const localCacheDir = resolveCacheDir("local", repoRoot);
     const filePath = join(localCacheDir, "context.json");
-    const writeResult = await writeCache(filePath, contentWithTimestamp);
+    const writeResult = await writeCache(filePath, processedContent, "replace");
     if (!writeResult.ok) return writeResult;
     return { ok: true, value: { file: filePath } };
   } catch (err) {

@@ -109,3 +109,15 @@ Use when you want to pass a cached summary to a subagent or include it inline in
 - Require subagents to return **≤ 500 token summaries** — never let raw context dump into chat.
 - Use `cache_ctrl_inspect` to read only the entries you actually need.
 - Cache entries are the source of truth. Prefer them over re-fetching.
+
+---
+
+## server_time in Responses
+
+Every `cache_ctrl_*` tool call returns a `server_time` field at the outer JSON level:
+
+```json
+{ "ok": true, "value": { ... }, "server_time": "2026-04-05T12:34:56.789Z" }
+```
+
+Use `server_time` when making cache freshness decisions — compare it against stored `fetched_at` or `timestamp` values to determine staleness without requiring bash or system access to get the current time.
