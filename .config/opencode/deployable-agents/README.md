@@ -317,40 +317,167 @@ In deep review mode, `local-context-gatherer` and `external-context-gatherer` ma
 
 ---
 
-## Installation
+## Installation Tutorial
 
-### Install all bundles
+### Requirements
+
+Ensure the following are available before starting:
+
+| Tool | Required | Why |
+|---|---|---|
+| [`opencode`](https://opencode.ai) | ✅ | The AI coding tool these agents run on |
+| `git` | ✅ | To clone this repository |
+| `bun` in `$PATH` | ⚠️ Recommended | Required for the `cache-ctrl` plugin and CLI |
+| `~/.local/bin` in `$PATH` | ⚠️ Recommended | Required for the `cache-ctrl` CLI binary |
+| Docker (running) | ❌ Optional | Required by the GitHub MCP server |
+| `GITHUB_TOKEN` env var | ❌ Optional | PAT with `public_repo` + `security_events` read access — enables GitHub MCP |
+| `CONTEXT7_API_KEY` env var | ❌ Optional | API key for context7 MCP — enables up-to-date library documentation |
+
+---
+
+### Step 1 — Set up opencode configuration
+
+Choose how you want to make the opencode configuration available at `~/.config/opencode/`.
+
+#### Option A — Symlink the opencode folder (recommended)
+
+Best when using this as your primary dotfiles setup. All future updates to this repository are reflected immediately — no reinstall needed.
 
 ```bash
-bash install-all.sh
+# Clone the repository
+git clone https://github.com/<user>/dotfiles ~/dotfiles
+
+# Symlink only the opencode folder
+ln -sf ~/dotfiles/.config/opencode ~/.config/opencode
+```
+
+> This symlinks **only** `.config/opencode/` — nothing else from the dotfiles repository. Everything under it (opencode.json, global skills, slash commands, custom tools) stays in sync with the repository automatically.
+
+#### Option B — Copy only the needed files
+
+Best when you want a standalone setup, or when you prefer to customize the configuration independently of this repository.
+
+```bash
+# Clone the repository
+git clone https://github.com/<user>/dotfiles ~/dotfiles
+
+# Create the config directories
+mkdir -p ~/.config/opencode/skills ~/.config/opencode/commands
+
+# Copy the main configuration file
+cp ~/dotfiles/.config/opencode/opencode.json ~/.config/opencode/opencode.json
+
+# Copy global skills (coding guidelines loaded by agents)
+cp -r ~/dotfiles/.config/opencode/skills/. ~/.config/opencode/skills/
+
+# Copy slash commands (including /init-implementer)
+cp -r ~/dotfiles/.config/opencode/commands/. ~/.config/opencode/commands/
+```
+
+> After copying, edit `~/.config/opencode/opencode.json` to adjust MCP servers, plugins, and API keys to your setup.
+
+---
+
+### Step 2 — Install deployable agents
+
+Run the install script to register all agent bundles.
+
+#### Globally (recommended)
+
+Installs all bundles to the default opencode agents directory (`~/.config/opencode/agents/`):
+
+```bash
+bash ~/.config/opencode/deployable-agents/install-all.sh
+```
+
+> **Option A (symlink)**: the script is already at `~/.config/opencode/deployable-agents/install-all.sh`.  
+> **Option B (copy)**: run the script from the cloned repository instead:  
+> `bash ~/dotfiles/.config/opencode/deployable-agents/install-all.sh`
+
+#### To a custom agents directory
+
+Pass a target path as the first argument:
+
+```bash
+bash ~/.config/opencode/deployable-agents/install-all.sh /path/to/custom/agents/dir
+```
+
+To install a single bundle only:
+
+```bash
+bash ~/.config/opencode/deployable-agents/ask/install.sh
+bash ~/.config/opencode/deployable-agents/implementer/install.sh
+bash ~/.config/opencode/deployable-agents/planner/install.sh
+```
+
+> Install scripts create **symlinks** — not copies. Editing any source file in the repository is immediately reflected in the installed agents without reinstalling.
+
+---
+
+### Step 3 — (Optional) Install cache-ctrl
+
+`cache-ctrl` is strongly recommended. It caches expensive context-gathering operations so agents do not re-fetch the same information on every run.
+
+See the full installation instructions in:
+
+📄 [`custom-tool/cache-ctrl/README.md`](../custom-tool/cache-ctrl/README.md#installation)
+
+Quick install:
+
+```bash
+cd ~/.config/opencode/custom-tool/cache-ctrl && zsh install.sh
+```
+
+**Prerequisites**: `bun` must be in `$PATH`, `~/.local/bin` must be in `$PATH`.
+
+---
+
+### Step 4 — Initialize a project
+
+Navigate to the **root directory of the project** you want to work on, open opencode, and run:
+
+```
+/init-implementer
+```
+
+This command will:
+
+1. Deep-scan your project structure and detect the tech stack
+2. Fetch external best practices for the detected technologies
+3. Generate project-specific skill files in `.opencode/skills/`
+4. Create code pattern examples in `.code-examples-for-ai/`
+5. Update `AGENTS.md` to reference the new skill structure
+6. Add `.ai/` to `.gitignore` (transient cache — do not commit)
+
+> Pass a tech stack hint as an optional argument: `/init-implementer typescript react`  
+> If no argument is given, full auto-detection runs with no bias.
+
+---
+
+### Installation complete 🎉
+
+Once `/init-implementer` finishes, your project is fully set up. You can now start using:
+
+| Agent | How to access | Purpose |
+|---|---|---|
+| **Orchestrator** | Open opencode → select `Orchestrator` | Transforms requests into reviewed, production-ready code |
+| **Planner** | Open opencode → select `Planner` | Turns ideas into concrete, reviewed feature specs |
+| **Ask** | Open opencode → select `Ask` | Answers questions with full codebase context |
+
+---
+
+### Uninstall
+
+```bash
+# Uninstall all bundles
+bash ~/.config/opencode/deployable-agents/uninstall-all.sh
 # or with a custom target:
-bash install-all.sh /path/to/custom/agents/dir
-```
+bash ~/.config/opencode/deployable-agents/uninstall-all.sh /path/to/custom/agents/dir
 
-Default target: `~/.config/opencode/agents`
-
-### Install a single bundle
-
-```bash
-bash ask/install.sh
-bash implementer/install.sh
-bash planner/install.sh
-```
-
-### Uninstall all bundles
-
-```bash
-bash uninstall-all.sh
-# or with a custom target:
-bash uninstall-all.sh /path/to/custom/agents/dir
-```
-
-### Uninstall a single bundle
-
-```bash
-bash ask/uninstall.sh
-bash implementer/uninstall.sh
-bash planner/uninstall.sh
+# Uninstall a single bundle
+bash ~/.config/opencode/deployable-agents/ask/uninstall.sh
+bash ~/.config/opencode/deployable-agents/implementer/uninstall.sh
+bash ~/.config/opencode/deployable-agents/planner/uninstall.sh
 ```
 
 Uninstall only removes **symlinks** (`-L` guard) — source files are never touched.
