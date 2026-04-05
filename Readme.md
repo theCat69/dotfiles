@@ -57,7 +57,7 @@ cd ~/dev-conf/dotfiles
 zsh install.sh
 ```
 
-The script creates symlinks using `ln -s`. If you re-run it, remove existing symlinks first — otherwise the script will error on already-linked targets.
+The script creates symlinks using `ln -sf` — it is fully idempotent and safe to re-run at any time.
 
 ### What gets symlinked
 

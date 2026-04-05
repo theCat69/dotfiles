@@ -10,9 +10,9 @@ TARGET_DIR="${1:-$HOME/.config/opencode/agents}"
 agents=(ask builder implementer planner)
 
 for agent in "${agents[@]}"; do
-	installer="$SCRIPT_DIR/$agent/install.sh"
-	echo "→ Installing $agent agent…"
-	bash "$installer" "$TARGET_DIR"
+  installer="$SCRIPT_DIR/$agent/install.sh"
+  echo "→ Installing $agent agent…"
+  bash "$installer" "$TARGET_DIR"
 done
 
 echo "✓ All agents installed to $TARGET_DIR"

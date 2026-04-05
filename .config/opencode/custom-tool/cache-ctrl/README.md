@@ -309,7 +309,7 @@ cache-ctrl write external <subject> --data '<json>' [--pretty]
 cache-ctrl write local --data '<json>' [--pretty]
 ```
 
-Writes a validated cache entry to disk. The `--data` argument must be a valid JSON string matching the ExternalCacheFile or LocalCacheFile schema. Returns `VALIDATION_ERROR` if required fields are missing or have wrong types. Uses atomic write-with-merge — existing fields not present in `--data` are preserved.
+Writes a validated cache entry to disk. The `--data` argument must be a valid JSON string matching the ExternalCacheFile or LocalCacheFile schema. Schema validation runs first — all required fields must be present in `--data` or the write is rejected with `VALIDATION_ERROR`. Only after validation passes are any extra/unknown fields from the existing file on disk preserved via atomic write-with-merge.
 
 - `external`: `subject` is required as a positional argument
 - `local`: no subject argument
@@ -327,7 +327,7 @@ Writes a validated cache entry to disk. The `--data` argument must be a valid JS
 
 ## opencode Plugin Tools
 
-The plugin (`cache_ctrl.ts`) is auto-discovered via `.opencode/tools/cache-ctrl.ts` and registers 7 tools that call the same command functions as the CLI:
+The plugin (`cache_ctrl.ts`) is auto-discovered via `~/.config/opencode/tools/cache_ctrl.ts` and registers 7 tools that call the same command functions as the CLI:
 
 | Tool | Description |
 |---|---|

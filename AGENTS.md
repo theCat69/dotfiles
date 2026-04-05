@@ -45,3 +45,4 @@ Code pattern examples (real snippets from the project):
 - **Install**: `zsh install.sh` from repo root — creates symlinks via `ln -sf`
 - **Neovim plugins**: each file in `lua/plugins/*/` returns a `LazyPluginSpec` or `LazyPluginSpec[]`
 - **No secrets in repo**: secrets sourced from `~/.secrets` (gitignored)
+- **opencode dependency versions**: `@opencode-ai/*` packages and opencode plugins (e.g. `@mohak34/*`, `@slkiser/*`) must **never** be version-pinned — always use `"latest"`. Pinned versions in this context are always wrong.

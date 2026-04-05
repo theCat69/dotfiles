@@ -1,26 +1,26 @@
 #!/usr/bin/zsh
 
-# needed dependencies : 
-# zsh, o-my-zsh, rust, starship, neovim, node, gitui, 
+# needed dependencies :
+# zsh, o-my-zsh, rust, starship, neovim, node, gitui,
 # zoxide, nvm, sjvm
 
 # .zshrc
-ln -s $(pwd)/.zshrc ~/.zshrc
+ln -sf $(pwd)/.zshrc ~/.zshrc
 
 # gitconfig uncommented only if you are me
-# ln -s $(pwd)/.gitconfig ~/.gitconfig
+# ln -sf $(pwd)/.gitconfig ~/.gitconfig
 
 # ghostty
-ln -s $(pwd)/.config/ghostty ~/.config/
+ln -sf $(pwd)/.config/ghostty ~/.config/
 
 # starship
-ln -s $(pwd)/.config/starship.toml ~/.config/starship.toml
+ln -sf $(pwd)/.config/starship.toml ~/.config/starship.toml
 
 # nvim
-ln -s $(pwd)/.config/nvim ~/.config/
+ln -sf $(pwd)/.config/nvim ~/.config/
 
 # gitui
-ln -s $(pwd)/.config/gitui ~/.config/
+ln -sf $(pwd)/.config/gitui ~/.config/
 
-# opencode 
-ln -s $(pwd)/.config/opencode ~/.config/
+# opencode
+ln -sf $(pwd)/.config/opencode ~/.config/

@@ -70,13 +70,13 @@ teardown() {
 }
 
 @test "install.sh creates .zshrc symlink" {
-  run bash install.sh
+  run zsh install.sh
   [ "$status" -eq 0 ]
   [ -L "$HOME/.zshrc" ]
 }
 
 @test "symlink points to correct target" {
-  run bash install.sh
+  run zsh install.sh
   local target
   target="$(readlink -f "$HOME/.zshrc")"
   [[ "$target" == *"/.zshrc" ]]

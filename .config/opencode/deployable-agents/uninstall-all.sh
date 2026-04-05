@@ -10,9 +10,9 @@ TARGET_DIR="${1:-$HOME/.config/opencode/agents}"
 agents=(ask implementer planner)
 
 for agent in "${agents[@]}"; do
-	uninstaller="$SCRIPT_DIR/$agent/uninstall.sh"
-	echo "→ Uninstalling $agent agent…"
-	bash "$uninstaller" "$TARGET_DIR"
+  uninstaller="$SCRIPT_DIR/$agent/uninstall.sh"
+  echo "→ Uninstalling $agent agent…"
+  bash "$uninstaller" "$TARGET_DIR"
 done
 
 echo "✓ All agents uninstalled from $TARGET_DIR"

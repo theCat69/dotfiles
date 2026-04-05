@@ -14,7 +14,6 @@
 set -euo pipefail
 
 TOOL_DIR="$(pwd)"
-REPO_ROOT="$(cd "${TOOL_DIR}/../../.." && pwd)"
 
 # ── Prerequisite checks ────────────────────────────────────
 
