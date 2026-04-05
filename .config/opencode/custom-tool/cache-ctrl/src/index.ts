@@ -11,6 +11,210 @@ import { searchCommand } from "./commands/search.js";
 import { writeCommand } from "./commands/write.js";
 import { ErrorCode } from "./types/result.js";
 
+type CommandName =
+  | "list"
+  | "inspect"
+  | "flush"
+  | "invalidate"
+  | "touch"
+  | "prune"
+  | "check-freshness"
+  | "check-files"
+  | "search"
+  | "write";
+
+function isKnownCommand(cmd: string): cmd is CommandName {
+  return Object.hasOwn(COMMAND_HELP as Record<string, unknown>, cmd);
+}
+
+interface CommandHelp {
+  usage: string;
+  description: string;
+  details: string;
+}
+
+const COMMAND_HELP: Record<CommandName, CommandHelp> = {
+  list: {
+    usage: "list [--agent external|local|all]",
+    description: "List all cache entries with age and staleness",
+    details: [
+      "  Arguments:",
+      "    (none)",
+      "",
+      "  Options:",
+      "    --agent external|local|all   Filter by agent type (default: all)",
+      "",
+      "  Output: JSON array of cache entries with timestamps and staleness flags.",
+    ].join("\n"),
+  },
+  inspect: {
+    usage: "inspect <agent> <subject-keyword>",
+    description: "Show full content of a cache entry",
+    details: [
+      "  Arguments:",
+      "    <agent>            Agent type: external or local",
+      "    <subject-keyword>  Keyword used to locate the cache entry",
+      "",
+      "  Output: Full JSON content of the matched cache entry.",
+    ].join("\n"),
+  },
+  flush: {
+    usage: "flush <agent|all> --confirm",
+    description: "Delete all cache entries (destructive, requires --confirm)",
+    details: [
+      "  Arguments:",
+      "    <agent|all>   Agent to flush: external, local, or all",
+      "",
+      "  Options:",
+      "    --confirm     Required flag — confirms the destructive operation",
+      "",
+      "  WARNING: This permanently deletes all matching cache entries.",
+    ].join("\n"),
+  },
+  invalidate: {
+    usage: "invalidate <agent> [subject-keyword]",
+    description: "Mark cache entries as stale (content preserved)",
+    details: [
+      "  Arguments:",
+      "    <agent>             Agent type: external or local",
+      "    [subject-keyword]   Optional keyword to target a specific entry",
+      "",
+      "  Output: Number of entries marked as stale.",
+    ].join("\n"),
+  },
+  touch: {
+    usage: "touch <agent> [subject-keyword]",
+    description: "Refresh timestamps on cache entries",
+    details: [
+      "  Arguments:",
+      "    <agent>             Agent type: external or local",
+      "    [subject-keyword]   Optional keyword to target a specific entry",
+      "",
+      "  Output: Number of entries whose timestamps were updated.",
+    ].join("\n"),
+  },
+  prune: {
+    usage: "prune [--agent external|local|all] [--max-age <duration>] [--delete]",
+    description: "Find and optionally remove stale entries",
+    details: [
+      "  Arguments:",
+      "    (none)",
+      "",
+      "  Options:",
+      "    --agent external|local|all   Filter by agent type (default: all)",
+      "    --max-age <duration>         Maximum age threshold (e.g. 24h, 7d)",
+      "    --delete                     Actually delete the stale entries (dry-run if omitted)",
+    ].join("\n"),
+  },
+  "check-freshness": {
+    usage: "check-freshness <subject-keyword> [--url <url>]",
+    description: "Send HTTP HEAD requests to verify source freshness",
+    details: [
+      "  Arguments:",
+      "    <subject-keyword>   Keyword identifying the cache entry to check",
+      "",
+      "  Options:",
+      "    --url <url>   Override the URL used for the HEAD request",
+      "",
+      "  Output: HTTP response metadata and freshness verdict.",
+    ].join("\n"),
+  },
+  "check-files": {
+    usage: "check-files",
+    description: "Compare tracked local files against stored mtime/hash",
+    details: [
+      "  Arguments:",
+      "    (none)",
+      "",
+      "  Output: List of files whose mtime or hash differs from the stored baseline.",
+    ].join("\n"),
+  },
+  search: {
+    usage: "search <keyword> [<keyword>...]",
+    description: "Search cache entries by keyword (ranked results)",
+    details: [
+      "  Arguments:",
+      "    <keyword> [<keyword>...]   One or more keywords to search for",
+      "",
+      "  Output: Ranked list of matching cache entries.",
+    ].join("\n"),
+  },
+  write: {
+    usage: "write <agent> [subject] --data '<json>'",
+    description: "Write a validated cache entry from JSON",
+    details: [
+      "  Arguments:",
+      "    <agent>     Agent type: external or local",
+      "    [subject]   Optional subject identifier (required for external agent)",
+      "",
+      "  Options:",
+      "    --data '<json>'   JSON string containing the cache entry payload",
+      "",
+      "  Output: Confirmation with the written entry's key.",
+    ].join("\n"),
+  },
+};
+
+const GLOBAL_OPTIONS_SECTION = [
+  "Global options:",
+  "  --help    Show help (use 'help <command>' for command-specific help)",
+  "  --pretty  Pretty-print JSON output",
+].join("\n");
+
+/**
+ * Writes plain-text usage information to stdout.
+ *
+ * @param command - If provided, prints help for that specific command.
+ *                  If omitted, prints the full command reference.
+ *                  Does NOT call process.exit — the caller handles exit.
+ */
+export function printHelp(command?: string): boolean {
+  if (command === undefined) {
+    const lines: string[] = [
+      "Usage: cache-ctrl <command> [args] [options]",
+      "",
+      "Commands:",
+    ];
+
+    const maxUsageLen = Math.max(
+      ...Object.values(COMMAND_HELP).map((h) => h.usage.length),
+    );
+
+    for (const [, help] of Object.entries(COMMAND_HELP) as [CommandName, CommandHelp][]) {
+      const paddedUsage = help.usage.padEnd(maxUsageLen);
+      lines.push(`  ${paddedUsage}   ${help.description}`);
+    }
+
+    lines.push("", GLOBAL_OPTIONS_SECTION, "", "Run 'cache-ctrl help <command>' for command-specific help.");
+    process.stdout.write(lines.join("\n") + "\n");
+    return true;
+  }
+
+  const sanitized = command.replace(/[\x00-\x1F\x7F]/g, "");
+
+  if (command === "help") {
+    return printHelp();
+  }
+
+  if (!isKnownCommand(command)) {
+    process.stderr.write(`Unknown command: "${sanitized}". Run 'cache-ctrl help' for available commands.\n`);
+    return false;
+  }
+
+  const help = COMMAND_HELP[command];
+  const lines: string[] = [
+    `Usage: cache-ctrl ${help.usage}`,
+    "",
+    `Description: ${help.description}`,
+    "",
+    help.details,
+    "",
+    GLOBAL_OPTIONS_SECTION,
+  ];
+  process.stdout.write(lines.join("\n") + "\n");
+  return true;
+}
+
 function printResult(value: unknown, pretty: boolean): void {
   if (pretty) {
     process.stdout.write(JSON.stringify(value, null, 2) + "\n");
@@ -68,12 +272,22 @@ async function main(): Promise<void> {
   const { args, flags } = parseArgs(rawArgs);
   const pretty = flags.pretty === true;
 
+  if (flags["help"] === true) {
+    printHelp();
+    process.exit(0);
+  }
+
   const command = args[0];
   if (!command) {
     usageError("Usage: cache-ctrl <command> [args]. Commands: list, inspect, flush, invalidate, touch, prune, check-freshness, check-files, search, write");
   }
 
   switch (command) {
+    case "help": {
+      const ok = printHelp(args[1]);
+      process.exit(ok ? 0 : 1);
+      break;
+    }
     case "list": {
       const agentArg = typeof flags.agent === "string" ? flags.agent : undefined;
       const validAgents = ["external", "local", "all", undefined];

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { parseArgs, usageError } from "../src/index.js";
+import { parseArgs, usageError, printHelp } from "../src/index.js";
 
 describe("parseArgs", () => {
   it("returns empty args and flags for empty input", () => {
@@ -79,4 +79,97 @@ describe("usageError side effects", () => {
     expect(parsed.error).toBe("test message");
     expect(parsed.code).toBe("INVALID_ARGS");
   });
+});
+
+describe("printHelp", () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+    stderrSpy.mockRestore();
+  });
+
+  function capturedOutput(): string {
+    return (stdoutSpy.mock.calls as [string | Uint8Array][])
+      .map((call) => String(call[0]))
+      .join("");
+  }
+
+  it("full help contains 'cache-ctrl' and 'Usage'", () => {
+    const result = printHelp();
+    const output = capturedOutput();
+    expect(result).toBe(true);
+    expect(output).toContain("cache-ctrl");
+    expect(output).toContain("Usage");
+  });
+
+  it("full help contains all 10 command names", () => {
+    printHelp();
+    const output = capturedOutput();
+    const commands = [
+      "list",
+      "inspect",
+      "flush",
+      "invalidate",
+      "touch",
+      "prune",
+      "check-freshness",
+      "check-files",
+      "search",
+      "write",
+    ];
+    for (const cmd of commands) {
+      expect(output).toContain(cmd);
+    }
+  });
+
+  it("list command help contains 'list' and '--agent'", () => {
+    const result = printHelp("list");
+    const output = capturedOutput();
+    expect(result).toBe(true);
+    expect(output).toContain("list");
+    expect(output).toContain("--agent");
+  });
+
+  it("inspect command help contains 'inspect' and 'subject-keyword'", () => {
+    const result = printHelp("inspect");
+    const output = capturedOutput();
+    expect(result).toBe(true);
+    expect(output).toContain("inspect");
+    expect(output).toContain("subject-keyword");
+  });
+
+  it("unknown command writes to stderr (not stdout) and returns false", () => {
+    const result = printHelp("unknown-cmd");
+    const stdout = capturedOutput();
+    const stderr = (stderrSpy.mock.calls as [string | Uint8Array][])
+      .map((call) => String(call[0]))
+      .join("");
+    expect(result).toBe(false);
+    expect(stdout).toBe("");
+    expect(stderr).toContain("Unknown command");
+  });
+
+  it("'help' command returns true and output contains 'Usage' (full help)", () => {
+    const result = printHelp("help");
+    const output = capturedOutput();
+    expect(result).toBe(true);
+    expect(output).toContain("Usage");
+  });
+
+  it.each(["list", "inspect", "flush", "invalidate", "touch", "prune", "check-freshness", "check-files", "search", "write"])(
+    "per-command help for '%s' writes to stdout",
+    (cmd) => {
+      const ok = printHelp(cmd);
+      const output = capturedOutput();
+      expect(ok).toBe(true);
+      expect(output).toContain(cmd);
+    },
+  );
 });

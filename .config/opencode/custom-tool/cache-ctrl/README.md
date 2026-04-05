@@ -64,7 +64,26 @@ src/index.ts              cache_ctrl.ts
 ## CLI Reference
 
 **Output format**: JSON (single line) by default. Add `--pretty` to any command for indented output.  
-**Errors**: Written to stderr as `{ "ok": false, "error": "...", "code": "..." }`. Exit code `1` on error, `2` on bad arguments.
+**Errors**: Written to stderr as `{ "ok": false, "error": "...", "code": "..." }`. Exit code `1` on error, `2` on bad arguments.  
+**Help**: Run `cache-ctrl --help` or `cache-ctrl help` for the full command reference. Run `cache-ctrl help <command>` for per-command usage, arguments, and options. Help output is plain text written to stdout; exit code `0` on success, `1` for unknown command.
+
+---
+
+### `help`
+
+```
+cache-ctrl help [<command>]
+cache-ctrl --help
+```
+
+Prints human-readable usage information and exits. No JSON output.
+
+- `cache-ctrl --help` — print full command reference (all commands with descriptions)
+- `cache-ctrl help` — same as `--help`
+- `cache-ctrl help <command>` — print per-command usage, arguments, and options
+- `cache-ctrl help help` — same as `cache-ctrl help` (full reference)
+
+Exit code: `0` on success, `1` if `<command>` is not recognized.
 
 ---
 
