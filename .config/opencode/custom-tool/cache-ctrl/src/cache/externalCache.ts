@@ -1,7 +1,13 @@
 import { readdir } from "node:fs/promises";
-import { join, basename } from "node:path";
-import type { ExternalCacheFile } from "../types/cache.js";
+import { join } from "node:path";
+import type { ExternalCacheFile, CacheEntry } from "../types/cache.js";
+import { ExternalCacheFileSchema } from "../types/cache.js";
 import { ErrorCode, type Result } from "../types/result.js";
+import { readCache, listCacheFiles } from "./cacheManager.js";
+import { scoreEntry } from "../search/keywordSearch.js";
+import { getFileStem } from "../utils/fileStem.js";
+
+export { getFileStem };
 
 const DEFAULT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
@@ -80,7 +86,44 @@ export function getAgeHuman(fetchedAt: string): string {
   return "just now";
 }
 
-export function getFileStem(filePath: string): string {
-  const name = basename(filePath);
-  return name.endsWith(".json") ? name.slice(0, -5) : name;
+/**
+ * Resolves the file path of the best-scoring external cache entry for a given subject keyword.
+ * Returns NO_MATCH if no entry scores above zero.
+ */
+export async function resolveTopExternalMatch(repoRoot: string, subject: string): Promise<Result<string>> {
+  const filesResult = await listCacheFiles("external", repoRoot);
+  if (!filesResult.ok) return filesResult;
+
+  const candidates: Array<{ filePath: string; entry: CacheEntry }> = [];
+  for (const filePath of filesResult.value) {
+    const readResult = await readCache(filePath);
+    if (!readResult.ok) continue;
+    const parseResult = ExternalCacheFileSchema.safeParse(readResult.value);
+    if (!parseResult.success) continue;
+    const data = parseResult.data;
+    const stem = getFileStem(filePath);
+    const entrySubject = data.subject ?? stem;
+    candidates.push({
+      filePath,
+      entry: {
+        file: filePath,
+        agent: "external",
+        subject: entrySubject,
+        description: data.description,
+        fetched_at: data.fetched_at ?? "",
+      },
+    });
+  }
+
+  const keywords = [subject];
+  const scored = candidates
+    .map((c) => ({ ...c, score: scoreEntry(c.entry, keywords) }))
+    .filter((c) => c.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (scored.length === 0) {
+    return { ok: false, error: `No cache entry matched keyword "${subject}"`, code: ErrorCode.NO_MATCH };
+  }
+
+  return { ok: true, value: scored[0]!.filePath };
 }

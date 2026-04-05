@@ -76,13 +76,17 @@ export async function pruneCommand(args: PruneArgs): Promise<Result<PruneResult[
           // File didn't exist — nothing pruned, don't add to matched
         }
       } else {
-        const writeResult = await writeCache(localPath, { timestamp: "" });
-        if (!writeResult.ok) {
-          // If local cache doesn't exist, that's fine — nothing to prune
-          if (writeResult.code !== ErrorCode.FILE_NOT_FOUND) {
-            return writeResult;
+        // Only invalidate if the file already exists
+        const readResult = await readCache(localPath);
+        if (!readResult.ok) {
+          if (readResult.code === ErrorCode.FILE_NOT_FOUND) {
+            // Nothing to prune — skip silently
+          } else {
+            return readResult;
           }
         } else {
+          const writeResult = await writeCache(localPath, { timestamp: "" });
+          if (!writeResult.ok) return writeResult;
           matched.push(localPath);
         }
       }

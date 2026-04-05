@@ -1,5 +1,9 @@
 # install.sh — cache-ctrl tool installer
 #
+# NOTE: No shebang by design — kept for shell compatibility across environments.
+#       Always invoke explicitly: zsh install.sh
+#       Do NOT add a shebang.
+#
 # Installs cache-ctrl as:
 #   1. A global CLI command at ~/.local/bin/cache-ctrl
 #   2. Opencode custom tools at .opencode/tools/cache_ctrl.ts

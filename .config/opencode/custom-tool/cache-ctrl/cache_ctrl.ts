@@ -7,6 +7,7 @@ import { checkFreshnessCommand } from "./src/commands/checkFreshness.js";
 import { checkFilesCommand } from "./src/commands/checkFiles.js";
 import { searchCommand } from "./src/commands/search.js";
 import { writeCommand } from "./src/commands/write.js";
+import { ErrorCode } from "./src/types/result.js";
 
 const AgentRequiredSchema = z.enum(["external", "local"]);
 
@@ -21,7 +22,7 @@ export const search = tool({
       return JSON.stringify(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: "UNKNOWN" });
+      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -37,7 +38,7 @@ export const list = tool({
       return JSON.stringify(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: "UNKNOWN" });
+      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -54,7 +55,7 @@ export const inspect = tool({
       return JSON.stringify(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: "UNKNOWN" });
+      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -74,7 +75,7 @@ export const invalidate = tool({
       return JSON.stringify(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: "UNKNOWN" });
+      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -83,14 +84,18 @@ export const check_freshness = tool({
   description: "For external cache: send HTTP HEAD requests to all source URLs and return freshness status per URL.",
   args: {
     subject: z.string().min(1),
+    url: z.string().url().optional(),
   },
   async execute(args) {
     try {
-      const result = await checkFreshnessCommand({ subject: args.subject });
+      const result = await checkFreshnessCommand({
+        subject: args.subject,
+        ...(args.url !== undefined ? { url: args.url } : {}),
+      });
       return JSON.stringify(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: "UNKNOWN" });
+      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -104,7 +109,7 @@ export const check_files = tool({
       return JSON.stringify(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: "UNKNOWN" });
+      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });
@@ -127,7 +132,7 @@ export const write = tool({
       return JSON.stringify(result);
     } catch (err) {
       const error = err as Error;
-      return JSON.stringify({ ok: false, error: error.message, code: "UNKNOWN" });
+      return JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN });
     }
   },
 });

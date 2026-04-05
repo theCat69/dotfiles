@@ -32,7 +32,12 @@ function usageError(message: string): never {
   process.exit(2);
 }
 
-function parseArgs(argv: string[]): { args: string[]; flags: Record<string, string | boolean> } {
+export { usageError };
+
+/** Flags that consume the following token as their value. Boolean flags must NOT appear here. */
+const VALUE_FLAGS = new Set(["data", "agent", "url", "max-age"]);
+
+export function parseArgs(argv: string[]): { args: string[]; flags: Record<string, string | boolean> } {
   const positional: string[] = [];
   const flags: Record<string, string | boolean> = {};
 
@@ -42,7 +47,7 @@ function parseArgs(argv: string[]): { args: string[]; flags: Record<string, stri
     if (arg.startsWith("--")) {
       const key = arg.slice(2);
       const next = argv[i + 1];
-      if (next !== undefined && !next.startsWith("--")) {
+      if (VALUE_FLAGS.has(key) && next !== undefined) {
         flags[key] = next;
         i += 2;
       } else {
@@ -258,8 +263,10 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err: unknown) => {
-  const error = err as Error;
-  process.stderr.write(JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN }) + "\n");
-  process.exit(1);
-});
+if (import.meta.main) {
+  main().catch((err: unknown) => {
+    const error = err as Error;
+    process.stderr.write(JSON.stringify({ ok: false, error: error.message, code: ErrorCode.UNKNOWN }) + "\n");
+    process.exit(1);
+  });
+}

@@ -20,10 +20,11 @@ This is a **dotfiles/configuration repository**. There is no application test su
 - Install: `brew install bats-core` or `apt install bats`
 - Alternative: `zunit` (Zsh-native unit test framework)
 
-### TypeScript (opencode plugin): bun test
-- Built-in Jest-compatible test runner
-- No config needed — any `*.test.ts` or `*.spec.ts` file is picked up automatically
-- ~3x faster than Jest
+### TypeScript (opencode plugin): vitest via `bun run test`
+- Test framework: **vitest** (configured in `package.json` scripts)
+- Run via `bun run test` — delegates to `bunx vitest run` per the `test` script
+- Import from `vitest`: `describe`, `it`, `expect`, `vi`, `beforeEach`, `afterEach`
+- Any `*.test.ts` file under `tests/` is picked up automatically
 
 ### Neovim Lua: `:checkhealth`
 - Run `:checkhealth` inside Neovim to validate plugin + LSP dependencies
@@ -89,13 +90,17 @@ teardown() {
 4. Required binaries are available (existence checks)
 5. Content matches source — `diff -q <(cat src) <(cat dest)`
 
-### TypeScript (Bun) test pattern
+### TypeScript (vitest) test pattern
 ```typescript
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
 describe("MyFeature", () => {
   beforeEach(() => {
-    // setup
+    // setup — e.g. mkdtemp, process.chdir
+  });
+
+  afterEach(() => {
+    // teardown — e.g. process.chdir(origCwd)
   });
 
   it("should do something", () => {
@@ -104,12 +109,15 @@ describe("MyFeature", () => {
 });
 ```
 
-### Mocking in Bun tests
+### Mocking in vitest
 ```typescript
-import { mock, spyOn } from "bun:test";
+import { vi } from "vitest";
 
-const mockFn = mock(() => "mocked value");
-const spy = spyOn(someObject, "method");
+const mockFn = vi.fn(() => "mocked value");
+const spy = vi.spyOn(someObject, "method");
+
+// Always restore mocks after each test
+afterEach(() => vi.restoreAllMocks());
 ```
 
 ---
@@ -117,7 +125,7 @@ const spy = spyOn(someObject, "method");
 ## Mocking & Fixtures
 
 - Shell tests: use `TMPDIR` + `mktemp -d` for isolated HOME environments
-- Bun tests: use `mock()` from `bun:test` for module mocking
+- vitest: use `vi.fn()` / `vi.spyOn()` from `vitest` for module mocking
 - Neovim: no automated mocking — use `:checkhealth` and `lua_ls` type checking
 
 ---
@@ -151,18 +159,15 @@ bats test/
 bats test/test_install.bats
 ```
 
-### TypeScript tests
+### TypeScript tests (cache-ctrl and other Bun projects with `package.json`)
 ```bash
-cd .config/opencode
+cd .config/opencode/custom-tool/cache-ctrl
 
-# Run all tests
-bun test
+# Run all tests (delegates to bunx vitest run via package.json "test" script)
+bun run test
 
 # Watch mode (during development)
-bun test --watch
-
-# With coverage
-bun test --coverage
+bun run test:watch
 ```
 
 ### Neovim health check (manual)

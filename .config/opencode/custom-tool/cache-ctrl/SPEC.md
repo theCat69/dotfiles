@@ -96,6 +96,10 @@ Two subagents (`external-context-gatherer` and `local-context-gatherer`) each ma
 │   │   ├── commands.ts             # Per-command arg/result types (ListArgs, FlushArgs, etc.)
 │   │   └── result.ts               # Result<T,E>, CacheError, ErrorCode enum
 │   │
+│   ├── utils/
+│   │   ├── fileStem.ts             — shared getFileStem() utility
+│   │   └── validate.ts             — validateSubject() path-traversal guard
+│   │
 │   ├── commands/
 │   │   ├── list.ts                 # list — enumerate entries with staleness flags
 │   │   ├── inspect.ts              # inspect — pretty-print a single entry
@@ -157,38 +161,40 @@ Two subagents (`external-context-gatherer` and `local-context-gatherer`) each ma
 One file per subject. The file stem (filename without `.json`) is the subject identifier for CLI commands.
 
 ```typescript
-interface ExternalCacheFile {
-  // ── Identity ──────────────────────────────────────────────
-  subject: string;               // Unique subject key. Must match the file stem.
-  description: string;           // NEW. Human-readable one-liner for keyword search.
-
-  // ── Freshness ─────────────────────────────────────────────
-  fetched_at: string;            // ISO 8601. When the cache was last populated.
-                                 // Set to "" (empty string) when invalidated.
-
-  // ── Sources ───────────────────────────────────────────────
-  sources: Array<{
-    type: string;                // e.g. "github_api", "docs", "webfetch"
-    url: string;                 // Canonical URL for HTTP HEAD checks
-    version?: string;            // Optional version tag at fetch time
-  }>;
-
-  // ── HTTP Freshness Metadata ────────────────────────────────
-  // NEW. Keyed by URL from sources[]. Populated by check-freshness command.
-  header_metadata: {
-    [url: string]: {
-      etag?: string;             // ETag header value from last HEAD response
-      last_modified?: string;    // Last-Modified header value
-      checked_at: string;        // ISO 8601. When the HEAD request was sent.
-      status: "fresh" | "stale" | "unchecked";
-    };
-  };
-
-  // ── Agent Content Fields (open) ────────────────────────────
-  // Any additional fields written by the agent are preserved unchanged.
-  // cache-ctrl never deletes unknown fields.
-  [key: string]: unknown;
-}
+export type ExternalCacheFile = z.infer<typeof ExternalCacheFileSchema>;
+// Shape:
+// {
+//   // ── Identity ──────────────────────────────────────────────
+//   subject: string;               // Unique subject key. Must match the file stem.
+//   description: string;           // NEW. Human-readable one-liner for keyword search.
+//
+//   // ── Freshness ─────────────────────────────────────────────
+//   fetched_at: string;            // ISO 8601. When the cache was last populated.
+//                                  // Set to "" (empty string) when invalidated.
+//
+//   // ── Sources ───────────────────────────────────────────────
+//   sources: Array<{
+//     type: string;                // e.g. "github_api", "docs", "webfetch"
+//     url: string;                 // Canonical URL for HTTP HEAD checks
+//     version?: string;            // Optional version tag at fetch time
+//   }>;
+//
+//   // ── HTTP Freshness Metadata ────────────────────────────────
+//   // NEW. Keyed by URL from sources[]. Populated by check-freshness command.
+//   header_metadata: {
+//     [url: string]: {
+//       etag?: string;             // ETag header value from last HEAD response
+//       last_modified?: string;    // Last-Modified header value
+//       checked_at: string;        // ISO 8601. When the HEAD request was sent.
+//       status: "fresh" | "stale" | "unchecked";
+//     };
+//   };
+//
+//   // ── Agent Content Fields (open) ────────────────────────────
+//   // Any additional fields written by the agent are preserved unchanged.
+//   // cache-ctrl never deletes unknown fields.
+//   [key: string]: unknown;
+// }
 ```
 
 **Staleness rule**: An external entry is stale if `fetched_at` is empty OR if the age since `fetched_at` exceeds 24 hours (configurable via `--max-age`).
@@ -205,26 +211,28 @@ interface ExternalCacheFile {
 Single file. No per-subject splitting for local cache.
 
 ```typescript
-interface LocalCacheFile {
-  // ── Identity ──────────────────────────────────────────────
-  timestamp: string;             // ISO 8601. When the local scan completed.
-                                 // Set to "" (empty string) when invalidated.
-  topic: string;                 // Topic description of this scan.
-  description: string;           // NEW. One-liner for keyword search.
-  cache_miss_reason?: string;    // Optional. Why the previous cache was discarded.
-
-  // ── File Change Detection ─────────────────────────────────
-  // NEW. Populated by the local-context-gatherer agent when writing cache.
-  // cache-ctrl reads and compares, but does NOT write this field.
-  tracked_files: Array<{
-    path: string;                // Absolute or repo-relative path.
-    mtime: number;               // Unix timestamp in milliseconds (Date.getTime()).
-    hash?: string;               // Optional SHA-256 hex of file contents at scan time.
-  }>;
-
-  // ── Agent Content Fields (open) ────────────────────────────
-  [key: string]: unknown;
-}
+export type LocalCacheFile = z.infer<typeof LocalCacheFileSchema>;
+// Shape:
+// {
+//   // ── Identity ──────────────────────────────────────────────
+//   timestamp: string;             // ISO 8601. When the local scan completed.
+//                                  // Set to "" (empty string) when invalidated.
+//   topic: string;                 // Topic description of this scan.
+//   description: string;           // NEW. One-liner for keyword search.
+//   cache_miss_reason?: string;    // Optional. Why the previous cache was discarded.
+//
+//   // ── File Change Detection ─────────────────────────────────
+//   // NEW. Populated by the local-context-gatherer agent when writing cache.
+//   // cache-ctrl reads and compares, but does NOT write this field.
+//   tracked_files: Array<{
+//     path: string;                // Absolute or repo-relative path.
+//     mtime: number;               // Unix timestamp in milliseconds (Date.getTime()).
+//     hash?: string;               // Optional SHA-256 hex of file contents at scan time.
+//   }>;
+//
+//   // ── Agent Content Fields (open) ────────────────────────────
+//   [key: string]: unknown;
+// }
 ```
 
 **Staleness rule for local**: Local cache has no time-based TTL. The `list` command always marks local as `is_stale: true` because it cannot run filesystem scans inline. For authoritative change detection, use `check-files`.
@@ -563,11 +571,13 @@ interface FreshnessCheckOutput {
 
 **Interface**:
 ```typescript
-interface TrackedFile {
-  path: string;
-  mtime: number;
-  hash?: string;
-}
+export type TrackedFile = z.infer<typeof TrackedFileSchema>;
+// Shape:
+// {
+//   path: string;
+//   mtime: number;
+//   hash?: string;
+// }
 
 interface FileComparisonResult {
   path: string;
@@ -703,7 +713,7 @@ const AgentRequiredSchema = z.enum(["external", "local"]);
 { agent: AgentRequiredSchema, subject: z.string().optional() }
 
 // cache_ctrl_check_freshness
-{ subject: z.string().min(1) }
+{ subject: z.string().min(1), url: z.string().url().optional() }
 
 // cache_ctrl_check_files
 // No subject param — local cache is always a single file
@@ -721,7 +731,7 @@ const AgentRequiredSchema = z.enum(["external", "local"]);
 | `cache_ctrl_list` | List all cache entries for the given agent type (external, local, or all) with age and staleness flags. |
 | `cache_ctrl_inspect` | Return the full content of a specific cache entry identified by agent type and subject keyword. |
 | `cache_ctrl_invalidate` | Mark a cache entry as stale by zeroing its timestamp. The entry content is preserved. Agent should re-fetch on next run. |
-| `cache_ctrl_check_freshness` | For external cache: send HTTP HEAD requests to all source URLs and return freshness status per URL. |
+| `cache_ctrl_check_freshness` | For external cache: send HTTP HEAD requests to all source URLs and return freshness status per URL. Optionally pass a specific `url` to check only that source instead of all sources. |
 | `cache_ctrl_check_files` | For local cache: compare tracked files against stored mtime/hash values and return which files changed. |
 | `cache_ctrl_write` | Write a validated cache entry to disk; validates against ExternalCacheFile or LocalCacheFile schema before writing. |
 
@@ -763,12 +773,14 @@ cache-ctrl write local --data '<json>' [--pretty]
 - `external`: `subject` positional argument is required. Returns `INVALID_ARGS` if absent.
 - `local`: no subject argument is accepted.
 
+**Subject validation** (external agent): `subject` must match `/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/` (max 128 chars). Returns `INVALID_ARGS` if it fails validation. This prevents path traversal.
+
 **Write delegation**: Delegates to `writeCache()` for atomic write-with-merge. Existing unknown fields in the file are preserved.
 
 **Returns**: `WriteResult`: `{ ok: true; value: { file: string } }` — `file` is the absolute path to the written cache file.
 
 **Error codes**:
-- `INVALID_ARGS` — subject missing for external agent
+- `INVALID_ARGS` — subject missing for external agent, or subject fails regex/length validation (path-traversal guard)
 - `VALIDATION_ERROR` — Zod schema validation failed, or content.subject mismatches subject arg
 - `FILE_WRITE_ERROR`, `LOCK_TIMEOUT`, `LOCK_ERROR` — from `writeCache()`
 
@@ -1079,8 +1091,9 @@ The install script checks for the following before creating symlinks:
 
 ### 10.3 install.sh Full Spec
 
+> **Note**: `install.sh` intentionally has no shebang for shell compatibility across environments. Always invoke it explicitly: `zsh install.sh`. Do not add a shebang.
+
 ```zsh
-#!/usr/bin/zsh
 # install.sh — cache-ctrl tool installer
 #
 # Installs cache-ctrl as:

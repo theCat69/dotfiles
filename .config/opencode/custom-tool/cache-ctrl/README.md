@@ -147,6 +147,8 @@ Zeros out the timestamp (`fetched_at` for external, `timestamp` for local), mark
 - Without a keyword on `external`: invalidates **all** external entries.
 - Without a keyword on `local`: invalidates `context.json`.
 
+> If the local cache file does not exist, returns `FILE_NOT_FOUND` — the command is a no-op in that case.
+
 ```
 cache-ctrl invalidate external opencode-skills
 cache-ctrl invalidate external          # all external entries
@@ -183,6 +185,8 @@ Finds entries older than `--max-age` and invalidates them (default) or deletes t
 **Duration format**: `<number><unit>` — `h` for hours, `d` for days. Examples: `24h`, `7d`, `1d`.
 
 **Defaults**: `--agent all`, `--max-age 24h` for external. Local cache **always** matches (no TTL).
+
+> If the local cache does not exist and `--delete` is not set, the local entry is skipped silently (not added to `matched`).
 
 > ⚠️ `prune --agent all --delete` will **always** delete the local cache. Use `--agent external` to avoid this.
 
@@ -290,6 +294,8 @@ Writes a validated cache entry to disk. The `--data` argument must be a valid JS
 
 - `external`: `subject` is required as a positional argument
 - `local`: no subject argument
+
+> The `subject` parameter (external agent) must match `/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/` and be at most 128 characters. Returns `INVALID_ARGS` if it fails validation.
 
 **Always use this command (or `cache_ctrl_write`) instead of writing cache files directly.** Direct writes skip schema validation and risk corrupting the cache.
 
@@ -419,7 +425,7 @@ cache-ctrl invalidate local
 
 ```zsh
 # Run tests
-bun test
+bun run test
 
 # Watch mode
 bun run test:watch

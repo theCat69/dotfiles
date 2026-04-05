@@ -2,45 +2,6 @@ import { z } from "zod";
 
 export type AgentType = "external" | "local";
 
-export interface TrackedFile {
-  path: string;
-  mtime: number;
-  hash?: string;
-}
-
-export interface ExternalCacheFile {
-  subject: string;
-  description: string;
-  fetched_at: string;
-  sources: Array<{
-    type: string;
-    url: string;
-    version?: string;
-  }>;
-  header_metadata: {
-    [url: string]: {
-      etag?: string;
-      last_modified?: string;
-      checked_at: string;
-      status: "fresh" | "stale" | "unchecked";
-    };
-  };
-  [key: string]: unknown;
-}
-
-export interface LocalCacheFile {
-  timestamp: string;
-  topic: string;
-  description: string;
-  cache_miss_reason?: string;
-  tracked_files: Array<{
-    path: string;
-    mtime: number;
-    hash?: string;
-  }>;
-  [key: string]: unknown;
-}
-
 export interface CacheEntry {
   file: string;
   agent: AgentType;
@@ -71,7 +32,7 @@ export const ExternalCacheFileSchema = z.looseObject({
   header_metadata: z.record(z.string(), HeaderMetaSchema),
 });
 
-const TrackedFileSchema = z.object({
+export const TrackedFileSchema = z.object({
   path: z.string(),
   mtime: z.number(),
   hash: z.string().optional(),
@@ -84,3 +45,7 @@ export const LocalCacheFileSchema = z.looseObject({
   cache_miss_reason: z.string().optional(),
   tracked_files: z.array(TrackedFileSchema),
 });
+
+export type TrackedFile = z.infer<typeof TrackedFileSchema>;
+export type ExternalCacheFile = z.infer<typeof ExternalCacheFileSchema>;
+export type LocalCacheFile = z.infer<typeof LocalCacheFileSchema>;

@@ -183,14 +183,14 @@ describe("pruneCommand — local entry", () => {
     expect(await fileExists(localPath)).toBe(false);
   });
 
-  it("creates and invalidates local cache when it does not exist and delete=false", async () => {
-    // writeCache handles non-existent files by creating them, so prune always succeeds
+  it("returns zero matched when local cache does not exist and delete=false", async () => {
     const localPath = join(tmpDir, LOCAL_DIR, "context.json");
     const result = await pruneCommand({ agent: "local" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    // The local path gets created with { timestamp: "" } and added to matched
-    expect(result.value.matched).toContain(localPath);
+    // Local file did not exist — nothing to prune, nothing created
+    expect(result.value.matched).toHaveLength(0);
+    expect(await fileExists(localPath)).toBe(false);
   });
 
   it("returns zero matched for local when local cache does not exist and delete=true", async () => {

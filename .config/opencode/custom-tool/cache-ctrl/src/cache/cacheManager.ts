@@ -1,6 +1,7 @@
 import { readFile, writeFile, rename, stat, unlink, readdir, mkdir } from "node:fs/promises";
 import { open } from "node:fs/promises";
 import { join, dirname } from "node:path";
+import { randomBytes } from "node:crypto";
 import type { AgentType, ExternalCacheFile, LocalCacheFile } from "../types/cache.js";
 import { ErrorCode, type Result } from "../types/result.js";
 
@@ -71,7 +72,7 @@ export async function writeCache(
     }
 
     const merged = { ...existing, ...updates };
-    const tmpPath = `${filePath}.tmp.${process.pid}`;
+    const tmpPath = `${filePath}.tmp.${process.pid}.${randomBytes(6).toString("hex")}`;
 
     try {
       await writeFile(tmpPath, JSON.stringify(merged, null, 2), "utf-8");

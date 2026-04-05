@@ -1,5 +1,5 @@
-import { basename } from "node:path";
 import type { CacheEntry } from "../types/cache.js";
+import { getFileStem } from "../utils/fileStem.js";
 
 export function scoreEntry(entry: CacheEntry, keywords: string[]): number {
   const stem = getFileStem(entry.file).toLowerCase();
@@ -56,9 +56,4 @@ function isExactWordMatch(text: string, keyword: string): boolean {
   // Match whole words — split on non-alphanumeric chars
   const words = text.split(/[\s\-_./]+/);
   return words.some((word) => word === keyword);
-}
-
-function getFileStem(filePath: string): string {
-  const name = basename(filePath);
-  return name.endsWith(".json") ? name.slice(0, -5) : name;
 }
