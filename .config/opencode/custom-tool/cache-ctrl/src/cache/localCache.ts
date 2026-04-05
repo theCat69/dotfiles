@@ -10,11 +10,3 @@ export function resolveLocalCacheDir(repoRoot: string): string {
 export function resolveLocalCachePath(repoRoot: string): string {
   return join(resolveLocalCacheDir(repoRoot), "context.json");
 }
-
-export function buildTrackedFilesIndex(trackedFiles: TrackedFile[]): Map<string, TrackedFile> {
-  const index = new Map<string, TrackedFile>();
-  for (const file of trackedFiles) {
-    index.set(file.path, file);
-  }
-  return index;
-}
