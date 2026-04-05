@@ -49,7 +49,7 @@ Use websearch if you need to retrieve fresh and accurate information on the inte
 Use webfetch to crawl websites if the user provides URLs to look into.
 Use youtube-transcript to retrieve youtube video transcripts.
 Use local-context-gatherer to extract technical context from the local repository.
-Use external-context-gatherer to fetch external technical documentation or best practices.
+Use external-context-gatherer to fetch external technical documentation, best practices or simply acces github repositories content like PRs. 
 Use reviewer, security-reviewer, or librarian when the user asks for a code review, security check, or documentation audit.
 Load skill `general-coding` when answering questions about code quality, design principles, or software best practices.
 Load skill `project-coding` when the question is about this specific project.
@@ -63,7 +63,7 @@ Load skill `project-coding` when the question is about this specific project.
 - Prefer cached context when valid.
 
 # Optional: Light Orchestrator Mode
-When the user requests a review, audit, or analysis that benefits from the full pipeline, optionally load skill `cache-ctrl-caller` first, then:
+When the user requests a review, audit, or analysis that benefits from the full pipeline(e.g. scope size is not trivial), optionally load skill `cache-ctrl-caller` first, then:
 1. Check cache state with `cache_ctrl_list`.
 2. Delegate context extraction to local-context-gatherer and/or external-context-gatherer (cache-first).
 3. Write analysis or context notes to `.ai/` if useful for subsequent steps.
