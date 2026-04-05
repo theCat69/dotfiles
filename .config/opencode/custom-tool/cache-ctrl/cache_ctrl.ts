@@ -116,7 +116,7 @@ export const check_files = tool({
 
 export const write = tool({
   description:
-    "Write a validated cache entry to disk. Validates the content object against the ExternalCacheFile or LocalCacheFile schema before writing. Returns VALIDATION_ERROR if required fields are missing or have wrong types. For 'external': subject arg is required and must match content.subject (or will be injected if absent). For 'local': omit subject. Uses atomic write-with-merge — existing unknown fields in the file are preserved. Call cache_ctrl_schema or read the skill to see required fields before calling this.",
+    "Write a validated cache entry to disk. Validates the content object against the ExternalCacheFile or LocalCacheFile schema before writing. Returns VALIDATION_ERROR if required fields are missing or have wrong types. For 'external': subject arg is required and must match content.subject (or will be injected if absent). For 'local': omit subject; timestamp is auto-set to current UTC time — do not include it in content. Uses atomic write-with-merge — existing unknown fields in the file are preserved. Call cache_ctrl_schema or read the skill to see required fields before calling this.",
   args: {
     agent: AgentRequiredSchema,
     subject: z.string().min(1).optional(),

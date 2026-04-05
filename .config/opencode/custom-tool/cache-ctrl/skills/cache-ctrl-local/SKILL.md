@@ -51,7 +51,6 @@ Result interpretation (Tier 1 & 2):
 {
   "agent": "local",
   "content": {
-    "timestamp": "<ISO 8601 now>",
     "topic": "<description of what was scanned>",
     "description": "<one-liner summary>",
     "tracked_files": [
@@ -60,6 +59,8 @@ Result interpretation (Tier 1 & 2):
   }
 }
 ```
+
+> **`timestamp` is auto-set** by the write command to the current UTC time. Do not include it in `content` — any value provided is silently overridden.
 
 **Tier 2:** `cache-ctrl write local --data '<json>'`
 
@@ -71,17 +72,16 @@ All fields are validated on write. Unknown extra fields are allowed and preserve
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `timestamp` | `string` | ✅ | ISO 8601 datetime. Use `""` when invalidating |
+| `timestamp` | `string` | ➕ auto-set | Set automatically by write command to current UTC time. Do not pass from calling agent |
 | `topic` | `string` | ✅ | Human description of what was scanned |
 | `description` | `string` | ✅ | One-liner for keyword search |
 | `cache_miss_reason` | `string` | ➕ optional | Why the previous cache was discarded |
 | `tracked_files` | `Array<{ path: string; mtime: number; hash?: string }>` | ✅ | **Mandatory** for `check-files` to work. `mtime` is Unix ms (`Date.getTime()`). `hash` is SHA-256 hex |
 | *(any other fields)* | `unknown` | ➕ optional | Preserved unchanged |
 
-**Minimal valid example:**
+**Minimal valid agent-supplied content** (what you pass to `cache_ctrl_write`):
 ```json
 {
-  "timestamp": "2026-04-05T10:00:00Z",
   "topic": "neovim plugin configuration scan",
   "description": "Full scan of lua/plugins tree for neovim lazy.nvim setup",
   "tracked_files": [
@@ -89,6 +89,8 @@ All fields are validated on write. Unknown extra fields are allowed and preserve
   ]
 }
 ```
+
+The file written to disk will also include `"timestamp": "<current UTC ISO string>"` injected by the write command.
 
 ### 4. Confirm cache (optional)
 

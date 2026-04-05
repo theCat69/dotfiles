@@ -44,8 +44,9 @@ export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult[
       return { ok: true, value: { file: filePath } };
     }
 
-    // local
-    const parsed = LocalCacheFileSchema.safeParse(args.content);
+    // local — auto-inject server-side timestamp; agent must not control this field
+    const contentWithTimestamp = { ...args.content, timestamp: new Date().toISOString() };
+    const parsed = LocalCacheFileSchema.safeParse(contentWithTimestamp);
     if (!parsed.success) {
       const message = parsed.error.issues.map((i) => i.message).join("; ");
       return { ok: false, error: `Validation failed: ${message}`, code: ErrorCode.VALIDATION_ERROR };
@@ -54,7 +55,7 @@ export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult[
     // resolve local path
     const localCacheDir = resolveCacheDir("local", repoRoot);
     const filePath = join(localCacheDir, "context.json");
-    const writeResult = await writeCache(filePath, args.content);
+    const writeResult = await writeCache(filePath, contentWithTimestamp);
     if (!writeResult.ok) return writeResult;
     return { ok: true, value: { file: filePath } };
   } catch (err) {

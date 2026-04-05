@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtemp, readFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -17,7 +17,6 @@ const validExternalContent = {
 } as const;
 
 const validLocalContent = {
-  timestamp: "2026-04-05T10:00:00Z",
   topic: "test local scan",
   description: "A test local cache entry",
   tracked_files: [{ path: "lua/plugins/ui/bufferline.lua", mtime: 1743768000000 }],
@@ -58,6 +57,9 @@ describe("writeCommand", () => {
   });
 
   it("writes a valid local entry", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
     const result = await writeCommand({
       agent: "local",
       content: { ...validLocalContent },
@@ -71,8 +73,57 @@ describe("writeCommand", () => {
 
     const raw = await readFile(expectedPath, "utf-8");
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    expect(parsed["timestamp"]).toBe("2026-04-05T10:00:00Z");
+    expect(parsed["timestamp"]).toBe("2026-04-05T10:00:00.000Z");
     expect(parsed["topic"]).toBe("test local scan");
+
+    vi.useRealTimers();
+  });
+
+  it("ignores caller-provided timestamp and uses server-side time", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    const result = await writeCommand({
+      agent: "local",
+      content: { ...validLocalContent, timestamp: "1999-01-01T00:00:00.000Z" },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed["timestamp"]).toBe("2026-04-05T10:00:00.000Z");
+
+    vi.useRealTimers();
+  });
+
+  it("overwrites existing local entry and refreshes timestamp", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    await writeCommand({
+      agent: "local",
+      content: { ...validLocalContent, extra_field: "preserved" },
+    });
+
+    vi.setSystemTime(new Date("2026-04-05T12:00:00.000Z"));
+
+    const result = await writeCommand({
+      agent: "local",
+      content: { ...validLocalContent, topic: "updated topic" },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed["timestamp"]).toBe("2026-04-05T12:00:00.000Z");
+    expect(parsed["topic"]).toBe("updated topic");
+    expect(parsed["extra_field"]).toBe("preserved");
+
+    vi.useRealTimers();
   });
 
   it("returns VALIDATION_ERROR for missing required field (external)", async () => {

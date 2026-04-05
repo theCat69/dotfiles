@@ -312,7 +312,7 @@ cache-ctrl write local --data '<json>' [--pretty]
 Writes a validated cache entry to disk. The `--data` argument must be a valid JSON string matching the ExternalCacheFile or LocalCacheFile schema. Schema validation runs first — all required fields must be present in `--data` or the write is rejected with `VALIDATION_ERROR`. Only after validation passes are any extra/unknown fields from the existing file on disk preserved via atomic write-with-merge.
 
 - `external`: `subject` is required as a positional argument
-- `local`: no subject argument
+- `local`: no subject argument; `timestamp` is **auto-set** to the current UTC time server-side — any value supplied in `--data` is silently overridden
 
 > The `subject` parameter (external agent) must match `/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/` and be at most 128 characters. Returns `INVALID_ARGS` if it fails validation.
 
@@ -403,9 +403,11 @@ cache-ctrl invalidate local
 
 ### Local: `.ai/local-context-gatherer_cache/context.json`
 
+> `timestamp` is **auto-set** by the write command to the current UTC time. Do not include it in agent-supplied content — any value provided is silently overridden.
+
 ```jsonc
 {
-  "timestamp": "2026-04-04T12:00:00Z",   // "" when invalidated
+  "timestamp": "2026-04-04T12:00:00Z",   // auto-set on write; "" when invalidated
   "topic": "neovim plugin configuration",
   "description": "Scan of nvim lua plugins",
   "cache_miss_reason": "files changed",  // optional: why the previous cache was discarded
