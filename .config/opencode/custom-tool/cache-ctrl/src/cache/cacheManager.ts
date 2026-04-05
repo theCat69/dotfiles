@@ -54,13 +54,13 @@ export async function writeCache(
   filePath: string,
   updates: Partial<ExternalCacheFile> | Partial<LocalCacheFile>,
 ): Promise<Result<void>> {
+  // Ensure parent directory exists before acquiring the lock
+  await mkdir(dirname(filePath), { recursive: true });
+
   const lockResult = await acquireLock(filePath);
   if (!lockResult.ok) return lockResult;
 
   try {
-    // Ensure parent directory exists
-    await mkdir(dirname(filePath), { recursive: true });
-
     // Read existing content if file exists
     let existing: Record<string, unknown> = {};
     const readResult = await readCache(filePath);

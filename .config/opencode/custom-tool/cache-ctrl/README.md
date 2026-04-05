@@ -278,6 +278,27 @@ cache-ctrl search neovim --pretty
 
 ---
 
+### `write`
+
+```
+cache-ctrl write external <subject> --data '<json>' [--pretty]
+cache-ctrl write local --data '<json>' [--pretty]
+```
+
+Writes a validated cache entry to disk. The `--data` argument must be a valid JSON string matching the ExternalCacheFile or LocalCacheFile schema. Returns `VALIDATION_ERROR` if required fields are missing or have wrong types. Uses atomic write-with-merge — existing fields not present in `--data` are preserved.
+
+- `external`: `subject` is required as a positional argument
+- `local`: no subject argument
+
+**Always use this command (or `cache_ctrl_write`) instead of writing cache files directly.** Direct writes skip schema validation and risk corrupting the cache.
+
+```json
+// cache-ctrl write external mysubject --data '{"subject":"mysubject","description":"...","fetched_at":"2026-04-05T10:00:00Z","sources":[],"header_metadata":{}}' --pretty
+{ "ok": true, "value": { "file": "/path/to/.ai/external-context-gatherer_cache/mysubject.json" } }
+```
+
+---
+
 ## opencode Plugin Tools
 
 The plugin (`plugin.ts`) is auto-discovered via `.opencode/tools/cache-ctrl.ts` and registers 6 tools that call the same command functions as the CLI:
@@ -290,6 +311,7 @@ The plugin (`plugin.ts`) is auto-discovered via `.opencode/tools/cache-ctrl.ts` 
 | `cache_ctrl_invalidate` | Zero out a cache entry's timestamp |
 | `cache_ctrl_check_freshness` | HTTP HEAD check for external source URLs |
 | `cache_ctrl_check_files` | Compare tracked files against stored mtime/hash |
+| `cache_ctrl_write` | Write a validated cache entry; validates against ExternalCacheFile or LocalCacheFile schema |
 
 No bash permission is required for agents that use the plugin tools directly.
 

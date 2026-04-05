@@ -49,22 +49,50 @@ Before fetching a brand-new subject, check whether related info is already cache
 
 ### 3. Write cache after fetching
 
-Write the cache file directly via the `edit` tool to `.ai/external-context-gatherer_cache/<subject>.json`.
-All tiers write the same JSON schema:
+**Always use the write tool/command — never write cache files directly via `edit`.** Direct writes bypass schema validation and can silently corrupt the cache format.
 
-```jsonc
+**Tier 1:** Call `cache_ctrl_write` with:
+```json
 {
-  "subject": "<subject>",              // must match the file stem
-  "description": "<one-line summary>", // required for search
-  "fetched_at": "<ISO 8601 now>",
-  "sources": [
-    { "type": "<type>", "url": "<canonical-url>" }
-  ],
-  "header_metadata": {}                // empty map is fine on first write
+  "agent": "external",
+  "subject": "<subject>",
+  "content": {
+    "subject": "<subject>",
+    "description": "<one-line summary>",
+    "fetched_at": "<ISO 8601 now>",
+    "sources": [{ "type": "<type>", "url": "<canonical-url>" }],
+    "header_metadata": {}
+  }
 }
 ```
 
-No tool call needed after writing — the fresh `fetched_at` is sufficient.
+**Tier 2:** `cache-ctrl write external <subject> --data '<json>'`
+
+**Tier 3:** Same as Tier 2 — there is no direct-file fallback for writes. If neither Tier 1 nor Tier 2 is available, request access to one of them.
+
+#### ExternalCacheFile schema
+
+All fields are validated on write. Unknown extra fields are allowed and preserved.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `subject` | `string` | ✅ | Must match the file stem (filename without `.json`) |
+| `description` | `string` | ✅ | One-liner for keyword search |
+| `fetched_at` | `string` | ✅ | ISO 8601 datetime. Use `""` when invalidating |
+| `sources` | `Array<{ type: string; url: string; version?: string }>` | ✅ | Empty array `[]` is valid |
+| `header_metadata` | `Record<url, { etag?: string; last_modified?: string; checked_at: string; status: "fresh"\|"stale"\|"unchecked" }>` | ✅ | Use `{}` on first write |
+| *(any other fields)* | `unknown` | ➕ optional | Preserved unchanged |
+
+**Minimal valid example:**
+```json
+{
+  "subject": "opencode-skills",
+  "description": "Index of opencode skill files in the dotfiles repo",
+  "fetched_at": "2026-04-05T10:00:00Z",
+  "sources": [{ "type": "github_api", "url": "https://api.github.com/repos/owner/repo/contents/.opencode/skills" }],
+  "header_metadata": {}
+}
+```
 
 ### 4. Force a re-fetch
 
@@ -83,6 +111,7 @@ No tool call needed after writing — the fresh `fetched_at` is sufficient.
 | Search entries | `cache_ctrl_search` | `cache-ctrl search <kw>...` | `glob` + scan `subject`/`description` |
 | View full entry | `cache_ctrl_inspect` | `cache-ctrl inspect external <subject>` | `read` file directly |
 | Invalidate entry | `cache_ctrl_invalidate` | `cache-ctrl invalidate external <subject>` | set `fetched_at` to `""` via `edit` |
+| Write entry | `cache_ctrl_write` | `cache-ctrl write external <subject> --data '<json>'` | ❌ not available |
 
 ## Cache Location
 

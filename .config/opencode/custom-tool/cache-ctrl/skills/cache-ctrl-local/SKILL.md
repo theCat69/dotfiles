@@ -42,25 +42,51 @@ Result interpretation (Tier 1 & 2):
 
 ### 3. Write cache after scanning
 
-Write the cache file directly via the `edit` tool to `.ai/local-context-gatherer_cache/context.json`.
-All tiers write the same JSON schema:
+**Always use the write tool/command — never write cache files directly via `edit`.** Direct writes bypass schema validation and can silently corrupt the cache format.
 
-```jsonc
+**Tier 1:** Call `cache_ctrl_write` with:
+```json
 {
-  "timestamp": "<ISO 8601 now>",
-  "topic": "<description of what was scanned>",
-  "description": "<one-line summary>",
-  "tracked_files": [
-    {
-      "path": "<repo-relative or absolute path>",
-      "mtime": 1743768000000,             // Date.getTime() in milliseconds
-      "hash": "<sha256 hex>"              // strongly recommended
-    }
-  ]
+  "agent": "local",
+  "content": {
+    "timestamp": "<ISO 8601 now>",
+    "topic": "<description of what was scanned>",
+    "description": "<one-liner summary>",
+    "tracked_files": [
+      { "path": "<repo-relative or absolute path>", "mtime": 1743768000000, "hash": "<sha256-hex>" }
+    ]
+  }
 }
 ```
 
-**`tracked_files` is mandatory** for Tier 1/2 change detection. Every file read during the scan MUST be recorded here. Tier 3 relies on `timestamp` instead, so `tracked_files` is still recommended but detection precision is lower.
+**Tier 2:** `cache-ctrl write local --data '<json>'`
+
+**Tier 3:** Same as Tier 2 — there is no direct-file fallback for writes. If neither Tier 1 nor Tier 2 is available, request access to one of them.
+
+#### LocalCacheFile schema
+
+All fields are validated on write. Unknown extra fields are allowed and preserved.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `timestamp` | `string` | ✅ | ISO 8601 datetime. Use `""` when invalidating |
+| `topic` | `string` | ✅ | Human description of what was scanned |
+| `description` | `string` | ✅ | One-liner for keyword search |
+| `cache_miss_reason` | `string` | ➕ optional | Why the previous cache was discarded |
+| `tracked_files` | `Array<{ path: string; mtime: number; hash?: string }>` | ✅ | **Mandatory** for `check-files` to work. `mtime` is Unix ms (`Date.getTime()`). `hash` is SHA-256 hex |
+| *(any other fields)* | `unknown` | ➕ optional | Preserved unchanged |
+
+**Minimal valid example:**
+```json
+{
+  "timestamp": "2026-04-05T10:00:00Z",
+  "topic": "neovim plugin configuration scan",
+  "description": "Full scan of lua/plugins tree for neovim lazy.nvim setup",
+  "tracked_files": [
+    { "path": "lua/plugins/ui/bufferline.lua", "mtime": 1743768000000, "hash": "a1b2c3..." }
+  ]
+}
+```
 
 ### 4. Confirm cache (optional)
 
@@ -80,6 +106,7 @@ Note: local entries always show `is_stale: true` in Tier 1/2 list output — thi
 | Invalidate cache | `cache_ctrl_invalidate` | `cache-ctrl invalidate local` | overwrite file in next step |
 | Confirm written | `cache_ctrl_list` | `cache-ctrl list --agent local` | `read` file, check `timestamp` |
 | View full entry | `cache_ctrl_inspect` | `cache-ctrl inspect local context` | `read` file directly |
+| Write cache | `cache_ctrl_write` | `cache-ctrl write local --data '<json>'` | ❌ not available |
 
 ## Cache Location
 

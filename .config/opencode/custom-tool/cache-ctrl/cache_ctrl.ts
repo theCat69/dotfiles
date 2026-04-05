@@ -6,6 +6,7 @@ import { invalidateCommand } from "./src/commands/invalidate.js";
 import { checkFreshnessCommand } from "./src/commands/checkFreshness.js";
 import { checkFilesCommand } from "./src/commands/checkFiles.js";
 import { searchCommand } from "./src/commands/search.js";
+import { writeCommand } from "./src/commands/write.js";
 
 const AgentRequiredSchema = z.enum(["external", "local"]);
 
@@ -100,6 +101,29 @@ export const check_files = tool({
   async execute(_args) {
     try {
       const result = await checkFilesCommand();
+      return JSON.stringify(result);
+    } catch (err) {
+      const error = err as Error;
+      return JSON.stringify({ ok: false, error: error.message, code: "UNKNOWN" });
+    }
+  },
+});
+
+export const write = tool({
+  description:
+    "Write a validated cache entry to disk. Validates the content object against the ExternalCacheFile or LocalCacheFile schema before writing. Returns VALIDATION_ERROR if required fields are missing or have wrong types. For 'external': subject arg is required and must match content.subject (or will be injected if absent). For 'local': omit subject. Uses atomic write-with-merge — existing unknown fields in the file are preserved. Call cache_ctrl_schema or read the skill to see required fields before calling this.",
+  args: {
+    agent: AgentRequiredSchema,
+    subject: z.string().min(1).optional(),
+    content: z.record(z.string(), z.unknown()),
+  },
+  async execute(args) {
+    try {
+      const result = await writeCommand({
+        agent: args.agent,
+        subject: args.subject,
+        content: args.content,
+      });
       return JSON.stringify(result);
     } catch (err) {
       const error = err as Error;

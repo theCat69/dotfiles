@@ -19,6 +19,7 @@ These examples demonstrate the coding patterns used in this project.
 | `shell-install-script.md` | Idempotent `ln -sf` symlink installer with `$(pwd)`-relative paths |
 | `typescript-result-pattern.md` | `Result<T, E>` discriminated union with `ErrorCode` enum — no-throw error propagation |
 | `typescript-zod-safeparse-boundary.md` | Zod `safeParse()` at I/O boundaries — replaces unsafe `as T` casts when reading JSON from disk |
+| `typescript-zod-write-validation.md` | Zod `safeParse()` at write boundary — field injection, mismatch guard, and `Result<T>` error surfacing |
 
 ## Location
 

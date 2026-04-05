@@ -18,7 +18,7 @@ Two subagents (`external-context-gatherer` and `local-context-gatherer`) each ma
 
 ## 2. Non-Goals
 
-- Does NOT write agent context or populate cache content — agents remain responsible for their own cache writes.
+- Does NOT validate or transform the agent content fields beyond the defined required schema fields.
 - Does NOT parse or understand the domain-specific content fields inside cache files (beyond the defined schema fields).
 - Does NOT provide a TUI or interactive mode.
 - Does NOT manage caches outside the two defined directories.
@@ -710,6 +710,9 @@ const AgentRequiredSchema = z.enum(["external", "local"]);
 // cache_ctrl_check_files
 // No subject param — local cache is always a single file
 {}
+
+// cache_ctrl_write
+{ agent: AgentRequiredSchema, subject: z.string().min(1).optional(), content: z.record(z.string(), z.unknown()) }
 ```
 
 **Tool descriptions** (shown to opencode agents):
@@ -722,6 +725,7 @@ const AgentRequiredSchema = z.enum(["external", "local"]);
 | `cache_ctrl_invalidate` | Mark a cache entry as stale by zeroing its timestamp. The entry content is preserved. Agent should re-fetch on next run. |
 | `cache_ctrl_check_freshness` | For external cache: send HTTP HEAD requests to all source URLs and return freshness status per URL. |
 | `cache_ctrl_check_files` | For local cache: compare tracked files against stored mtime/hash values and return which files changed. |
+| `cache_ctrl_write` | Write a validated cache entry to disk; validates against ExternalCacheFile or LocalCacheFile schema before writing. |
 
 **Plugin tool output**: Same `Result<T, CacheError>` shape as CLI. The plugin wraps the result in a JSON string. On error, the plugin returns `{ ok: false, error: "...", code: "..." }` rather than throwing.
 
@@ -736,6 +740,39 @@ See Section 10 for the full `install.sh` spec.
    Makes `cache-ctrl` available as a global shell command (Bun executes TypeScript directly).
 2. `<repo>/.opencode/tools/cache-ctrl.ts` → `<repo>/.config/opencode/custom-tool/cache-ctrl/plugin.ts`  
    Registers the plugin with opencode's tool discovery path.
+
+---
+
+### 6.8 `cache-ctrl write` Command
+
+**CLI usage**:
+```
+cache-ctrl write external <subject> --data '<json>' [--pretty]
+cache-ctrl write local --data '<json>' [--pretty]
+```
+
+**Plugin tool**: `cache_ctrl_write` with args `{ agent: "external" | "local", subject?: string, content: Record<string, unknown> }`
+
+**Validation behavior**:
+- For `external`: validates `content` (with `subject` injected if absent) against `ExternalCacheFileSchema` via Zod `safeParse`. Returns `VALIDATION_ERROR` if required fields are missing or have wrong types.
+- For `local`: validates `content` against `LocalCacheFileSchema` via Zod `safeParse`. Returns `VALIDATION_ERROR` if required fields are missing or have wrong types.
+
+**Subject injection and mismatch detection**:
+- If `content.subject` is absent, the positional `subject` argument is injected before validation.
+- If `content.subject` is present and does not match the positional `subject` argument, returns `VALIDATION_ERROR` with an error message indicating the mismatch.
+
+**Subject requirement**:
+- `external`: `subject` positional argument is required. Returns `INVALID_ARGS` if absent.
+- `local`: no subject argument is accepted.
+
+**Write delegation**: Delegates to `writeCache()` for atomic write-with-merge. Existing unknown fields in the file are preserved.
+
+**Returns**: `WriteResult`: `{ ok: true; value: { file: string } }` — `file` is the absolute path to the written cache file.
+
+**Error codes**:
+- `INVALID_ARGS` — subject missing for external agent
+- `VALIDATION_ERROR` — Zod schema validation failed, or content.subject mismatches subject arg
+- `FILE_WRITE_ERROR`, `LOCK_TIMEOUT`, `LOCK_ERROR` — from `writeCache()`
 
 ---
 
@@ -963,7 +1000,7 @@ cache-ctrl check-freshness <subject>
 ```
 If `overall: "fresh"` → skip re-fetch. If `overall: "stale"` → proceed.
 
-**After fetching and writing cache**: The agent writes its cache file normally (as it does today). It should include the new `description` field and the `header_metadata` block (can be empty `{}`). The agent does NOT need to call `cache-ctrl` to write — it writes directly.
+**After fetching and writing cache**: The agent writes its cache file using `cache_ctrl_write` (Tier 1) or `cache-ctrl write external <subject> --data '<json>'` (Tier 2). It should include the `description` field and the `header_metadata` block (can be empty `{}`). Direct file writes via `edit` bypass schema validation and are discouraged.
 
 **To mark entry fresh after writing**:
 ```
@@ -1000,7 +1037,7 @@ cache-ctrl list --agent local --pretty
 ```
 to confirm the entry is present and not manually invalidated.
 
-**When writing cache**: The agent MUST include `tracked_files[]` in the cache JSON it writes. Each entry must have `path` (absolute or repo-relative), `mtime` (milliseconds), and optionally `hash` (SHA-256 hex). The agent is responsible for computing these values at write time.
+**When writing cache**: The agent MUST use `cache_ctrl_write` (Tier 1) or `cache-ctrl write local --data '<json>'` (Tier 2). The content MUST include `tracked_files[]` (with `path`, `mtime`, and optionally `hash`). Direct file writes via `edit` bypass schema validation and are discouraged. `check-files` returns `unchanged` silently if `tracked_files` is absent.
 
 **Schema compliance**: The agent should also include `description` (a one-liner summary of what was scanned) in the cache file. This enables `cache-ctrl search` to find the local cache entry by keyword.
 

@@ -148,3 +148,18 @@ export type SearchResult = {
     score: number;
   }>;
 };
+
+// ── write ─────────────────────────────────────────────────────────────────────
+
+export interface WriteArgs {
+  agent: AgentType;
+  subject?: string; // required for external, unused for local
+  content: Record<string, unknown>;
+}
+
+export type WriteResult = {
+  ok: true;
+  value: {
+    file: string;
+  };
+};

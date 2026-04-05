@@ -8,6 +8,7 @@ import { pruneCommand } from "./commands/prune.js";
 import { checkFreshnessCommand } from "./commands/checkFreshness.js";
 import { checkFilesCommand } from "./commands/checkFiles.js";
 import { searchCommand } from "./commands/search.js";
+import { writeCommand } from "./commands/write.js";
 import { ErrorCode } from "./types/result.js";
 
 function printResult(value: unknown, pretty: boolean): void {
@@ -64,7 +65,7 @@ async function main(): Promise<void> {
 
   const command = args[0];
   if (!command) {
-    usageError("Usage: cache-ctrl <command> [args]. Commands: list, inspect, flush, invalidate, touch, prune, check-freshness, check-files, search");
+    usageError("Usage: cache-ctrl <command> [args]. Commands: list, inspect, flush, invalidate, touch, prune, check-freshness, check-files, search, write");
   }
 
   switch (command) {
@@ -223,8 +224,37 @@ async function main(): Promise<void> {
       break;
     }
 
+    case "write": {
+      const agent = args[1];
+      if (!agent) {
+        usageError("Usage: cache-ctrl write <agent> [subject] --data '<json>'");
+      }
+      if (agent !== "external" && agent !== "local") {
+        usageError(`Invalid agent: "${agent}". Must be external or local`);
+      }
+      const dataStr = typeof flags.data === "string" ? flags.data : undefined;
+      if (!dataStr) {
+        usageError("Usage: cache-ctrl write <agent> [subject] --data '<json>'");
+      }
+      let content: Record<string, unknown>;
+      try {
+        content = JSON.parse(dataStr) as Record<string, unknown>;
+      } catch {
+        usageError("--data must be valid JSON");
+      }
+      const subject = agent === "external" ? args[2] : undefined;
+      const result = await writeCommand({ agent, subject, content });
+      if (result.ok) {
+        printResult(result, pretty);
+      } else {
+        printError(result, pretty);
+        process.exit(1);
+      }
+      break;
+    }
+
     default:
-      usageError(`Unknown command: "${command}". Commands: list, inspect, flush, invalidate, touch, prune, check-freshness, check-files, search`);
+      usageError(`Unknown command: "${command}". Commands: list, inspect, flush, invalidate, touch, prune, check-freshness, check-files, search, write`);
   }
 }
 
