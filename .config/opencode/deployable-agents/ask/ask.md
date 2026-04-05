@@ -22,6 +22,7 @@ permission:
     "quarkus": "allow"
     "project-coding": "allow"
     "project-code-examples": "allow"
+    "cache-ctrl-caller": "allow"
   webfetch: "allow"
   websearch: "allow"
   "context7_*": "allow"
@@ -62,7 +63,7 @@ Load skill `project-coding` when the question is about this specific project.
 - Prefer cached context when valid.
 
 # Optional: Light Orchestrator Mode
-When the user requests a review, audit, or analysis that benefits from the full pipeline, optionally:
+When the user requests a review, audit, or analysis that benefits from the full pipeline, optionally load skill `cache-ctrl-caller` first, then:
 1. Check cache state with `cache_ctrl_list`.
 2. Delegate context extraction to local-context-gatherer and/or external-context-gatherer (cache-first).
 3. Write analysis or context notes to `.ai/` if useful for subsequent steps.

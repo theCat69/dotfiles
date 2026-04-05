@@ -48,13 +48,16 @@ fi
 # ── Skills ────────────────────────────────────────────────
 # ~/.config/opencode/skills/cache-ctrl-external/ → skills/cache-ctrl-external/
 # ~/.config/opencode/skills/cache-ctrl-local/ → skills/cache-ctrl-local/
+# ~/.config/opencode/skills/cache-ctrl-caller/ → skills/cache-ctrl-caller/
 mkdir -p "${HOME}/.config/opencode/skills/cache-ctrl-external"
 mkdir -p "${HOME}/.config/opencode/skills/cache-ctrl-local"
+mkdir -p "${HOME}/.config/opencode/skills/cache-ctrl-caller"
 ln -sf "${TOOL_DIR}/skills/cache-ctrl-external/SKILL.md" "${HOME}/.config/opencode/skills/cache-ctrl-external/SKILL.md"
 ln -sf "${TOOL_DIR}/skills/cache-ctrl-local/SKILL.md" "${HOME}/.config/opencode/skills/cache-ctrl-local/SKILL.md"
+ln -sf "${TOOL_DIR}/skills/cache-ctrl-caller/SKILL.md" "${HOME}/.config/opencode/skills/cache-ctrl-caller/SKILL.md"
 
 # ── Verify ─────────────────────────────────────────────────
 echo "cache-ctrl installed:"
 echo "  CLI     → ${HOME}/.local/bin/cache-ctrl"
 echo "  Tools   → ${HOME}/.config/opencode/tools/cache_ctrl.ts"
-echo "  Skills  → ${HOME}/.config/opencode/skills/cache-ctrl-{external,local}/SKILL.md"
+echo "  Skills  → ${HOME}/.config/opencode/skills/cache-ctrl-{external,local,caller}/SKILL.md"

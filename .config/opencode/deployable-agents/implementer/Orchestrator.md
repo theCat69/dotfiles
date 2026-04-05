@@ -25,6 +25,7 @@ permission:
     "java": "allow"
     "angular": "allow"
     "quarkus": "allow"
+    "cache-ctrl-caller": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
@@ -107,6 +108,7 @@ Safely transform user requests into production-ready code for production systems
 # Guidelines Access
 Load skill `project-coding` if available.
 Load skill `general-coding` if available.
+Load skill `cache-ctrl-caller` if available.
 Load stack skills detected in step 2b (see Workflow).
 Load skill `git-commit` before making any git commit.
 Warn the user if any skill is missing and continue with industry best practices.

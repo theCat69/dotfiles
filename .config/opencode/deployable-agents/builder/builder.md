@@ -23,21 +23,12 @@ permission:
     "project-coding": "allow"
     "project-code-examples": "allow"
     "git-commit": "allow"
+    "cache-ctrl-caller": "allow"
   webfetch: "allow"
   websearch: "allow"
   "context7_*": "allow"
   "youtube-transcript_*": "allow"
-  bash:
-    "*": "deny"
-    "git add *": "allow"
-    "git commit *": "allow"
-    "git log *": "allow"
-    "git status *": "allow"
-    "git diff *": "allow"
-    "curl *": "allow"
-    "npm *": "allow"
-    "bun *": "allow"
-    "mkdir *": "allow"
+  bash: "allow"
   task:
     "*": "deny"
     "local-context-gatherer": "allow"
@@ -101,6 +92,7 @@ Load skill `project-coding` if available.
 Load skill `general-coding` if available.
 Load stack skills after detecting the project stack (pipeline mode step 3).
 Load skill `git-commit` before making any git commit.
+Load skill `cache-ctrl-caller` when entering pipeline mode (before interacting with cache_ctrl tools or calling context gatherers).
 Warn the user if any skill is missing and continue with industry best practices.
 
 # Output Format
