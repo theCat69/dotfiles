@@ -39,6 +39,8 @@ Check whether tracked repo files have changed since the last scan.
 | `status: "changed"` | Files changed. Call local-context-gatherer to re-scan. |
 | File absent / `status: "unchanged"` with empty `tracked_files` | Cold start. Call local-context-gatherer. |
 
+> **⚠ Cache is non-exhaustive**: `status: "unchanged"` only confirms that previously-tracked files have not changed. It does **not** detect new files added to the repository or files that were deleted. Always use `glob`/`grep` for comprehensive file discovery — never assume the cached file list is complete.
+
 To **force a full re-scan** (e.g. user just made significant changes):
 **Tier 1:** Call `cache_ctrl_invalidate` with `agent: "local"`.
 **Tier 2:** `cache-ctrl invalidate local`

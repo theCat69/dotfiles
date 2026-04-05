@@ -36,6 +36,6 @@ Extract relevant technical context from the local repository.
 # Output (≤ 500 tokens)
 - Cache hit/miss
 - Key facts
-- Relevant files
+- Relevant files _(non-exhaustive: reflects files known at last scan time)_
 - Constraints
 - Unknowns

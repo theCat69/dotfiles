@@ -34,6 +34,8 @@ Result interpretation (Tier 1 & 2):
 - `status: "changed"` → files changed, proceed to re-scan.
 - `status: "unchanged"` with empty `tracked_files` → cold start, proceed to scan.
 
+> **⚠ Cache is non-exhaustive**: The cached file list only covers files that were tracked during the last scan. New files added to the repository, or files deleted, since the last scan are NOT detected by the cache check — `status: "unchanged"` only confirms tracked files are content-stable. Callers must use `glob`/`grep` for comprehensive file discovery and must not assume the cached file list is complete.
+
 ### 2. Invalidate before writing (optional)
 
 **Tier 1:** Call `cache_ctrl_invalidate` with `agent: "local"`.
