@@ -50,7 +50,7 @@ The response also reports:
 
 **Always use the write tool/command — never edit the file directly.** Direct writes bypass schema validation and can silently corrupt the cache format.
 
-> **Write is replace, not merge**: Each local write fully replaces the cache file. Include all intended data in every write call.
+> **Write is per-path merge**: Submitted `tracked_files` entries replace existing entries for the same paths. Paths not in the submission are preserved. Entries for files deleted from disk are evicted automatically (no agent action needed).
 
 #### Input fields (`content` object)
 
@@ -60,6 +60,8 @@ The response also reports:
 | `description` | `string` | ✅ | One-liner for keyword search |
 | `tracked_files` | `Array<{ path: string }>` | ✅ | Paths to track; `mtime` and `hash` are auto-computed by the tool |
 | `cache_miss_reason` | `string` | optional | Why the previous cache was discarded |
+
+> **Cold start vs incremental**: On first run (no existing cache), submit all relevant files. On subsequent runs, submit only new and changed files — the tool merges them in.
 
 > **Auto-set by the tool — do not include**: `timestamp` (current UTC), `mtime` (filesystem `lstat()`), and `hash` (SHA-256) per `tracked_files` entry.
 

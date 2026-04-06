@@ -57,7 +57,7 @@ src/index.ts              cache_ctrl.ts
 - All commands funnel through `cacheManager` for reads/writes — no direct filesystem access from command handlers.
 - The CLI and plugin share the same command functions — no duplicated business logic.
 - All operations return `Result<T, CacheError>` — nothing throws into the caller.
-- `writeCache` defaults to merging updates onto the existing object (preserving unknown agent fields). Local writes use replace mode — the full file is overwritten; no merge occurs.
+- `writeCache` defaults to merging updates onto the existing object (preserving unknown agent fields). Local writes use per-path merge — submitted `tracked_files` entries replace existing entries for those paths; entries for other paths are preserved; entries for files no longer present on disk are evicted automatically.
 
 ---
 
@@ -312,7 +312,7 @@ cache-ctrl write local --data '<json>' [--pretty]
 Writes a validated cache entry to disk. The `--data` argument must be a valid JSON string matching the ExternalCacheFile or LocalCacheFile schema. Schema validation runs first — all required fields must be present in `--data` or the write is rejected with `VALIDATION_ERROR`.
 
 - `external`: `subject` is required as a positional argument. After validation, unknown fields from the existing file on disk are preserved (merge write).
-- `local`: no subject argument; `timestamp` is **auto-set** to the current UTC time server-side — any value supplied in `--data` is silently overridden. `mtime` for each entry in `tracked_files[]` is **auto-populated** by the write command via filesystem `lstat()` — agents do not need to supply it. Local writes fully replace the cache file (no merge).
+- `local`: no subject argument; `timestamp` is **auto-set** to the current UTC time server-side — any value supplied in `--data` is silently overridden. `mtime` for each entry in `tracked_files[]` is **auto-populated** by the write command via filesystem `lstat()` — agents do not need to supply it. Local writes use per-path merge: submitted `tracked_files` entries replace existing entries for the same path; entries for other paths are preserved; entries for files deleted from disk are evicted automatically. On cold start (no existing cache), submit all relevant files for a full write; on subsequent writes, submit only new or changed files.
 
 > The `subject` parameter (external agent) must match `/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/` and be at most 128 characters. Returns `INVALID_ARGS` if it fails validation.
 
@@ -411,7 +411,7 @@ cache-ctrl invalidate local
 
 ### Local: `.ai/local-context-gatherer_cache/context.json`
 
-> `timestamp` is **auto-set** by the write command to the current UTC time. Do not include it in agent-supplied content — any value provided is silently overridden. `mtime` values in `tracked_files[]` are **auto-populated** by the write command via filesystem `lstat()` — agents only need to supply `path` (and optionally `hash`). Local writes fully replace the cache file — any fields not included in the new content will be absent from the written file.
+> `timestamp` is **auto-set** by the write command to the current UTC time. Do not include it in agent-supplied content — any value provided is silently overridden. `mtime` values in `tracked_files[]` are **auto-populated** by the write command via filesystem `lstat()` — agents only need to supply `path` (and optionally `hash`). Local writes use per-path merge: submitted `tracked_files` entries replace existing entries for the same path; entries for other paths are preserved; entries for files deleted from disk are evicted automatically. On cold start (no existing cache), submit all relevant files; on subsequent writes, submit only new or changed files.
 
 ```jsonc
 {

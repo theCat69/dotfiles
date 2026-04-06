@@ -24,6 +24,14 @@ Load skill `cache-ctrl-local` and follow its startup workflow on every run befor
 Use `.ai/local-context-gatherer_cache/context.json` to store extracted facts.
 Reuse cache if repo files have not changed.
 
+## Cache workflow
+
+1. Call `check-files` → get `changed_files`, `new_git_files`, `deleted_git_files`.
+2. If `status: "unchanged"` AND `new_git_files` is empty → cache hit; return cached context without scanning.
+3. Otherwise: scan only `changed_files` + `new_git_files` (the delta). For deleted files: no action needed — the tool evicts them automatically on next write.
+4. Write: submit only the scanned files in `tracked_files`. Always re-submit `topic` and `description`.
+5. Cold start (no cache or empty `tracked_files`): scan all relevant git-tracked files before writing.
+
 # Mission
 Extract relevant technical context from the local repository. 
 

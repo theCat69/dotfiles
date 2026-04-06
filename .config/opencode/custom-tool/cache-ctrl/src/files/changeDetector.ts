@@ -39,8 +39,7 @@ export async function compareTrackedFile(file: TrackedFile, repoRoot: string): P
     // No hash stored — mtime change alone is sufficient
     return { path: file.path, status: "changed", reason: "mtime" };
   } catch (err) {
-    const error = err as NodeJS.ErrnoException;
-    if (error.code === "ENOENT") {
+    if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code === "ENOENT") {
       return { path: file.path, status: "missing", reason: "missing" };
     }
     // Re-throw unexpected errors
@@ -68,6 +67,32 @@ export function resolveTrackedFilePath(inputPath: string, repoRoot: string): str
 }
 
 /**
+ * Checks existence of already-tracked files via lstat(). Used during write to evict stale entries
+ * (deleted files). Does NOT recompute mtime or hash — only confirms the file is still present on disk.
+ */
+export async function filterExistingFiles(files: TrackedFile[], repoRoot: string): Promise<TrackedFile[]> {
+  const results = await Promise.all(
+    files.map(async (file): Promise<TrackedFile | null> => {
+      const absolutePath = resolveTrackedFilePath(file.path, repoRoot);
+      if (absolutePath === null) {
+        // Path traversal rejected — evict
+        return null;
+      }
+      try {
+        await lstat(absolutePath);
+        return file;
+      } catch (err) {
+        if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code === "ENOENT") {
+          return null;
+        }
+        throw err;
+      }
+    }),
+  );
+  return results.filter((entry): entry is TrackedFile => entry !== null);
+}
+
+/**
  * Resolves filesystem stats (mtime and hash) for a list of path-only tracked file entries.
  * For each entry: if the path is valid and the file exists, computes mtime via lstat().mtimeMs
  * and hash via SHA-256 in parallel, returning { path, mtime, hash }.
@@ -89,8 +114,7 @@ export async function resolveTrackedFileStats(
         const [fileStat, hash] = await Promise.all([lstat(absolutePath), computeFileHash(absolutePath)]);
         return { path: file.path, mtime: fileStat.mtimeMs, hash };
       } catch (err) {
-        const error = err as NodeJS.ErrnoException;
-        if (error.code !== "ENOENT") throw err;
+        if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
         return { path: file.path, mtime: 0 };
       }
     }),
