@@ -64,6 +64,7 @@ Safely transform user requests into production-ready code for production systems
 - ALWAYS use the question tool to interact with the user.
 - NEVER return unless all features are implemented, reviewed and validated by the user.
 - Always treat the target system as a live production environment. Prefer safe, backward-compatible, well-tested patterns over clever or experimental ones.
+- Load skill `git-commit` before making any git commit.
 
 # Anti-Bloat Rules (Critical)
 - Never store raw logs, diffs, docs, or web pages in chat context.
@@ -82,9 +83,12 @@ Before starting any workflow step, unconditionally run all of the following step
 1. Load skill `project-coding`. (If unavailable, warn the user and continue with industry best practices.)
 2. Load skill `general-coding`. (If unavailable, warn the user and continue with industry best practices.)
 3. Load skill `cache-ctrl-caller`.
-
-Stack skills (angular, typescript, java, quarkus) are loaded in Workflow step 2b after stack detection.
-Load skill `git-commit` before making any git commit.
+4. Detect the project stack by reading manifest files (`package.json`, `pom.xml`, `build.gradle`) directly, or use the stack value from the Context Snapshot if explicitly provided. Load the corresponding skill(s) unconditionally:
+   - `package.json` containing `@angular/core` → load `angular` + `typescript`
+   - `package.json` without Angular → load `typescript`
+   - `pom.xml` or `build.gradle` containing `quarkus` → load `quarkus` + `java`
+   - `pom.xml` or `build.gradle` without quarkus → load `java`
+   - No recognizable manifest → warn Orchestrator and continue with `general-coding` only
 
 # Workflow
 1. Restate goal briefly.
@@ -116,10 +120,6 @@ Load skill `git-commit` before making any git commit.
    - **Discarded** — false positive confirmed, discard silently.
 9. Call librarian to check for doc changes.
 10. Summarize blocking issues and next steps.
-
-# Rules
-- If skill is not available, warn the user and continue.
-- Summarize skill content before passing to Coder/Reviewer.
 
 # Output Contract to Subagents
 Always request:
