@@ -31,7 +31,7 @@ Three tiers of access — use the best one available.
 
 Result interpretation (Tier 1 & 2):
 - `status: "unchanged"` → tracked files are content-stable; skip re-scan and return cached context.
-- `status: "changed"` → at least one tracked file changed; proceed to re-scan.
+- `status: "changed"` → at least one tracked file changed; proceed to **delta scan** (read content of `changed_files` + `new_files` only — do not re-read unchanged files).
 - `status: "unchanged"` with empty `tracked_files` → cold start, proceed to scan.
 
 The response also reports:
@@ -95,7 +95,7 @@ Not available — there is no direct-file fallback for writes. If neither Tier 1
 **Tier 2:** `cache-ctrl list --agent local`
 **Tier 3:** `read` `.ai/local-context-gatherer_cache/context.json` and verify `timestamp` is current.
 
-Note: local entries always show `is_stale: true` in Tier 1/2 list output — this is expected. Use `cache_ctrl_check_files` (Tier 1/2) or timestamp comparison (Tier 3) for authoritative change detection.
+Note: local entries show `is_stale: true` only when `cache_ctrl_check_files` detects actual changes (changed files, new non-ignored files, or deleted files). A freshly-written cache with no subsequent file changes will show `is_stale: false`.
 
 ---
 

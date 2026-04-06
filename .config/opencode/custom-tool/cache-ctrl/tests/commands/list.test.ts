@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtemp, writeFile, mkdir } from "node:fs/promises";
+import { mkdtemp, writeFile, mkdir, stat } from "node:fs/promises";
+import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { listCommand } from "../../src/commands/list.js";
 
 const EXTERNAL_DIR = join(".ai", "external-context-gatherer_cache");
@@ -196,7 +199,7 @@ describe("listCommand", () => {
     expect(result.value[0]!.is_stale).toBe(false);
   });
 
-  it("always marks local entries as is_stale: true", async () => {
+  it("marks local entry as is_stale: false when nothing changed and tracked_files is empty", async () => {
     await setupCacheDir(tmpDir);
     await writeFile(
       join(tmpDir, LOCAL_DIR, "context.json"),
@@ -205,6 +208,94 @@ describe("listCommand", () => {
         topic: "recent local",
         description: "desc",
         tracked_files: [],
+      }),
+    );
+
+    const result = await listCommand({ agent: "local" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value[0]!.is_stale).toBe(false);
+  });
+
+  it("marks local entry as is_stale: false when tracked files are all unchanged", async () => {
+    await setupCacheDir(tmpDir);
+    const trackedPath = join(tmpDir, "tracked.ts");
+    await writeFile(trackedPath, "export const x = 1;");
+    const fileStat = await stat(trackedPath);
+    const mtime = fileStat.mtimeMs;
+    const hash = createHash("sha256").update("export const x = 1;").digest("hex");
+
+    await writeFile(
+      join(tmpDir, LOCAL_DIR, "context.json"),
+      JSON.stringify({
+        timestamp: makeFetchedAt(0.5),
+        topic: "local scan",
+        description: "desc",
+        tracked_files: [{ path: "tracked.ts", mtime, hash }],
+      }),
+    );
+
+    const result = await listCommand({ agent: "local" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value[0]!.is_stale).toBe(false);
+  });
+
+  it("marks local entry as is_stale: true when a tracked file changed", async () => {
+    await setupCacheDir(tmpDir);
+    const trackedPath = join(tmpDir, "changed.ts");
+    await writeFile(trackedPath, "export const x = 2;");
+
+    await writeFile(
+      join(tmpDir, LOCAL_DIR, "context.json"),
+      JSON.stringify({
+        timestamp: makeFetchedAt(0.5),
+        topic: "local scan",
+        description: "desc",
+        tracked_files: [{ path: "changed.ts", mtime: 999_999_999 }],
+      }),
+    );
+
+    const result = await listCommand({ agent: "local" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value[0]!.is_stale).toBe(true);
+  });
+
+  it("marks local entry as is_stale: true when there are new files in a git repo", async () => {
+    await setupCacheDir(tmpDir);
+    initGitRepo(tmpDir);
+    const newFile = join(tmpDir, "untracked.ts");
+    writeFileSync(newFile, "export const y = 99;");
+    // Deliberately NOT git-adding the file — it is untracked but non-ignored
+
+    await writeFile(
+      join(tmpDir, LOCAL_DIR, "context.json"),
+      JSON.stringify({
+        timestamp: makeFetchedAt(0.5),
+        topic: "local scan",
+        description: "desc",
+        tracked_files: [],
+      }),
+    );
+
+    const result = await listCommand({ agent: "local" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value[0]!.is_stale).toBe(true);
+  });
+
+  it("marks local entry as is_stale: true when a tracked file is missing (documents error-fallback path)", async () => {
+    // A tracked_files entry pointing to a nonexistent path causes checkFilesCommand to report
+    // status: "changed" (via missing_files), which listCommand must surface as is_stale: true.
+    await setupCacheDir(tmpDir);
+    await writeFile(
+      join(tmpDir, LOCAL_DIR, "context.json"),
+      JSON.stringify({
+        timestamp: makeFetchedAt(0.5),
+        topic: "local scan",
+        description: "desc",
+        tracked_files: [{ path: "does-not-exist.ts", mtime: 0 }],
       }),
     );
 
@@ -230,3 +321,12 @@ describe("listCommand", () => {
     expect(result.value).toHaveLength(0);
   });
 });
+
+function initGitRepo(dir: string): void {
+  execFileSync("git", ["init"], { cwd: dir });
+  execFileSync("git", ["config", "user.email", "test@test.com"], { cwd: dir });
+  execFileSync("git", ["config", "user.name", "Test"], { cwd: dir });
+  writeFileSync(join(dir, ".gitignore"), ".ai/\n");
+  execFileSync("git", ["add", ".gitignore"], { cwd: dir });
+  execFileSync("git", ["commit", "-m", "chore: init gitignore"], { cwd: dir });
+}

@@ -96,7 +96,7 @@ cache-ctrl list [--agent external|local|all] [--pretty]
 Lists all cache entries. Shows age, human-readable age string, and staleness flag.
 
 - External entries are stale if `fetched_at` is empty or older than 24 hours.
-- Local entries are always marked `is_stale: true` (no TTL — use `check-files` for authoritative change detection).
+- Local entries show `is_stale: true` only when `cache_ctrl_check_files` detects actual changes (changed files, new non-ignored files, or deleted files). A freshly-written cache with no subsequent file changes shows `is_stale: false`.
 
 **Default**: `--agent all`
 

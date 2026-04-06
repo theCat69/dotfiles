@@ -36,12 +36,14 @@ Check whether tracked repo files have changed since the last scan.
 | Result | Action |
 |---|---|
 | `status: "unchanged"` | Context is still valid. Skip calling local-context-gatherer, or pass a cache-fresh hint in the task prompt. |
-| `status: "changed"` | Files changed. Call local-context-gatherer to re-scan. |
+| `status: "changed"` | Files changed. Call local-context-gatherer for a **delta scan**. Pass the `check-files` result in the task prompt (`changed_files`, `new_files` lists) so the gatherer scans only those files. |
 | File absent / `status: "unchanged"` with empty `tracked_files` | Cold start. Call local-context-gatherer. |
+
+> **To request specific file context**: if your task needs full context on specific files (e.g. recently relevant paths), include them explicitly in the gatherer task prompt: *"Also re-read: lua/plugins/lsp/nvim-lspconfig.lua"*. The gatherer will re-read them even if check-files marks them unchanged.
 
 > **ℹ New/deleted file detection**: `check-files` now returns `new_files` and `deleted_git_files` (`string[]`). If either is non-empty, `status` is set to `"changed"`. `new_files` lists files not excluded by .gitignore that are absent from `tracked_files` — this includes both git-tracked files and untracked-non-ignored files; `deleted_git_files` lists git-tracked files removed from the working tree. Both fields are `[]` when git is unavailable or the directory is not a git repo.
 
-To **force a full re-scan** (e.g. user just made significant changes):
+**Force a full re-scan** (non-default — only when delta is insufficient, e.g. first run after a major repo restructure):
 **Tier 1:** Call `cache_ctrl_invalidate` with `agent: "local"`.
 **Tier 2:** `cache-ctrl invalidate local`
 
