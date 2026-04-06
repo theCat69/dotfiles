@@ -43,40 +43,6 @@ Verify that all behavior touched in Passes 1–3 is covered by tests.
 - **Default (flag-only)**: flag each uncovered path explicitly — do NOT write tests. Report each gap with: file, function/branch, and reason it is uncovered. The caller decides whether to proceed with writing tests.
 - **Test-writing override**: callers may explicitly request test authoring by stating it in the invocation prompt (e.g. `/unslop-loop` does this). When test writing is explicitly requested, write targeted tests that lock the preserved behavior. Each test must assert a meaningful result — not just "no error thrown". Co-locate new tests with existing test files following the project's naming convention.
 
----
-
-## Structured Review Mode
-
-When the calling prompt contains `--review` or when the caller is a read-only reviewer (e.g. a `reviewer` subagent), operate in **Structured Review Mode** — report all findings as a numbered list and make **no file edits**.
-
-### Findings Schema
-
-Each finding must include all of these fields:
-
-| Field | Type | Values |
-|---|---|---|
-| `id` | string | Sequential: `F-1`, `F-2`, … |
-| `file` | string | Relative file path |
-| `pass` | integer | `1` = dead-code · `2` = duplication · `3` = naming/errors · `4` = test-coverage |
-| `category` | enum | `dead-code` \| `duplication` \| `abstraction` \| `boundary` \| `test` |
-| `size` | enum | `S` = single line/symbol · `M` = function/block · `L` = cross-file/structural |
-| `description` | string | What the slop is and where |
-| `fix` | string | Exact action to take (delete / rename / extract / inline / add test for …) |
-
-### Output Format
-
-Emit a **numbered list only** — one line per finding, no prose, no section headers, no explanations:
-
-```
-1. F-1 | src/auth.ts | pass:1 | dead-code | S | Unused `lodash` import at line 3 | Delete line 3
-2. F-2 | src/auth.ts | pass:3 | dead-code | S | Variable named `data` at line 47 | Rename to `userRecord`
-…
-```
-
-Sort findings by `pass` ascending (all pass-1 findings before pass-2, etc.). Within a pass, sort by file path.
-
----
-
 ## Critical Rules
 
 - **Scope is bounded to changed files by default.** Identify them via `git diff`. Never touch a file that is not in the changed set unless `--full` is active.
@@ -85,7 +51,7 @@ Sort findings by `pass` ascending (all pass-1 findings before pass-2, etc.). Wit
 - **Prefer deletion over addition.** But scope rule takes precedence: if a symbol is not in the changed files set and is not provably dead within those files, flag it for manual review — do NOT delete it speculatively. Deletion without scope evidence is a violation of the scope rule.
 - **Preserve behavior.** Do NOT refactor logic, restructure architecture, or improve algorithms. Surface-level cleanup only.
 - **Lock behavior with tests BEFORE deleting anything that has side effects.** Write the test first, then delete.
-- **Review-only mode**: when the calling prompt contains `--review` or when the caller is a read-only reviewer, use **Structured Review Mode** — emit the findings list defined above, do NOT edit any file.
+- **Read-only scanning is handled by the `unslop-reviewer` skill** — do NOT use this skill in read-only contexts. This skill always edits files.
 
 ---
 

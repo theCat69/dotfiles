@@ -22,7 +22,7 @@ permission:
     "angular": "allow"
     "quarkus": "allow"
     "cache-ctrl-caller": "allow"
-    "unslop": "allow"
+     "unslop-reviewer": "allow"
   task:
     "*": "deny"
     "local-context-gatherer": "allow"

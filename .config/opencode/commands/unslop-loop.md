@@ -174,7 +174,7 @@ Otherwise: increment `iteration` and go back to Pass 1.
 
 Call `reviewer` as a task with this prompt:
 
-> Load skill `unslop`. Use Structured Review Mode. Scan these files: [scope list from Step 1]. Test-writing override is active — include pass-4 findings for behaviors that would need test coverage. Return the full numbered findings list (all passes sorted 1→4, no prose, no file edits). Output ≤ 400 tokens.
+> Load skill `unslop-reviewer`. Scan these files: [scope list from Step 1]. Test-writing override is active — include pass-4 findings for behaviors that would need test coverage. Return the full numbered findings list (all passes sorted 1→4, no prose, no file edits). Output ≤ 400 tokens.
 
 Once reviewer returns:
 
@@ -202,7 +202,7 @@ Once reviewer returns:
 
 Call `coder` as a task with this prompt:
 
-> Load skill `unslop`. Apply these cleanup findings. Scope rule: never touch files outside [scope list]. Test-writing override is active for any pass-4 findings.
+> Load skill `unslop-coder`. Apply these cleanup findings. Scope rule: never touch files outside [scope list]. Test-writing override is active for any pass-4 findings.
 > Findings:
 > [Bi — numbered findings list]
 > Return: files touched, what was removed per finding, any risks. Output ≤ 300 tokens.
