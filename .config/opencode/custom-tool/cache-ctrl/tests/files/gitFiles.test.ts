@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, writeFile, rm, mkdir } from "node:fs/promises";
+import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { getGitTrackedFiles, getGitDeletedFiles } from "../../src/files/gitFiles.js";
+import { getGitTrackedFiles, getGitDeletedFiles, getUntrackedNonIgnoredFiles } from "../../src/files/gitFiles.js";
 
 let tmpDir: string;
 
@@ -19,6 +20,9 @@ function initGitRepo(dir: string): void {
   execFileSync("git", ["init"], { cwd: dir });
   execFileSync("git", ["config", "user.email", "test@test.com"], { cwd: dir });
   execFileSync("git", ["config", "user.name", "Test"], { cwd: dir });
+  writeFileSync(join(dir, ".gitignore"), ".ai/\n");
+  execFileSync("git", ["add", ".gitignore"], { cwd: dir });
+  execFileSync("git", ["commit", "-m", "chore: init gitignore"], { cwd: dir });
 }
 
 describe("getGitTrackedFiles", () => {
@@ -28,7 +32,10 @@ describe("getGitTrackedFiles", () => {
   });
 
   it("returns [] for an empty git repo with no commits", async () => {
-    initGitRepo(tmpDir);
+    // Bare init without any commits — use inline setup, not initGitRepo
+    execFileSync("git", ["init"], { cwd: tmpDir });
+    execFileSync("git", ["config", "user.email", "test@test.com"], { cwd: tmpDir });
+    execFileSync("git", ["config", "user.name", "Test"], { cwd: tmpDir });
     const result = await getGitTrackedFiles(tmpDir);
     expect(result).toEqual([]);
   });
@@ -81,5 +88,59 @@ describe("getGitDeletedFiles", () => {
 
     const result = await getGitDeletedFiles(tmpDir);
     expect(result).toEqual([]);
+  });
+});
+
+describe("getUntrackedNonIgnoredFiles", () => {
+  it("returns [] for a non-git directory", async () => {
+    const result = await getUntrackedNonIgnoredFiles(tmpDir);
+    expect(result).toEqual([]);
+  });
+
+  it("returns [] for a git repo with no untracked files", async () => {
+    initGitRepo(tmpDir);
+    const result = await getUntrackedNonIgnoredFiles(tmpDir);
+    expect(result).toEqual([]);
+  });
+
+  it("returns untracked non-ignored file", async () => {
+    initGitRepo(tmpDir);
+    await writeFile(join(tmpDir, "untracked.ts"), "export const y = 2;");
+
+    const result = await getUntrackedNonIgnoredFiles(tmpDir);
+    expect(result).toContain("untracked.ts");
+  });
+
+  it("does NOT return gitignored files", async () => {
+    initGitRepo(tmpDir);
+    // .gitignore already contains .ai/ from initGitRepo; add secret.ts
+    writeFileSync(join(tmpDir, ".gitignore"), ".ai/\nsecret.ts\n");
+    await writeFile(join(tmpDir, "secret.ts"), "const secret = 42;");
+
+    const result = await getUntrackedNonIgnoredFiles(tmpDir);
+    expect(result).not.toContain("secret.ts");
+  });
+
+  it("does NOT return committed (tracked) files", async () => {
+    initGitRepo(tmpDir);
+    await writeFile(join(tmpDir, "tracked.ts"), "export const x = 1;");
+    execFileSync("git", ["add", "."], { cwd: tmpDir });
+    execFileSync("git", ["commit", "-m", "init"], { cwd: tmpDir });
+
+    const result = await getUntrackedNonIgnoredFiles(tmpDir);
+    expect(result).not.toContain("tracked.ts");
+  });
+
+  it("does NOT return directory entries with trailing slash — only files", async () => {
+    initGitRepo(tmpDir);
+    const subDir = join(tmpDir, "mydir");
+    await mkdir(subDir, { recursive: true });
+    await writeFile(join(subDir, "file.ts"), "export const z = 3;");
+
+    const result = await getUntrackedNonIgnoredFiles(tmpDir);
+    // The directory itself must not appear with a trailing slash
+    expect(result).not.toContain("mydir/");
+    // The file inside may appear as mydir/file.ts
+    expect(result).toContain("mydir/file.ts");
   });
 });

@@ -128,7 +128,7 @@ export type CheckFilesResult = {
     }>;
     unchanged_files: string[];
     missing_files: string[];
-    new_git_files: string[];
+    new_files: string[];
     deleted_git_files: string[];
   };
 };

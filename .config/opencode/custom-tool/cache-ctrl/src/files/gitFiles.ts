@@ -27,3 +27,15 @@ export async function getGitDeletedFiles(repoRoot: string): Promise<string[]> {
     return [];
   }
 }
+
+export async function getUntrackedNonIgnoredFiles(repoRoot: string): Promise<string[]> {
+  try {
+    const result = await execFileAsync("git", ["ls-files", "--others", "--exclude-standard"], {
+      cwd: repoRoot,
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    return parseGitOutput(result.stdout).filter((p) => !p.endsWith("/"));
+  } catch {
+    return [];
+  }
+}

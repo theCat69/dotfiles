@@ -35,10 +35,10 @@ Result interpretation (Tier 1 & 2):
 - `status: "unchanged"` with empty `tracked_files` → cold start, proceed to scan.
 
 The response also reports:
-- `new_git_files` — git-tracked files absent from cache (added since last scan)
+- `new_files` — files not excluded by .gitignore that are absent from cache (includes git-tracked and untracked-non-ignored files)
 - `deleted_git_files` — files in cache that no longer exist on disk
 
-> **⚠ Cache is non-exhaustive**: `status: "unchanged"` only confirms that previously-tracked files are content-stable — it does not mean the file set is complete. Always check `new_git_files` and `deleted_git_files` in the response; if either is non-empty, include those paths in the next write to keep the cache up to date.
+> **⚠ Cache is non-exhaustive**: `status: "unchanged"` only confirms that previously-tracked files are content-stable — it does not mean the file set is complete. Always check `new_files` and `deleted_git_files` in the response; if either is non-empty, include those paths in the next write to keep the cache up to date.
 
 ### 2. Invalidate before writing (optional)
 

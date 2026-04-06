@@ -2,7 +2,7 @@ import { posix, sep } from "node:path";
 import { findRepoRoot, readCache } from "../cache/cacheManager.js";
 import { resolveLocalCachePath } from "../cache/localCache.js";
 import { compareTrackedFile } from "../files/changeDetector.js";
-import { getGitTrackedFiles, getGitDeletedFiles } from "../files/gitFiles.js";
+import { getGitTrackedFiles, getGitDeletedFiles, getUntrackedNonIgnoredFiles } from "../files/gitFiles.js";
 import { LocalCacheFileSchema } from "../types/cache.js";
 import { ErrorCode, type Result } from "../types/result.js";
 import type { CheckFilesResult } from "../types/commands.js";
@@ -40,12 +40,15 @@ export async function checkFilesCommand(): Promise<Result<CheckFilesResult["valu
       }
     }
 
-    const [gitTrackedFiles, deletedGitFiles] = await Promise.all([
+    const [gitTrackedFiles, deletedGitFiles, untrackedNonIgnoredFiles] = await Promise.all([
       getGitTrackedFiles(repoRoot),
       getGitDeletedFiles(repoRoot),
+      getUntrackedNonIgnoredFiles(repoRoot),
     ]);
     const cachedPaths = new Set(trackedFiles.map((f) => toPosix(f.path)));
-    const newGitFiles = gitTrackedFiles.filter((p) => !cachedPaths.has(toPosix(p)));
+    const newFiles = [...new Set([...gitTrackedFiles, ...untrackedNonIgnoredFiles])].filter(
+      (p) => !cachedPaths.has(toPosix(p)),
+    );
 
     return {
       ok: true,
@@ -53,14 +56,14 @@ export async function checkFilesCommand(): Promise<Result<CheckFilesResult["valu
         status:
           changedFiles.length > 0 ||
           missingFiles.length > 0 ||
-          newGitFiles.length > 0 ||
+          newFiles.length > 0 ||
           deletedGitFiles.length > 0
             ? "changed"
             : "unchanged",
         changed_files: changedFiles,
         unchanged_files: unchangedFiles,
         missing_files: missingFiles,
-        new_git_files: newGitFiles,
+        new_files: newFiles,
         deleted_git_files: deletedGitFiles,
       },
     };
