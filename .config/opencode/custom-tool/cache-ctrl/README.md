@@ -454,14 +454,19 @@ cache-ctrl invalidate local
 ## Development
 
 ```zsh
-# Run tests
+# Run unit tests
 bun run test
 
 # Watch mode
 bun run test:watch
 
+# Run E2E tests (requires Docker)
+bun run test:e2e
+
 # Re-run installer (idempotent)
 zsh install.sh
 ```
 
-Tests live in `tests/` and use Vitest. Filesystem operations use real temp directories; HTTP calls are mocked with `vi.mock`.
+Unit tests live in `tests/` and use Vitest. Filesystem operations use real temp directories; HTTP calls are mocked with `vi.mock`.
+
+E2E tests live in `e2e/tests/` and run inside Docker via `docker compose -f e2e/docker-compose.yml run --rm e2e`. They spawn the actual CLI binary as a subprocess and verify exit codes, stdout/stderr JSON shape, and cross-command behaviour. Docker must be running; no other host dependencies are required.

@@ -64,7 +64,7 @@ export async function inspectCommand(args: InspectArgs): Promise<Result<InspectR
     }
 
     if (candidates.length === 0) {
-      return { ok: false, error: `No cache entries found for agent "${args.agent}"`, code: ErrorCode.NO_MATCH };
+      return { ok: false, error: `No cache entries found for agent "${args.agent}"`, code: ErrorCode.FILE_NOT_FOUND };
     }
 
     // Score all candidates
@@ -78,7 +78,7 @@ export async function inspectCommand(args: InspectArgs): Promise<Result<InspectR
     const matched = scored.filter((s) => s.score > 0);
 
     if (matched.length === 0) {
-      return { ok: false, error: `No cache entry matched keyword "${args.subject}"`, code: ErrorCode.NO_MATCH };
+      return { ok: false, error: `No cache entry matched keyword "${args.subject}"`, code: ErrorCode.FILE_NOT_FOUND };
     }
 
     // Sort by score descending
@@ -98,9 +98,9 @@ export async function inspectCommand(args: InspectArgs): Promise<Result<InspectR
     return {
       ok: true,
       value: {
+        ...top.content,
         file: top.file,
         agent: args.agent,
-        content: top.content,
       },
     };
   } catch (err) {

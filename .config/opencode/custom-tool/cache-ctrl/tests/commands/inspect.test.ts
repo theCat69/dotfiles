@@ -41,10 +41,10 @@ describe("inspectCommand — external agent", () => {
 
     expect(result.value.file).toBe(filePath);
     expect(result.value.agent).toBe("external");
-    const content = result.value.content as Record<string, unknown>;
-    expect(content.subject).toBe("mylib");
-    expect(content.description).toBe("My library docs");
-    expect(content.extra_field).toBe("custom value");
+    const value = result.value as Record<string, unknown>;
+    expect(value.subject).toBe("mylib");
+    expect(value.description).toBe("My library docs");
+    expect(value.extra_field).toBe("custom value");
   });
 
   it("returns NO_MATCH for unrecognized keyword", async () => {
@@ -62,14 +62,14 @@ describe("inspectCommand — external agent", () => {
     const result = await inspectCommand({ agent: "external", subject: "completely-unrelated-xyz" });
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.code).toBe("NO_MATCH");
+    expect(result.code).toBe("FILE_NOT_FOUND");
   });
 
-  it("returns NO_MATCH when no external cache files exist", async () => {
+  it("returns FILE_NOT_FOUND when no external cache files exist", async () => {
     const result = await inspectCommand({ agent: "external", subject: "anything" });
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.code).toBe("NO_MATCH");
+    expect(result.code).toBe("FILE_NOT_FOUND");
   });
 
   it("returns AMBIGUOUS_MATCH when two entries score equally", async () => {
@@ -139,9 +139,9 @@ describe("inspectCommand — local agent", () => {
 
     expect(result.value.file).toBe(localPath);
     expect(result.value.agent).toBe("local");
-    const content = result.value.content as Record<string, unknown>;
-    expect(content.topic).toBe("local codebase scan");
-    expect(Array.isArray(content.tracked_files)).toBe(true);
+    const value = result.value as Record<string, unknown>;
+    expect(value.topic).toBe("local codebase scan");
+    expect(Array.isArray(value.tracked_files)).toBe(true);
   });
 
   it("returns FILE_NOT_FOUND when local cache does not exist", async () => {

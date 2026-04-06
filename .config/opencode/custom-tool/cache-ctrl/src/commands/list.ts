@@ -66,7 +66,10 @@ export async function listCommand(args: ListArgs): Promise<Result<ListResult["va
               `[cache-ctrl] Warning: could not compute local cache staleness: ${checkResult.error}\n`,
             );
           }
-          const isStale = !checkResult.ok || checkResult.value.status === "changed";
+          // Local entry is stale if:
+          //   1. The timestamp has been zeroed (entry was invalidated), OR
+          //   2. check-files reports changed files
+          const isStale = !timestamp || !checkResult.ok || checkResult.value.status === "changed";
 
           entries.push({
             file: localPath,

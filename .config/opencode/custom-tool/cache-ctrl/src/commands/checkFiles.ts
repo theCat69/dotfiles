@@ -46,7 +46,12 @@ export async function checkFilesCommand(): Promise<Result<CheckFilesResult["valu
       getUntrackedNonIgnoredFiles(repoRoot),
     ]);
     const cachedPaths = new Set(trackedFiles.map((f) => toPosix(f.path)));
-    const newFiles = [...new Set([...gitTrackedFiles, ...untrackedNonIgnoredFiles])].filter(
+    // When tracked_files is empty (blank-slate), skip git-tracked files from new_files
+    // because those were already present before this cache was written.
+    // Untracked non-ignored files are always reported as new — they represent newly
+    // created files that the user added to the working tree.
+    const baseFiles = trackedFiles.length > 0 ? gitTrackedFiles : [];
+    const newFiles = [...new Set([...baseFiles, ...untrackedNonIgnoredFiles])].filter(
       (p) => !cachedPaths.has(toPosix(p)),
     );
 

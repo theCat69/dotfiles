@@ -265,6 +265,15 @@ describe("listCommand", () => {
   it("marks local entry as is_stale: true when there are new files in a git repo", async () => {
     await setupCacheDir(tmpDir);
     initGitRepo(tmpDir);
+
+    // Commit a tracked file so tracked_files is non-empty (enables new_files detection)
+    const trackedPath = join(tmpDir, "tracked.ts");
+    writeFileSync(trackedPath, "export const x = 1;");
+    execFileSync("git", ["add", "."], { cwd: tmpDir });
+    execFileSync("git", ["commit", "-m", "add tracked"], { cwd: tmpDir });
+    const fileStat = await stat(trackedPath);
+    const mtime = fileStat.mtimeMs;
+
     const newFile = join(tmpDir, "untracked.ts");
     writeFileSync(newFile, "export const y = 99;");
     // Deliberately NOT git-adding the file — it is untracked but non-ignored
@@ -275,7 +284,7 @@ describe("listCommand", () => {
         timestamp: makeFetchedAt(0.5),
         topic: "local scan",
         description: "desc",
-        tracked_files: [],
+        tracked_files: [{ path: "tracked.ts", mtime }],
       }),
     );
 

@@ -5,6 +5,7 @@ import { resolveLocalCachePath } from "../cache/localCache.js";
 import { ExternalCacheFileSchema } from "../types/cache.js";
 import { ErrorCode, type Result } from "../types/result.js";
 import type { PruneArgs, PruneResult } from "../types/commands.js";
+import { getFileStem } from "../utils/fileStem.js";
 
 export function parseDurationMs(duration: string): number | null {
   const match = /^(\d+)(h|d)$/.exec(duration);
@@ -21,7 +22,7 @@ export async function pruneCommand(args: PruneArgs): Promise<Result<PruneResult[
     const repoRoot = await findRepoRoot(process.cwd());
     const agent = args.agent ?? "all";
     const doDelete = args.delete ?? false;
-    const matched: string[] = [];
+    const matched: Array<{ file: string; agent: "external" | "local"; subject: string }> = [];
 
     // Parse maxAge for external (default 24h)
     const externalMaxAgeMs = args.maxAge ? parseDurationMs(args.maxAge) : 24 * 3_600_000;
@@ -42,7 +43,9 @@ export async function pruneCommand(args: PruneArgs): Promise<Result<PruneResult[
         const data = parseResult.data;
 
         if (isExternalStale(data, externalMaxAgeMs ?? undefined)) {
-          matched.push(filePath);
+          const stem = getFileStem(filePath);
+          const subject = data.subject ?? stem;
+          matched.push({ file: filePath, agent: "external", subject });
           if (doDelete) {
             try {
               await unlink(filePath);
@@ -67,7 +70,7 @@ export async function pruneCommand(args: PruneArgs): Promise<Result<PruneResult[
       if (doDelete) {
         try {
           await unlink(localPath);
-          matched.push(localPath);
+          matched.push({ file: localPath, agent: "local", subject: "local" });
         } catch (err) {
           const error = err as NodeJS.ErrnoException;
           if (error.code !== "ENOENT") {
@@ -87,7 +90,7 @@ export async function pruneCommand(args: PruneArgs): Promise<Result<PruneResult[
         } else {
           const writeResult = await writeCache(localPath, { timestamp: "" });
           if (!writeResult.ok) return writeResult;
-          matched.push(localPath);
+          matched.push({ file: localPath, agent: "local", subject: "local" });
         }
       }
     }

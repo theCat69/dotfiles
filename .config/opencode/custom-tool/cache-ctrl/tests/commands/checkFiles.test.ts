@@ -203,15 +203,21 @@ describe("git file detection", () => {
     expect(result.value.deleted_git_files).toEqual([]);
   });
 
-  it("committed file not in tracked_files → appears in new_files", async () => {
+  it("committed file not in tracked_files → appears in new_files only when tracked_files is non-empty", async () => {
     initGitRepo(tmpDir);
     const filePath = join(tmpDir, "file.ts");
     await writeFile(filePath, "export const x = 1;");
     execFileSync("git", ["add", "."], { cwd: tmpDir });
     execFileSync("git", ["commit", "-m", "init"], { cwd: tmpDir });
 
-    // Cache has empty tracked_files — file.ts is known to git but not cached
-    await writeLocalCache([]);
+    // Cache has one tracked file — file.ts is known to git but not cached → new_files
+    const otherPath = join(tmpDir, "other.ts");
+    await writeFile(otherPath, "export const y = 2;");
+    const mtime = await getMtime(otherPath);
+    execFileSync("git", ["add", "."], { cwd: tmpDir });
+    execFileSync("git", ["commit", "-m", "add other"], { cwd: tmpDir });
+
+    await writeLocalCache([{ path: "other.ts", mtime }]);
     const result = await checkFilesCommand();
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -219,13 +225,37 @@ describe("git file detection", () => {
     expect(result.value.status).toBe("changed");
   });
 
-  it("untracked-non-ignored file → appears in new_files", async () => {
+  it("empty tracked_files → status unchanged even when git files exist", async () => {
     initGitRepo(tmpDir);
+    const filePath = join(tmpDir, "file.ts");
+    await writeFile(filePath, "export const x = 1;");
+    execFileSync("git", ["add", "."], { cwd: tmpDir });
+    execFileSync("git", ["commit", "-m", "init"], { cwd: tmpDir });
+
+    // Cache has empty tracked_files — blank-slate, nothing to compare
+    await writeLocalCache([]);
+    const result = await checkFilesCommand();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.new_files).toEqual([]);
+    expect(result.value.status).toBe("unchanged");
+  });
+
+  it("untracked-non-ignored file with non-empty tracked_files → appears in new_files", async () => {
+    initGitRepo(tmpDir);
+    // Commit an initial file so tracked_files is non-empty
+    const committedPath = join(tmpDir, "committed.ts");
+    await writeFile(committedPath, "export const x = 1;");
+    execFileSync("git", ["add", "."], { cwd: tmpDir });
+    execFileSync("git", ["commit", "-m", "init"], { cwd: tmpDir });
+    const committedMtime = await getMtime(committedPath);
+
+    // Create an untracked (not gitignored) file
     const filePath = join(tmpDir, "untracked.ts");
     await writeFile(filePath, "export const y = 2;");
     // Deliberately do NOT git add — file is untracked but not gitignored
 
-    await writeLocalCache([]);
+    await writeLocalCache([{ path: "committed.ts", mtime: committedMtime }]);
     const result = await checkFilesCommand();
     expect(result.ok).toBe(true);
     if (!result.ok) return;

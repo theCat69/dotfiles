@@ -8,7 +8,9 @@
     "noEmit": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": ["bun-types"]
   },
-  "include": ["src/**/*", "cache_ctrl.ts", "tests/**/*"]
+  "include": ["src/**/*", "cache_ctrl.ts", "tests/**/*", "e2e/**/*"]
 }
