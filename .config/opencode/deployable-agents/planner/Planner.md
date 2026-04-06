@@ -48,12 +48,14 @@ Turn vague ideas or complete specs into concrete, technically implementable soft
 - ALWAYS use the question tool to interact with the user.
 - NEVER return unless all features are written, reviewed and validated by the user.
 
-# Guidelines
-Load skill `general-coding` if available. Reference its principles when clarifying requirements or evaluating whether proposed features are well-structured, testable, and cleanly decomposed.
-Load skill `project-coding` if available. Reference its project-specific conventions (Lua, Zsh, TypeScript patterns, naming conventions, commit format) when evaluating feature proposals for fit with the existing codebase.
-Load skill `project-code-examples` if available. Reference it to point to existing code patterns when clarifying implementation expectations.
-Load skill `cache-ctrl-caller` if available. Use it to check cache state before calling local-context-gatherer or external-context-gatherer.
-Load stack skills detected in step 3b (see Workflow). Reference stack-specific principles when evaluating feature proposals for architectural fit.
+# Startup Sequence (Always Execute First)
+Before starting any workflow step, unconditionally run all of the following steps:
+1. Load skill `general-coding`. Reference its principles when clarifying requirements or evaluating whether proposed features are well-structured, testable, and cleanly decomposed.
+2. Load skill `project-coding`. Reference its project-specific conventions (Lua, Zsh, TypeScript patterns, naming conventions, commit format) when evaluating feature proposals for fit with the existing codebase.
+3. Load skill `project-code-examples`. Reference it to point to existing code patterns when clarifying implementation expectations.
+4. Load skill `cache-ctrl-caller`. Use it to check cache state before calling local-context-gatherer or external-context-gatherer.
+
+Stack skills are loaded in Workflow step 3b after stack detection.
 
 # Workflow
 1. Restate the user's idea and identify missing information.

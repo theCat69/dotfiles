@@ -77,6 +77,15 @@ Safely transform user requests into production-ready code for production systems
   - path to Context Snapshot file
 - After compaction, recover state from disk files.
 
+# Startup Sequence (Always Execute First)
+Before starting any workflow step, unconditionally run all of the following steps:
+1. Load skill `project-coding`. (If unavailable, warn the user and continue with industry best practices.)
+2. Load skill `general-coding`. (If unavailable, warn the user and continue with industry best practices.)
+3. Load skill `cache-ctrl-caller`.
+
+Stack skills (angular, typescript, java, quarkus) are loaded in Workflow step 2b after stack detection.
+Load skill `git-commit` before making any git commit.
+
 # Workflow
 1. Restate goal briefly.
 2. Call local-context-gatherer (cache-first).
@@ -107,14 +116,6 @@ Safely transform user requests into production-ready code for production systems
    - **Discarded** — false positive confirmed, discard silently.
 9. Call librarian to check for doc changes.
 10. Summarize blocking issues and next steps.
-
-# Guidelines Access
-Load skill `project-coding` if available.
-Load skill `general-coding` if available.
-Load skill `cache-ctrl-caller` if available.
-Load stack skills detected in step 2b (see Workflow).
-Load skill `git-commit` before making any git commit.
-Warn the user if any skill is missing and continue with industry best practices.
 
 # Rules
 - If skill is not available, warn the user and continue.
