@@ -61,7 +61,7 @@ The response also reports:
 | `tracked_files` | `Array<{ path: string }>` | ✅ | Paths to track; `mtime` and `hash` are auto-computed by the tool |
 | `cache_miss_reason` | `string` | optional | Why the previous cache was discarded |
 
-> **Auto-set by the tool — do not include**: `timestamp` (current UTC), `mtime` (filesystem `stat()`), and `hash` (SHA-256) per `tracked_files` entry.
+> **Auto-set by the tool — do not include**: `timestamp` (current UTC), `mtime` (filesystem `lstat()`), and `hash` (SHA-256) per `tracked_files` entry.
 
 #### Tier 1 — `cache_ctrl_write`
 

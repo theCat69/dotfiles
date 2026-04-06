@@ -1,4 +1,4 @@
-import { readFile, stat, lstat } from "node:fs/promises";
+import { readFile, lstat } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve, isAbsolute } from "node:path";
 import type { TrackedFile } from "../types/cache.js";
@@ -18,7 +18,8 @@ export async function compareTrackedFile(file: TrackedFile, repoRoot: string): P
   }
 
   try {
-    const fileStat = await stat(absolutePath);
+    // lstat: mtime reflects the symlink node, not the target; hash check covers content drift when hash is stored
+    const fileStat = await lstat(absolutePath);
     const currentMtime = fileStat.mtimeMs;
 
     if (currentMtime === file.mtime) {
@@ -84,6 +85,7 @@ export async function resolveTrackedFileStats(
         return { path: file.path, mtime: 0 };
       }
       try {
+        // lstat: mtime reflects the symlink node; hash is computed from the target content via readFile
         const [fileStat, hash] = await Promise.all([lstat(absolutePath), computeFileHash(absolutePath)]);
         return { path: file.path, mtime: fileStat.mtimeMs, hash };
       } catch (err) {
