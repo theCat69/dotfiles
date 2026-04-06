@@ -41,11 +41,21 @@ Continue to Step 1. Load skill `unslop` and execute all 4 passes yourself on the
 - If mode is **report-only**: apply the `--review` mode defined in the skill — report slop findings per category, do NOT edit any file.
 - If mode is **edit**: apply all 4 passes with full edits as defined in the skill.
 
-**Orchestrator context** (agent cannot edit files; has `task` access to `coder`):
-Run Step 1 yourself to resolve the file scope. Then call `coder` as a task with this prompt:
+**Orchestrator context** (agent cannot edit files; has `task` access to `coder` and `reviewer`):
 
-> Load skill `unslop`. Run all 4 sequential passes on these files: [scope list]. Mode: [edit | report-only]. Scope rule: never touch files outside this list.
-> Return: files touched, what was removed per pass, Pass 4 coverage gaps, remaining risks. Output ≤ 300 tokens.
+1. Run Step 1 yourself to resolve the file scope.
+
+2. Call `reviewer` as a task with this prompt:
+
+   > Load skill `unslop`. Use Structured Review Mode. Scan these files: [scope list from Step 1]. Return the full numbered findings list (all passes sorted 1→4, no prose, no file edits). Output ≤ 300 tokens.
+
+3. If mode is **report-only**: skip step 4 and proceed directly to Step 2 (Present Results) using the findings list as the output.
+
+4. If mode is **edit**: call `coder` as a task with this prompt:
+
+   > Load skill `unslop`. Apply these cleanup findings. Scope rule: never touch files outside [scope list]. Findings:
+   > [full findings list from reviewer]
+   > Return: files touched, what was removed per finding, Pass 4 coverage gaps, remaining risks. Output ≤ 300 tokens.
 
 After coder returns, proceed to Step 2 (Present Results) and Step 3 (Next Step) yourself.
 
