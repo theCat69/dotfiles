@@ -8,6 +8,14 @@ import { resolveTrackedFileStats, filterExistingFiles } from "../files/changeDet
 import type { TrackedFile } from "../types/cache.js";
 import { TrackedFileSchema } from "../types/cache.js";
 
+function evictFactsForDeletedPaths(
+  facts: Record<string, string[]>,
+  survivingFiles: TrackedFile[],
+): Record<string, string[]> {
+  const survivingPaths = new Set(survivingFiles.map((f) => f.path));
+  return Object.fromEntries(Object.entries(facts).filter(([path]) => survivingPaths.has(path)));
+}
+
 export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult["value"]>> {
   try {
     const repoRoot = await findRepoRoot(process.cwd());
@@ -53,17 +61,43 @@ export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult[
     // Resolve real mtimes for submitted tracked_files if present
     const rawTrackedFiles = contentWithTimestamp["tracked_files"];
     let survivingSubmitted: TrackedFile[] = [];
+    let submittedPathsForGuard = new Set<string>();
 
     if (Array.isArray(rawTrackedFiles)) {
       const validEntries = rawTrackedFiles
         .filter(
           (entry): entry is { path: string } =>
-            entry !== null && typeof entry === "object" && typeof (entry as Record<string, unknown>)["path"] === "string",
+            entry !== null &&
+            typeof entry === "object" &&
+            typeof (entry as Record<string, unknown>)["path"] === "string",
         )
         .map((entry) => ({ path: entry.path }));
+
+      submittedPathsForGuard = new Set(validEntries.map((e) => e.path));
+
       const resolved = await resolveTrackedFileStats(validEntries, repoRoot);
       // Evict submitted entries for files that are missing or path-traversal-rejected
       survivingSubmitted = resolved.filter((f) => f.mtime !== 0);
+    }
+
+    // Guard: submitted facts paths must be a strict subset of submitted tracked_files paths
+    const rawSubmittedFacts = contentWithTimestamp["facts"];
+    if (
+      rawSubmittedFacts !== null &&
+      rawSubmittedFacts !== undefined &&
+      typeof rawSubmittedFacts === "object" &&
+      !Array.isArray(rawSubmittedFacts)
+    ) {
+      const violatingPaths = Object.keys(rawSubmittedFacts as Record<string, string[]>).filter(
+        (p) => !submittedPathsForGuard.has(p),
+      );
+      if (violatingPaths.length > 0) {
+        return {
+          ok: false,
+          error: `facts contains paths not in submitted tracked_files: ${violatingPaths.join(", ")}`,
+          code: ErrorCode.VALIDATION_ERROR,
+        };
+      }
     }
 
     // Read existing cache to perform per-path merge
@@ -92,11 +126,28 @@ export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult[
 
     const mergedTrackedFiles = [...survivingExisting, ...survivingSubmitted];
 
+    // Per-path merge for facts (mirrors tracked_files merge)
+    const existingFactsRaw = existingContent["facts"];
+    const submittedFactsRaw = contentWithTimestamp["facts"];
+
+    const existingFacts =
+      typeof existingFactsRaw === "object" && existingFactsRaw !== null && !Array.isArray(existingFactsRaw)
+        ? (existingFactsRaw as Record<string, string[]>)
+        : {};
+    const submittedFacts =
+      typeof submittedFactsRaw === "object" && submittedFactsRaw !== null && !Array.isArray(submittedFactsRaw)
+        ? (submittedFactsRaw as Record<string, string[]>)
+        : {};
+
+    const rawMergedFacts = { ...existingFacts, ...submittedFacts };
+    const mergedFacts = evictFactsForDeletedPaths(rawMergedFacts, mergedTrackedFiles);
+
     // Merge top-level fields: existing base → then submitted content (submitted wins)
     const processedContent: Record<string, unknown> = {
       ...existingContent,
       ...contentWithTimestamp,
       tracked_files: mergedTrackedFiles,
+      facts: mergedFacts,
     };
 
     const parsed = LocalCacheFileSchema.safeParse(processedContent);

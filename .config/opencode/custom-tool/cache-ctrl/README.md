@@ -313,6 +313,7 @@ Writes a validated cache entry to disk. The `--data` argument must be a valid JS
 
 - `external`: `subject` is required as a positional argument. After validation, unknown fields from the existing file on disk are preserved (merge write).
 - `local`: no subject argument; `timestamp` is **auto-set** to the current UTC time server-side — any value supplied in `--data` is silently overridden. `mtime` for each entry in `tracked_files[]` is **auto-populated** by the write command via filesystem `lstat()` — agents do not need to supply it. Local writes use per-path merge: submitted `tracked_files` entries replace existing entries for the same path; entries for other paths are preserved; entries for files deleted from disk are evicted automatically. On cold start (no existing cache), submit all relevant files for a full write; on subsequent writes, submit only new or changed files.
+- `local`: facts paths are validated against submitted `tracked_files` — submitting a facts key outside that set returns `VALIDATION_ERROR`.
 
 > The `subject` parameter (external agent) must match `/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/` and be at most 128 characters. Returns `INVALID_ARGS` if it fails validation.
 
@@ -422,7 +423,15 @@ cache-ctrl invalidate local
   "tracked_files": [
     { "path": "lua/plugins/ui/bufferline.lua", "mtime": 1743768000000, "hash": "sha256hex..." }
     // mtime is auto-populated by the write command; agents only need to supply path (and optionally hash)
-  ]
+  ],
+  "global_facts": [                       // optional: repo-level facts; last-write-wins
+    "Kubuntu dotfiles repo",
+    "StyLua for Lua (140 col, 2-space indent)"
+  ],
+  "facts": {                              // optional: per-file facts; per-path merge
+    "lua/plugins/ui/bufferline.lua": ["lazy-loaded via ft = lua", "uses catppuccin mocha theme"]
+    // Facts for files deleted from disk are evicted automatically on the next write
+  }
   // Any additional agent fields are preserved unchanged
 }
 ```

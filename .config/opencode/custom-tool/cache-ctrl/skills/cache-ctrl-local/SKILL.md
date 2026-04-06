@@ -61,11 +61,35 @@ The response also reports:
 | `topic` | `string` | ✅ | Human description of what was scanned |
 | `description` | `string` | ✅ | One-liner for keyword search |
 | `tracked_files` | `Array<{ path: string }>` | ✅ | Paths to track; `mtime` and `hash` are auto-computed by the tool |
+| `global_facts` | `string[]` | optional | Repo-level facts; last-write-wins; see trigger rule below |
+| `facts` | `Record<string, string[]>` | optional | Per-file facts keyed by path; per-path merge |
 | `cache_miss_reason` | `string` | optional | Why the previous cache was discarded |
 
 > **Cold start vs incremental**: On first run (no existing cache), submit all relevant files. On subsequent runs, submit only new and changed files — the tool merges them in.
 
 > **Auto-set by the tool — do not include**: `timestamp` (current UTC), `mtime` (filesystem `lstat()`), and `hash` (SHA-256) per `tracked_files` entry.
+
+### Scope rule for `facts`
+
+Submit `facts` ONLY for files you actually read in this session (i.e., files present in
+your submitted `tracked_files`). Never reconstruct or re-submit facts for unchanged files —
+the tool preserves them automatically via per-path merge.
+
+Submitting a facts key for a path absent from submitted `tracked_files` is a
+VALIDATION_ERROR and the entire write is rejected.
+
+### When to submit `global_facts`
+
+Submit `global_facts` only when you re-read at least one structural file in this session:
+AGENTS.md, install.sh, opencode.json, package.json, *.toml config files.
+
+If none of those are in `changed_files` or `new_files`, omit `global_facts` from the write.
+The existing value is preserved automatically.
+
+### Eviction
+
+Facts for files deleted from disk are evicted automatically on the next write — no agent
+action needed. `global_facts` is never evicted.
 
 #### Tier 1 — `cache_ctrl_write`
 
