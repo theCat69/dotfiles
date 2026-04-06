@@ -4,7 +4,7 @@ import { ErrorCode, type Result } from "../types/result.js";
 import type { WriteArgs, WriteResult } from "../types/commands.js";
 import { writeCache, findRepoRoot, resolveCacheDir } from "../cache/cacheManager.js";
 import { validateSubject } from "../utils/validate.js";
-import { resolveTrackedFileMtimes } from "../files/changeDetector.js";
+import { resolveTrackedFileStats } from "../files/changeDetector.js";
 
 export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult["value"]>> {
   try {
@@ -52,11 +52,13 @@ export async function writeCommand(args: WriteArgs): Promise<Result<WriteResult[
     // Resolve real mtimes for tracked_files if present
     const rawTrackedFiles = contentWithTimestamp["tracked_files"];
     if (Array.isArray(rawTrackedFiles)) {
-      const validEntries = rawTrackedFiles.filter(
-        (entry): entry is { path: string; mtime?: number; hash?: string } =>
-          entry !== null && typeof entry === "object" && typeof (entry as Record<string, unknown>)["path"] === "string",
-      );
-      const resolved = await resolveTrackedFileMtimes(validEntries, repoRoot);
+      const validEntries = rawTrackedFiles
+        .filter(
+          (entry): entry is { path: string } =>
+            entry !== null && typeof entry === "object" && typeof (entry as Record<string, unknown>)["path"] === "string",
+        )
+        .map((entry) => ({ path: entry.path }));
+      const resolved = await resolveTrackedFileStats(validEntries, repoRoot);
       processedContent = { ...contentWithTimestamp, tracked_files: resolved };
     }
 

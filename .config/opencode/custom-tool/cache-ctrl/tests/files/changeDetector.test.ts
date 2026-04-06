@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { compareTrackedFile, computeFileHash, resolveTrackedFileMtimes } from "../../src/files/changeDetector.js";
+import { compareTrackedFile, computeFileHash, resolveTrackedFileStats } from "../../src/files/changeDetector.js";
 
 let origCwd: string;
 let tmpDir: string;
@@ -111,7 +111,7 @@ describe("changeDetector", () => {
   });
 });
 
-describe("resolveTrackedFileMtimes", () => {
+describe("resolveTrackedFileStats", () => {
   it("injects real mtime for existing file", async () => {
     const filePath = join(tmpDir, "tracked.ts");
     await writeFile(filePath, "export const y = 2;");
@@ -120,42 +120,35 @@ describe("resolveTrackedFileMtimes", () => {
     const realStat = await stat(filePath);
     const realMtime = realStat.mtimeMs;
 
-    const result = await resolveTrackedFileMtimes(
-      [{ path: filePath, mtime: 1 }],
+    const result = await resolveTrackedFileStats(
+      [{ path: filePath }],
       tmpDir,
     );
 
     expect(result).toHaveLength(1);
     expect(result[0]?.mtime).toBe(realMtime);
+    expect(result[0]?.hash).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it("falls back to provided mtime for missing file", async () => {
-    const result = await resolveTrackedFileMtimes(
-      [{ path: "missing/file.ts", mtime: 12345 }],
+  it("uses mtime=0 and no hash for missing file", async () => {
+    const result = await resolveTrackedFileStats(
+      [{ path: "missing/file.ts" }],
       tmpDir,
     );
 
     expect(result).toHaveLength(1);
-    expect(result[0]?.mtime).toBe(12345);
+    expect(result[0]?.mtime).toBe(0);
+    expect(result[0]?.hash).toBeUndefined();
   });
 
   it("falls back to 0 for path traversal attempt", async () => {
-    const result = await resolveTrackedFileMtimes(
+    const result = await resolveTrackedFileStats(
       [{ path: "../../etc/passwd" }],
       tmpDir,
     );
 
     expect(result).toHaveLength(1);
     expect(result[0]?.mtime).toBe(0);
-  });
-
-  it("falls back to provided mtime (not 0) for path traversal when mtime is given", async () => {
-    const result = await resolveTrackedFileMtimes(
-      [{ path: "../../etc/passwd", mtime: 999 }],
-      tmpDir,
-    );
-
-    expect(result).toHaveLength(1);
-    expect(result[0]?.mtime).toBe(999);
+    expect(result[0]?.hash).toBeUndefined();
   });
 });

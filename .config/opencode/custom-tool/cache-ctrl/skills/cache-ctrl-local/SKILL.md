@@ -30,11 +30,15 @@ Three tiers of access — use the best one available.
   - File present → check `timestamp`. If older than 1 hour, treat as stale and re-scan. Otherwise treat as fresh.
 
 Result interpretation (Tier 1 & 2):
-- `status: "unchanged"` → **skip scanning, return cached context**.
-- `status: "changed"` → files changed, proceed to re-scan.
+- `status: "unchanged"` → tracked files are content-stable; skip re-scan and return cached context.
+- `status: "changed"` → at least one tracked file changed; proceed to re-scan.
 - `status: "unchanged"` with empty `tracked_files` → cold start, proceed to scan.
 
-> **⚠ Cache is non-exhaustive**: The cached file list only covers files that were tracked during the last scan. New files added to the repository, or files deleted, since the last scan are NOT detected by the cache check — `status: "unchanged"` only confirms tracked files are content-stable. Callers must use `glob`/`grep` for comprehensive file discovery and must not assume the cached file list is complete.
+The response also reports:
+- `new_git_files` — git-tracked files absent from cache (added since last scan)
+- `deleted_git_files` — files in cache that no longer exist on disk
+
+> **⚠ Cache is non-exhaustive**: `status: "unchanged"` only confirms that previously-tracked files are content-stable — it does not mean the file set is complete. Always check `new_git_files` and `deleted_git_files` in the response; if either is non-empty, include those paths in the next write to keep the cache up to date.
 
 ### 2. Invalidate before writing (optional)
 
@@ -44,57 +48,44 @@ Result interpretation (Tier 1 & 2):
 
 ### 3. Write cache after scanning
 
-**Always use the write tool/command — never write cache files directly via `edit`.** Direct writes bypass schema validation and can silently corrupt the cache format.
+**Always use the write tool/command — never edit the file directly.** Direct writes bypass schema validation and can silently corrupt the cache format.
 
-> **Write is replace, not merge**: Each local write fully replaces the cache file. Any fields not included in the new content will be absent from the written file. Do not rely on previous writes to preserve fields — include all intended data in every write call.
+> **Write is replace, not merge**: Each local write fully replaces the cache file. Include all intended data in every write call.
 
-**Tier 1:** Call `cache_ctrl_write` with:
+#### Input fields (`content` object)
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `topic` | `string` | ✅ | Human description of what was scanned |
+| `description` | `string` | ✅ | One-liner for keyword search |
+| `tracked_files` | `Array<{ path: string }>` | ✅ | Paths to track; `mtime` and `hash` are auto-computed by the tool |
+| `cache_miss_reason` | `string` | optional | Why the previous cache was discarded |
+
+> **Auto-set by the tool — do not include**: `timestamp` (current UTC), `mtime` (filesystem `stat()`), and `hash` (SHA-256) per `tracked_files` entry.
+
+#### Tier 1 — `cache_ctrl_write`
+
 ```json
 {
   "agent": "local",
   "content": {
-    "topic": "<description of what was scanned>",
-    "description": "<one-liner summary>",
+    "topic": "neovim plugin configuration scan",
+    "description": "Full scan of lua/plugins tree for neovim lazy.nvim setup",
     "tracked_files": [
-      { "path": "<repo-relative or absolute path>", "hash": "<sha256-hex>" }
+      { "path": "lua/plugins/ui/bufferline.lua" },
+      { "path": "lua/plugins/lsp/nvim-lspconfig.lua" }
     ]
   }
 }
 ```
 
-> **`timestamp` is auto-set** by the write command to the current UTC time. Do not include it in `content` — any value provided is silently overridden.
+#### Tier 2 — CLI
 
-**Tier 2:** `cache-ctrl write local --data '<json>'`
+`cache-ctrl write local --data '<json>'` — pass the same `content` object as JSON string.
 
-**Tier 3:** Same as Tier 2 — there is no direct-file fallback for writes. If neither Tier 1 nor Tier 2 is available, request access to one of them.
+#### Tier 3
 
-#### LocalCacheFile schema
-
-All fields are validated on write. Unknown extra fields are allowed and preserved.
-
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `timestamp` | `string` | ➕ auto-set | Set automatically by write command to current UTC time. Do not pass from calling agent |
-| `topic` | `string` | ✅ | Human description of what was scanned |
-| `description` | `string` | ✅ | One-liner for keyword search |
-| `cache_miss_reason` | `string` | ➕ optional | Why the previous cache was discarded |
-| `tracked_files` | `Array<{ path: string; mtime?: number; hash?: string }>` | ✅ | **Mandatory** for `check-files` to work. `mtime` is auto-populated by the write command using real filesystem `stat()` — agent does not need to provide it. `hash` is optional SHA-256 hex (agent-provided, kept as-is). |
-| *(any other fields)* | `unknown` | ➕ optional | Preserved unchanged |
-
-> **`mtime` is auto-set** by the write command using real filesystem `stat()` for each path in `tracked_files`. Do not include `mtime` — it will be populated server-side. Only `path` is required per entry.
-
-**Minimal valid agent-supplied content** (what you pass to `cache_ctrl_write`):
-```json
-{
-  "topic": "neovim plugin configuration scan",
-  "description": "Full scan of lua/plugins tree for neovim lazy.nvim setup",
-  "tracked_files": [
-    { "path": "lua/plugins/ui/bufferline.lua", "hash": "a1b2c3..." }
-  ]
-}
-```
-
-The file written to disk will also include `"timestamp": "<current UTC ISO string>"` injected by the write command.
+Not available — there is no direct-file fallback for writes. If neither Tier 1 nor Tier 2 is accessible, request access to one of them.
 
 ### 4. Confirm cache (optional)
 

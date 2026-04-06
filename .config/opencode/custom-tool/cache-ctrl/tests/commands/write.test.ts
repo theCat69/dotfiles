@@ -19,7 +19,7 @@ const validExternalContent = {
 const validLocalContent = {
   topic: "test local scan",
   description: "A test local cache entry",
-  tracked_files: [{ path: "lua/plugins/ui/bufferline.lua", mtime: 1743768000000 }],
+  tracked_files: [{ path: "lua/plugins/ui/bufferline.lua" }],
 } as const;
 
 let origCwd: string;
@@ -141,7 +141,7 @@ describe("writeCommand", () => {
       content: {
         topic: "mtime test",
         description: "testing mtime auto-pop",
-        tracked_files: [{ path: trackedPath, mtime: 1 }], // wrong mtime
+        tracked_files: [{ path: trackedPath }],
       },
     });
 
@@ -150,13 +150,14 @@ describe("writeCommand", () => {
 
     const raw = await readFile(result.value.file, "utf-8");
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number }>;
+    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number; hash?: string }>;
     expect(files[0]?.mtime).toBe(realMtime);
+    expect(files[0]?.hash).toMatch(/^[0-9a-f]{64}$/);
 
     vi.useRealTimers();
   });
 
-  it("keeps fallback mtime when tracked file does not exist", async () => {
+  it("uses mtime=0 and no hash when tracked file does not exist", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
 
@@ -165,7 +166,7 @@ describe("writeCommand", () => {
       content: {
         topic: "fallback mtime test",
         description: "testing fallback",
-        tracked_files: [{ path: "nonexistent/file.ts", mtime: 999 }],
+        tracked_files: [{ path: "nonexistent/file.ts" }],
       },
     });
 
@@ -174,10 +175,37 @@ describe("writeCommand", () => {
 
     const raw = await readFile(result.value.file, "utf-8");
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number }>;
-    expect(files[0]?.mtime).toBe(999);
+    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number; hash?: string }>;
+    expect(files[0]?.mtime).toBe(0);
+    expect(files[0]?.hash).toBeUndefined();
 
     vi.useRealTimers();
+  });
+
+  it("ignores caller-provided mtime and hash in tracked_files", async () => {
+    const trackedPath = join(tmpDir, "real-file.ts");
+    await writeFile(trackedPath, "export const z = 3;");
+    const realStat = await stat(trackedPath);
+    const realMtime = realStat.mtimeMs;
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "strip test",
+        description: "testing that caller mtime/hash are stripped",
+        tracked_files: [{ path: trackedPath, mtime: 1, hash: "fakehash" }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number; hash?: string }>;
+    expect(files[0]?.mtime).toBe(realMtime);
+    expect(files[0]?.hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(files[0]?.hash).not.toBe("fakehash");
   });
 
   it("returns VALIDATION_ERROR for missing required field (external)", async () => {

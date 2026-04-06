@@ -67,28 +67,29 @@ export function resolveTrackedFilePath(inputPath: string, repoRoot: string): str
 }
 
 /**
- * Resolves real mtimes from the filesystem for a list of tracked file entries.
- * For each entry: if the path is valid and the file exists, injects the real mtimeMs.
- * Falls back to the provided mtime (or 0) on path traversal rejection or missing file.
+ * Resolves filesystem stats (mtime and hash) for a list of path-only tracked file entries.
+ * For each entry: if the path is valid and the file exists, computes mtime via lstat().mtimeMs
+ * and hash via SHA-256 in parallel, returning { path, mtime, hash }.
+ * Falls back to { path, mtime: 0 } (no hash) on path traversal rejection or missing file.
  * Never throws — always returns gracefully.
  */
-export async function resolveTrackedFileMtimes(
-  files: Array<{ path: string; mtime?: number; hash?: string }>,
+export async function resolveTrackedFileStats(
+  files: Array<{ path: string }>,
   repoRoot: string,
 ): Promise<TrackedFile[]> {
   return Promise.all(
     files.map(async (file) => {
       const absolutePath = resolveTrackedFilePath(file.path, repoRoot);
       if (absolutePath === null) {
-        return { path: file.path, mtime: file.mtime ?? 0, ...(file.hash !== undefined ? { hash: file.hash } : {}) };
+        return { path: file.path, mtime: 0 };
       }
       try {
-        const fileStat = await lstat(absolutePath);
-        return { path: file.path, mtime: fileStat.mtimeMs, ...(file.hash !== undefined ? { hash: file.hash } : {}) };
+        const [fileStat, hash] = await Promise.all([lstat(absolutePath), computeFileHash(absolutePath)]);
+        return { path: file.path, mtime: fileStat.mtimeMs, hash };
       } catch (err) {
         const error = err as NodeJS.ErrnoException;
         if (error.code !== "ENOENT") throw err;
-        return { path: file.path, mtime: file.mtime ?? 0, ...(file.hash !== undefined ? { hash: file.hash } : {}) };
+        return { path: file.path, mtime: 0 };
       }
     }),
   );
