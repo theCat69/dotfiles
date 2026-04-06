@@ -74,7 +74,7 @@ Execute the loop yourself. For each iteration, run Passes 1–4 directly (using 
 You manage the loop — you own loop state (`commit_count`, `iteration`), git operations (`git add`, `git commit`), test runner invocation, and termination logic.
 **You must NOT edit any files yourself.** For each iteration, call `coder` as a task with this prompt:
 
-> Load skill `unslop`. Run all 4 passes (dead code, duplication, naming + error handling, test writing) on these files: [scope list]. Scope rule: never touch files outside this list. Return: files touched, what was removed per pass, tests written, remaining risks. Output ≤ 400 tokens.
+> Load skill `unslop`. Run all 4 passes (dead code, duplication, naming + error handling, test writing — explicit override: write tests for behaviors touched in Passes 1–3) on these files: [scope list]. Scope rule: never touch files outside this list. Return: files touched, what was removed per pass, tests written, remaining risks. Output ≤ 400 tokens.
 
 After coder returns, you handle change detection (3e), auto-validation (3f), and commit (3g) yourself.
 

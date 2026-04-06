@@ -5,7 +5,7 @@ description: Clean AI-generated code slop in sequential bounded passes scoped to
 
 # Unslop — AI Slop Cleanup
 
-**Philosophy**: slop cleanup is a scalpel, not a rewrite. The invariant is behavior preservation. Lock behavior with tests before removing anything that has side effects. Prefer deletion over addition — every line of code is a liability. Diffs must be small and reversible. Scope is always bounded to changed files only, never the whole codebase.
+**Philosophy**: slop cleanup is a scalpel, not a rewrite. The invariant is behavior preservation. Lock behavior with tests before removing anything that has side effects. Prefer deletion over addition — every line of code is a liability. Diffs must be small and reversible. Default scope is bounded to changed files only; callers may override to full-codebase mode by explicitly passing `--full` or stating it in the invocation prompt.
 
 ---
 
@@ -39,13 +39,16 @@ Extract repeated logic into a single authoritative location. Remove copy-paste b
 Rename generic identifiers (`data`, `value`, `temp`, `result`, `obj`, `info`) to intention-revealing names. Ensure errors are explicit and typed — no silent swallowing, no mixed return/error values. Remove noise comments (inline "what" comments, any commented-out code that survived Pass 1).
 
 **Pass 4 — Test reinforcement**
-Verify that all behavior touched in Passes 1–3 is covered by tests. For each uncovered path: flag it explicitly in the output — do NOT unilaterally write tests. Report each gap with: file, function/branch, and reason it is uncovered. The caller decides whether to proceed with writing tests or to stop and address coverage first.
+Verify that all behavior touched in Passes 1–3 is covered by tests.
+- **Default (flag-only)**: flag each uncovered path explicitly — do NOT write tests. Report each gap with: file, function/branch, and reason it is uncovered. The caller decides whether to proceed with writing tests.
+- **Test-writing override**: callers may explicitly request test authoring by stating it in the invocation prompt (e.g. `/unslop-loop` does this). When test writing is explicitly requested, write targeted tests that lock the preserved behavior. Each test must assert a meaningful result — not just "no error thrown". Co-locate new tests with existing test files following the project's naming convention.
 
 ---
 
 ## Critical Rules
 
-- **Scope is always bounded to changed files only.** Identify them via `git diff`. Never touch a file that is not in the changed set.
+- **Scope is bounded to changed files by default.** Identify them via `git diff`. Never touch a file that is not in the changed set unless `--full` is active.
+- **Full-codebase override (`--full`)**: when the caller explicitly passes `--full` or states full-codebase scope in the invocation prompt, scope expands to all source files (excluding `.ai/`, `node_modules/`, build artifact directories, and binary files). Use only when the default diff scope is empty or the caller has explicitly requested whole-codebase cleanup.
 - **Run passes sequentially.** Complete Pass 1 before starting Pass 2. Starting Pass 2 without finishing Pass 1 is a violation.
 - **Prefer deletion over addition.** But scope rule takes precedence: if a symbol is not in the changed files set and is not provably dead within those files, flag it for manual review — do NOT delete it speculatively. Deletion without scope evidence is a violation of the scope rule.
 - **Preserve behavior.** Do NOT refactor logic, restructure architecture, or improve algorithms. Surface-level cleanup only.

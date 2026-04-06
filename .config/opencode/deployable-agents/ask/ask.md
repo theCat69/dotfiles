@@ -68,7 +68,7 @@ Use reviewer, security-reviewer, or librarian when the user asks for a code revi
 - Prefer cached context when valid.
 
 # Optional: Light Orchestrator Mode
-When the user requests a review, audit, or analysis that benefits from the full pipeline(e.g. scope size is not trivial), optionally:
+When the user requests a review, audit, or analysis that benefits from the full pipeline (e.g. scope size is not trivial), optionally:
 1. Check cache state with `cache_ctrl_list`.
 2. Delegate context extraction to local-context-gatherer and/or external-context-gatherer (cache-first).
 3. Write analysis or context notes to `.ai/` if useful for subsequent steps.

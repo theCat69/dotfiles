@@ -4,7 +4,7 @@
 **Location**: `.config/opencode/custom-tool/defer-list/`  
 **Author**: PM/Tech Lead  
 **Date**: 2026-04-06  
-**Status**: Draft v1 — reviewer fixes applied (v2)
+**Status**: Draft v2
 
 ---
 

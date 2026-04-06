@@ -377,16 +377,24 @@ Commands available in any opencode session. Invoke them by typing `/command-name
 | Command | File | Purpose |
 |---|---|---|
 | `/init-implementer` | `commands/init-implementer.md` | Deep-scans a project, detects the stack, generates skill files and code examples |
-| `/unslop` | `commands/unslop.md` | Removes AI slop from changed files (or `--full` for the whole codebase, or a specific path) |
+| `/unslop` | `commands/unslop.md` | Removes AI slop from changed files (pass `--full` to target the whole codebase, or provide an explicit path) |
+| `/unslop-loop` | `commands/unslop-loop.md` | Runs unslop in a loop — writes tests, auto-commits per cycle, stops when clean or after N commits |
 | `/critic` | `commands/critic.md` | Challenges a plan, spec, or current work from first principles (Necessity / Simplicity / Coupling) |
 | `/interview` | `commands/interview.md` | Runs a Socratic requirements session, producing a Structured Spec when ambiguity drops below 20% |
 
 ### `/unslop`
 
 Runs the `unslop` skill in sequential bounded passes on changed files.  
+Default scope is the git diff; pass `--full` to target all source files (explicit override — use with care).  
 Default mode edits files in place; pass `--review` for a report-only pass with no writes.  
 Routing: Builder loads the skill directly; Orchestrator delegates to the coder subagent; other agents return an error.  
-**Never auto-writes tests** — it only flags gaps in the Pass 4 report.
+**Never auto-writes tests** — it only flags gaps in the Pass 4 report. Use `/unslop-loop` if you want test writing.
+
+### `/unslop-loop`
+
+Runs the `unslop` skill in a continuous loop until the scope is fully clean or a commit limit is reached.  
+Each iteration runs all 4 passes, **writes tests** for behaviors touched (explicit Pass 4 override), runs the test suite, and commits on success. Rolls back and stops on test failure.  
+Arguments: optional bare integer sets `max_commits` (e.g. `/unslop-loop 3`); `--full` expands scope to the whole codebase; an explicit path targets specific files.
 
 ### `/critic`
 
