@@ -1,4 +1,4 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile, lstat } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve, isAbsolute } from "node:path";
 import type { TrackedFile } from "../types/cache.js";
@@ -18,7 +18,8 @@ export async function compareTrackedFile(file: TrackedFile, repoRoot: string): P
   }
 
   try {
-    const fileStat = await stat(absolutePath);
+    // lstat: mtime reflects the symlink node, not the target; hash check covers content drift when hash is stored
+    const fileStat = await lstat(absolutePath);
     const currentMtime = fileStat.mtimeMs;
 
     if (currentMtime === file.mtime) {
@@ -38,8 +39,7 @@ export async function compareTrackedFile(file: TrackedFile, repoRoot: string): P
     // No hash stored — mtime change alone is sufficient
     return { path: file.path, status: "changed", reason: "mtime" };
   } catch (err) {
-    const error = err as NodeJS.ErrnoException;
-    if (error.code === "ENOENT") {
+    if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code === "ENOENT") {
       return { path: file.path, status: "missing", reason: "missing" };
     }
     // Re-throw unexpected errors
@@ -64,4 +64,59 @@ export function resolveTrackedFilePath(inputPath: string, repoRoot: string): str
     return null; // path traversal rejected
   }
   return resolved;
+}
+
+/**
+ * Checks existence of already-tracked files via lstat(). Used during write to evict stale entries
+ * (deleted files). Does NOT recompute mtime or hash — only confirms the file is still present on disk.
+ */
+export async function filterExistingFiles(files: TrackedFile[], repoRoot: string): Promise<TrackedFile[]> {
+  const results = await Promise.all(
+    files.map(async (file): Promise<TrackedFile | null> => {
+      const absolutePath = resolveTrackedFilePath(file.path, repoRoot);
+      if (absolutePath === null) {
+        // Path traversal rejected — evict
+        return null;
+      }
+      try {
+        await lstat(absolutePath);
+        return file;
+      } catch (err) {
+        if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code === "ENOENT") {
+          return null;
+        }
+        throw err;
+      }
+    }),
+  );
+  return results.filter((entry): entry is TrackedFile => entry !== null);
+}
+
+/**
+ * Resolves filesystem stats (mtime and hash) for a list of path-only tracked file entries.
+ * For each entry: if the path is valid and the file exists, computes mtime via lstat().mtimeMs
+ * and hash via SHA-256 in parallel, returning { path, mtime, hash }.
+ * Falls back to { path, mtime: 0 } (no hash) on path traversal rejection or missing file.
+ * Never throws — always returns gracefully.
+ */
+export async function resolveTrackedFileStats(
+  files: Array<{ path: string }>,
+  repoRoot: string,
+): Promise<TrackedFile[]> {
+  return Promise.all(
+    files.map(async (file) => {
+      const absolutePath = resolveTrackedFilePath(file.path, repoRoot);
+      if (absolutePath === null) {
+        return { path: file.path, mtime: 0 };
+      }
+      try {
+        // lstat: mtime reflects the symlink node; hash is computed from the target content via readFile
+        const [fileStat, hash] = await Promise.all([lstat(absolutePath), computeFileHash(absolutePath)]);
+        return { path: file.path, mtime: fileStat.mtimeMs, hash };
+      } catch {
+        // Always return gracefully per the "never throws" contract — do not propagate filesystem errors
+        return { path: file.path, mtime: 0 };
+      }
+    }),
+  );
 }

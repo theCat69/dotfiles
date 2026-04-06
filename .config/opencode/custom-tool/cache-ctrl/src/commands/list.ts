@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { findRepoRoot, listCacheFiles, readCache } from "../cache/cacheManager.js";
 import { getAgeHuman, isExternalStale, getFileStem } from "../cache/externalCache.js";
 import { resolveLocalCachePath } from "../cache/localCache.js";
+import { checkFilesCommand } from "./checkFiles.js";
 import { ExternalCacheFileSchema, LocalCacheFileSchema } from "../types/cache.js";
 import { ErrorCode, type Result } from "../types/result.js";
 import type { ListArgs, ListEntry, ListResult } from "../types/commands.js";
@@ -59,6 +60,17 @@ export async function listCommand(args: ListArgs): Promise<Result<ListResult["va
           const timestamp = data.timestamp ?? "";
           const description = data.description;
 
+          const checkResult = await checkFilesCommand();
+          if (!checkResult.ok) {
+            process.stderr.write(
+              `[cache-ctrl] Warning: could not compute local cache staleness: ${checkResult.error}\n`,
+            );
+          }
+          // Local entry is stale if:
+          //   1. The timestamp has been zeroed (entry was invalidated), OR
+          //   2. check-files reports changed files
+          const isStale = !timestamp || !checkResult.ok || checkResult.value.status === "changed";
+
           entries.push({
             file: localPath,
             agent: "local",
@@ -66,7 +78,7 @@ export async function listCommand(args: ListArgs): Promise<Result<ListResult["va
             ...(description !== undefined ? { description } : {}),
             fetched_at: timestamp,
             age_human: getAgeHuman(timestamp),
-            is_stale: true, // Local is always stale
+            is_stale: isStale,
           });
         } else {
           process.stderr.write(`[cache-ctrl] Warning: malformed local cache file: ${localPath}\n`);
@@ -78,7 +90,7 @@ export async function listCommand(args: ListArgs): Promise<Result<ListResult["va
 
     return { ok: true, value: entries };
   } catch (err) {
-    const error = err as Error;
-    return { ok: false, error: error.message, code: ErrorCode.UNKNOWN };
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: msg, code: ErrorCode.UNKNOWN };
   }
 }

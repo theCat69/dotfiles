@@ -27,10 +27,9 @@ export interface InspectArgs {
 
 export type InspectResult = {
   ok: true;
-  value: {
+  value: (ExternalCacheFile | LocalCacheFile) & {
     file: string;
     agent: AgentType;
-    content: ExternalCacheFile | LocalCacheFile;
   };
 };
 
@@ -89,7 +88,7 @@ export interface PruneArgs {
 export type PruneResult = {
   ok: true;
   value: {
-    matched: string[];
+    matched: Array<{ file: string; agent: AgentType; subject: string }>;
     action: "invalidated" | "deleted";
     count: number;
   };
@@ -128,6 +127,8 @@ export type CheckFilesResult = {
     }>;
     unchanged_files: string[];
     missing_files: string[];
+    new_files: string[];
+    deleted_git_files: string[];
   };
 };
 

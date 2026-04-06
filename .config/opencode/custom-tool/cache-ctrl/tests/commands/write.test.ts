@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtemp, readFile, mkdir } from "node:fs/promises";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { mkdtemp, readFile, mkdir, writeFile, stat, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { writeCommand } from "../../src/commands/write.js";
@@ -17,10 +17,9 @@ const validExternalContent = {
 } as const;
 
 const validLocalContent = {
-  timestamp: "2026-04-05T10:00:00Z",
   topic: "test local scan",
   description: "A test local cache entry",
-  tracked_files: [{ path: "lua/plugins/ui/bufferline.lua", mtime: 1743768000000 }],
+  tracked_files: [{ path: "lua/plugins/ui/bufferline.lua" }],
 } as const;
 
 let origCwd: string;
@@ -37,6 +36,10 @@ afterEach(() => {
 });
 
 describe("writeCommand", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("writes a valid external entry", async () => {
     const result = await writeCommand({
       agent: "external",
@@ -58,6 +61,9 @@ describe("writeCommand", () => {
   });
 
   it("writes a valid local entry", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
     const result = await writeCommand({
       agent: "local",
       content: { ...validLocalContent },
@@ -71,8 +77,131 @@ describe("writeCommand", () => {
 
     const raw = await readFile(expectedPath, "utf-8");
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    expect(parsed["timestamp"]).toBe("2026-04-05T10:00:00Z");
+    expect(parsed["timestamp"]).toBe("2026-04-05T10:00:00.000Z");
     expect(parsed["topic"]).toBe("test local scan");
+  });
+
+  it("ignores caller-provided timestamp and uses server-side time", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    const result = await writeCommand({
+      agent: "local",
+      content: { ...validLocalContent, timestamp: "1999-01-01T00:00:00.000Z" },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed["timestamp"]).toBe("2026-04-05T10:00:00.000Z");
+  });
+
+  it("second write updates timestamp and topic; top-level extra fields from first write are preserved by merge", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    await writeCommand({
+      agent: "local",
+      content: { ...validLocalContent, extra_field: "preserved" },
+    });
+
+    vi.setSystemTime(new Date("2026-04-05T12:00:00.000Z"));
+
+    const result = await writeCommand({
+      agent: "local",
+      content: { ...validLocalContent, topic: "updated topic" },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed["timestamp"]).toBe("2026-04-05T12:00:00.000Z");
+    expect(parsed["topic"]).toBe("updated topic");
+    // extra_field is preserved via top-level merge — second write does not include it,
+    // so the existing value survives
+    expect(parsed["extra_field"]).toBe("preserved");
+  });
+
+  it("auto-populates real mtime for tracked_files on local write", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    // Create a real file to track
+    const trackedPath = join(tmpDir, "some-real-file.ts");
+    await writeFile(trackedPath, "export const x = 1;");
+    const realStat = await stat(trackedPath);
+    const realMtime = realStat.mtimeMs;
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "mtime test",
+        description: "testing mtime auto-pop",
+        tracked_files: [{ path: trackedPath }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number; hash?: string }>;
+    expect(files[0]?.mtime).toBe(realMtime);
+    expect(files[0]?.hash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("evicts submitted entry for non-existent file (not added to tracked_files)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "fallback mtime test",
+        description: "testing fallback",
+        tracked_files: [{ path: "nonexistent/file.ts" }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number; hash?: string }>;
+    // Non-existent file is evicted — tracked_files should be empty
+    expect(files).toHaveLength(0);
+  });
+
+  it("ignores caller-provided mtime and hash in tracked_files", async () => {
+    const trackedPath = join(tmpDir, "real-file.ts");
+    await writeFile(trackedPath, "export const z = 3;");
+    const realStat = await stat(trackedPath);
+    const realMtime = realStat.mtimeMs;
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "strip test",
+        description: "testing that caller mtime/hash are stripped",
+        tracked_files: [{ path: trackedPath, mtime: 1, hash: "fakehash" }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string; mtime: number; hash?: string }>;
+    expect(files[0]?.mtime).toBe(realMtime);
+    expect(files[0]?.hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(files[0]?.hash).not.toBe("fakehash");
   });
 
   it("returns VALIDATION_ERROR for missing required field (external)", async () => {
@@ -226,5 +355,223 @@ describe("writeCommand", () => {
     expect(parsed["fetched_at"]).toBe("2026-04-06T10:00:00Z");
     // Preserved from first write (merge semantics)
     expect(parsed["existing_field"]).toBe("original");
+  });
+
+  it("per-path preserve: write fileA then write only fileB → fileA entry is preserved", async () => {
+    const fileA = join(tmpDir, "fileA.ts");
+    const fileB = join(tmpDir, "fileB.ts");
+    await writeFile(fileA, "export const a = 1;");
+    await writeFile(fileB, "export const b = 2;");
+
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "initial scan",
+        description: "scan with fileA",
+        tracked_files: [{ path: fileA }],
+      },
+    });
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "incremental scan",
+        description: "scan with fileB",
+        tracked_files: [{ path: fileB }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string }>;
+    const paths = files.map((f) => f.path);
+    expect(paths).toContain(fileA);
+    expect(paths).toContain(fileB);
+  });
+
+  it("per-path upsert: writing fileA twice updates the entry without duplicates", async () => {
+    const fileA = join(tmpDir, "fileA-upsert.ts");
+    await writeFile(fileA, "export const a = 1;");
+
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "first write",
+        description: "write fileA",
+        tracked_files: [{ path: fileA }],
+      },
+    });
+
+    // Modify the file so mtime changes
+    await writeFile(fileA, "export const a = 2;");
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "second write",
+        description: "write fileA again",
+        tracked_files: [{ path: fileA }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string }>;
+    const matchingEntries = files.filter((f) => f.path === fileA);
+    // Exactly one entry for fileA — no duplicates
+    expect(matchingEntries).toHaveLength(1);
+  });
+
+  it("ENOENT eviction of existing: deletes fileB from disk, then writes fileC → fileB evicted, fileA and fileC survive", async () => {
+    const fileA = join(tmpDir, "fileA-evict.ts");
+    const fileB = join(tmpDir, "fileB-evict.ts");
+    const fileC = join(tmpDir, "fileC-evict.ts");
+    await writeFile(fileA, "export const a = 1;");
+    await writeFile(fileB, "export const b = 2;");
+    await writeFile(fileC, "export const c = 3;");
+
+    // Write fileA and fileB to cache
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "initial",
+        description: "write A and B",
+        tracked_files: [{ path: fileA }, { path: fileB }],
+      },
+    });
+
+    // Delete fileB from disk
+    await rm(fileB);
+
+    // Now write only fileC — fileB should be evicted from existing entries
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "after eviction",
+        description: "write C only",
+        tracked_files: [{ path: fileC }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string }>;
+    const paths = files.map((f) => f.path);
+    expect(paths).toContain(fileA);
+    expect(paths).toContain(fileC);
+    expect(paths).not.toContain(fileB);
+  });
+
+  it("top-level field merge: second write topic wins, first write topic is replaced", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "old topic",
+        description: "first write",
+        tracked_files: [],
+      },
+    });
+
+    vi.setSystemTime(new Date("2026-04-05T11:00:00.000Z"));
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "new topic",
+        description: "second write",
+        tracked_files: [],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed["topic"]).toBe("new topic");
+  });
+
+  it("existing loose fields preserved: second partial write does not remove extra foo field", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-05T10:00:00.000Z"));
+
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "initial",
+        description: "first write with foo",
+        tracked_files: [],
+        foo: "bar",
+      },
+    });
+
+    vi.setSystemTime(new Date("2026-04-05T11:00:00.000Z"));
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "update",
+        description: "second write without foo",
+        tracked_files: [],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    // foo was set in the first write and not overridden in the second — should be preserved
+    expect(parsed["foo"]).toBe("bar");
+  });
+
+  it("corrupted tracked_files in existing cache is treated as empty (safeParse fallback)", async () => {
+    // Pre-write a corrupted context.json with tracked_files: null
+    const cacheDir = join(tmpDir, ".ai", "local-context-gatherer_cache");
+    await mkdir(cacheDir, { recursive: true });
+    const cachePath = join(cacheDir, "context.json");
+    await writeFile(
+      cachePath,
+      JSON.stringify({
+        topic: "corrupted",
+        description: "has bad tracked_files",
+        timestamp: "2026-01-01T00:00:00.000Z",
+        tracked_files: null,
+      }),
+    );
+
+    const trackedPath = join(tmpDir, "fresh-file.ts");
+    await writeFile(trackedPath, "export const x = 1;");
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "recovery write",
+        description: "write after corruption",
+        tracked_files: [{ path: trackedPath }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const files = parsed["tracked_files"] as Array<{ path: string }>;
+    // Corrupted existing tracked_files treated as [] — only the newly submitted entry survives
+    expect(files).toHaveLength(1);
+    expect(files[0]?.path).toBe(trackedPath);
   });
 });

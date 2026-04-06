@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test": "bunx vitest run",
-    "test:watch": "bunx vitest"
+    "test:watch": "bunx vitest",
+    "test:e2e": "docker compose -f e2e/docker-compose.yml run --rm e2e"
   },
   "dependencies": {
     "@opencode-ai/plugin": "latest",

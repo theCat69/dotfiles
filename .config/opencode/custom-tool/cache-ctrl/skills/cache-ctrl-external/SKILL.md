@@ -118,3 +118,13 @@ All fields are validated on write. Unknown extra fields are allowed and preserve
 `.ai/external-context-gatherer_cache/<subject>.json` — one file per subject.
 
 Staleness threshold: `fetched_at` is empty **or** older than 24 hours.
+
+## server_time in Responses
+
+Every `cache_ctrl_*` tool call returns a `server_time` field at the outer JSON level:
+
+```json
+{ "ok": true, "value": { ... }, "server_time": "2026-04-05T12:34:56.789Z" }
+```
+
+Use this to assess how stale `fetched_at` timestamps are — you do not need `bash` or system access to know the current time.

@@ -53,7 +53,8 @@ export async function readCache(filePath: string): Promise<Result<Record<string,
 
 export async function writeCache(
   filePath: string,
-  updates: Partial<ExternalCacheFile> | Partial<LocalCacheFile>,
+  updates: Partial<ExternalCacheFile> | Partial<LocalCacheFile> | Record<string, unknown>,
+  mode: "merge" | "replace" = "merge",
 ): Promise<Result<void>> {
   // Ensure parent directory exists before acquiring the lock
   await mkdir(dirname(filePath), { recursive: true });
@@ -62,16 +63,21 @@ export async function writeCache(
   if (!lockResult.ok) return lockResult;
 
   try {
-    // Read existing content if file exists
-    let existing: Record<string, unknown> = {};
-    const readResult = await readCache(filePath);
-    if (readResult.ok) {
-      existing = readResult.value;
-    } else if (readResult.code !== ErrorCode.FILE_NOT_FOUND) {
-      return { ok: false, error: readResult.error, code: readResult.code };
-    }
+    let merged: Record<string, unknown>;
 
-    const merged = { ...existing, ...updates };
+    if (mode === "replace") {
+      merged = updates as Record<string, unknown>;
+    } else {
+      // Read existing content if file exists
+      let existing: Record<string, unknown> = {};
+      const readResult = await readCache(filePath);
+      if (readResult.ok) {
+        existing = readResult.value;
+      } else if (readResult.code !== ErrorCode.FILE_NOT_FOUND) {
+        return { ok: false, error: readResult.error, code: readResult.code };
+      }
+      merged = { ...existing, ...updates };
+    }
     const tmpPath = `${filePath}.tmp.${process.pid}.${randomBytes(6).toString("hex")}`;
 
     try {

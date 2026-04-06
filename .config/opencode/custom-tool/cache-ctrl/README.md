@@ -57,7 +57,7 @@ src/index.ts              cache_ctrl.ts
 - All commands funnel through `cacheManager` for reads/writes — no direct filesystem access from command handlers.
 - The CLI and plugin share the same command functions — no duplicated business logic.
 - All operations return `Result<T, CacheError>` — nothing throws into the caller.
-- `writeCache` merges updates onto the existing object — unknown agent fields are always preserved.
+- `writeCache` defaults to merging updates onto the existing object (preserving unknown agent fields). Local writes use per-path merge — submitted `tracked_files` entries replace existing entries for those paths; entries for other paths are preserved; entries for files no longer present on disk are evicted automatically.
 
 ---
 
@@ -96,7 +96,7 @@ cache-ctrl list [--agent external|local|all] [--pretty]
 Lists all cache entries. Shows age, human-readable age string, and staleness flag.
 
 - External entries are stale if `fetched_at` is empty or older than 24 hours.
-- Local entries are always marked `is_stale: true` (no TTL — use `check-files` for authoritative change detection).
+- Local entries show `is_stale: true` only when `cache_ctrl_check_files` detects actual changes (changed files, new non-ignored files, or deleted files). A freshly-written cache with no subsequent file changes shows `is_stale: false`.
 
 **Default**: `--agent all`
 
@@ -255,7 +255,7 @@ cache-ctrl check-files [--pretty]
 Reads `tracked_files[]` from the local cache and compares each file's current `mtime` (and `hash` if stored) against the saved values.
 
 **Comparison logic:**
-1. Read current `mtime` via `stat()`.
+1. Read current `mtime` via `lstat()` (reflects the symlink node itself, not the target).
 2. If stored `hash` is present and `mtime` changed → recompute SHA-256. Hash match → `unchanged` (touch-only). Hash differs → `changed`.
 3. No stored `hash` → mtime change alone marks the file as `changed`.
 4. File missing on disk → `missing`.
@@ -309,10 +309,10 @@ cache-ctrl write external <subject> --data '<json>' [--pretty]
 cache-ctrl write local --data '<json>' [--pretty]
 ```
 
-Writes a validated cache entry to disk. The `--data` argument must be a valid JSON string matching the ExternalCacheFile or LocalCacheFile schema. Schema validation runs first — all required fields must be present in `--data` or the write is rejected with `VALIDATION_ERROR`. Only after validation passes are any extra/unknown fields from the existing file on disk preserved via atomic write-with-merge.
+Writes a validated cache entry to disk. The `--data` argument must be a valid JSON string matching the ExternalCacheFile or LocalCacheFile schema. Schema validation runs first — all required fields must be present in `--data` or the write is rejected with `VALIDATION_ERROR`.
 
-- `external`: `subject` is required as a positional argument
-- `local`: no subject argument
+- `external`: `subject` is required as a positional argument. After validation, unknown fields from the existing file on disk are preserved (merge write).
+- `local`: no subject argument; `timestamp` is **auto-set** to the current UTC time server-side — any value supplied in `--data` is silently overridden. `mtime` for each entry in `tracked_files[]` is **auto-populated** by the write command via filesystem `lstat()` — agents do not need to supply it. Local writes use per-path merge: submitted `tracked_files` entries replace existing entries for the same path; entries for other paths are preserved; entries for files deleted from disk are evicted automatically. On cold start (no existing cache), submit all relevant files for a full write; on subsequent writes, submit only new or changed files.
 
 > The `subject` parameter (external agent) must match `/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/` and be at most 128 characters. Returns `INVALID_ARGS` if it fails validation.
 
@@ -340,6 +340,14 @@ The plugin (`cache_ctrl.ts`) is auto-discovered via `~/.config/opencode/tools/ca
 | `cache_ctrl_write` | Write a validated cache entry; validates against ExternalCacheFile or LocalCacheFile schema |
 
 No bash permission is required for agents that use the plugin tools directly.
+
+All 7 plugin tool responses include a `server_time` field at the outer JSON level:
+
+```json
+{ "ok": true, "value": { ... }, "server_time": "2026-04-05T12:34:56.789Z" }
+```
+
+Use `server_time` to assess how stale stored timestamps are without requiring bash or system access.
 
 ---
 
@@ -373,7 +381,7 @@ cache-ctrl invalidate local
 # If status: "unchanged" → use cached context
 ```
 
-**Requirement**: The agent MUST populate `tracked_files[]` (with `path`, `mtime`, and optionally `hash`) when writing its cache file. `check-files` returns `unchanged` silently if this field is absent.
+**Requirement**: The agent MUST populate `tracked_files[]` (with `path` and optionally `hash`) when writing its cache file. `mtime` per entry is auto-populated server-side via filesystem `lstat()` — agents do not need to supply it. `check-files` returns `unchanged` silently if `tracked_files` is absent.
 
 ---
 
@@ -403,14 +411,17 @@ cache-ctrl invalidate local
 
 ### Local: `.ai/local-context-gatherer_cache/context.json`
 
+> `timestamp` is **auto-set** by the write command to the current UTC time. Do not include it in agent-supplied content — any value provided is silently overridden. `mtime` values in `tracked_files[]` are **auto-populated** by the write command via filesystem `lstat()` — agents only need to supply `path` (and optionally `hash`). Local writes use per-path merge: submitted `tracked_files` entries replace existing entries for the same path; entries for other paths are preserved; entries for files deleted from disk are evicted automatically. On cold start (no existing cache), submit all relevant files; on subsequent writes, submit only new or changed files.
+
 ```jsonc
 {
-  "timestamp": "2026-04-04T12:00:00Z",   // "" when invalidated
+  "timestamp": "2026-04-04T12:00:00Z",   // auto-set on write; "" when invalidated
   "topic": "neovim plugin configuration",
   "description": "Scan of nvim lua plugins",
   "cache_miss_reason": "files changed",  // optional: why the previous cache was discarded
   "tracked_files": [
     { "path": "lua/plugins/ui/bufferline.lua", "mtime": 1743768000000, "hash": "sha256hex..." }
+    // mtime is auto-populated by the write command; agents only need to supply path (and optionally hash)
   ]
   // Any additional agent fields are preserved unchanged
 }
@@ -443,14 +454,19 @@ cache-ctrl invalidate local
 ## Development
 
 ```zsh
-# Run tests
+# Run unit tests
 bun run test
 
 # Watch mode
 bun run test:watch
 
+# Run E2E tests (requires Docker)
+bun run test:e2e
+
 # Re-run installer (idempotent)
 zsh install.sh
 ```
 
-Tests live in `tests/` and use Vitest. Filesystem operations use real temp directories; HTTP calls are mocked with `vi.mock`.
+Unit tests live in `tests/` and use Vitest. Filesystem operations use real temp directories; HTTP calls are mocked with `vi.mock`.
+
+E2E tests live in `e2e/tests/` and run inside Docker via `docker compose -f e2e/docker-compose.yml run --rm e2e`. They spawn the actual CLI binary as a subprocess and verify exit codes, stdout/stderr JSON shape, and cross-command behaviour. Docker must be running; no other host dependencies are required.

@@ -30,9 +30,15 @@ Three tiers of access — use the best one available.
   - File present → check `timestamp`. If older than 1 hour, treat as stale and re-scan. Otherwise treat as fresh.
 
 Result interpretation (Tier 1 & 2):
-- `status: "unchanged"` → **skip scanning, return cached context**.
-- `status: "changed"` → files changed, proceed to re-scan.
+- `status: "unchanged"` → tracked files are content-stable; skip re-scan and return cached context.
+- `status: "changed"` → at least one tracked file changed; proceed to **delta scan** (read content of `changed_files` + `new_files` only — do not re-read unchanged files).
 - `status: "unchanged"` with empty `tracked_files` → cold start, proceed to scan.
+
+The response also reports:
+- `new_files` — untracked non-ignored files absent from cache, plus git-tracked files absent from cache when the cache is non-empty (blank-slate caches skip git-tracked files to avoid false positives on cold start)
+- `deleted_git_files` — git-tracked files deleted from the working tree (reported by `git ls-files --deleted`)
+
+> **⚠ Cache is non-exhaustive**: `status: "unchanged"` only confirms that previously-tracked files are content-stable — it does not mean the file set is complete. Always check `new_files` and `deleted_git_files` in the response; if either is non-empty, include those paths in the next write to keep the cache up to date.
 
 ### 2. Invalidate before writing (optional)
 
@@ -42,51 +48,46 @@ Result interpretation (Tier 1 & 2):
 
 ### 3. Write cache after scanning
 
-**Always use the write tool/command — never write cache files directly via `edit`.** Direct writes bypass schema validation and can silently corrupt the cache format.
+**Always use the write tool/command — never edit the file directly.** Direct writes bypass schema validation and can silently corrupt the cache format.
 
-**Tier 1:** Call `cache_ctrl_write` with:
+> **Write is per-path merge**: Submitted `tracked_files` entries replace existing entries for the same paths. Paths not in the submission are preserved. Entries for files deleted from disk are evicted automatically (no agent action needed).
+
+#### Input fields (`content` object)
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `topic` | `string` | ✅ | Human description of what was scanned |
+| `description` | `string` | ✅ | One-liner for keyword search |
+| `tracked_files` | `Array<{ path: string }>` | ✅ | Paths to track; `mtime` and `hash` are auto-computed by the tool |
+| `cache_miss_reason` | `string` | optional | Why the previous cache was discarded |
+
+> **Cold start vs incremental**: On first run (no existing cache), submit all relevant files. On subsequent runs, submit only new and changed files — the tool merges them in.
+
+> **Auto-set by the tool — do not include**: `timestamp` (current UTC), `mtime` (filesystem `lstat()`), and `hash` (SHA-256) per `tracked_files` entry.
+
+#### Tier 1 — `cache_ctrl_write`
+
 ```json
 {
   "agent": "local",
   "content": {
-    "timestamp": "<ISO 8601 now>",
-    "topic": "<description of what was scanned>",
-    "description": "<one-liner summary>",
+    "topic": "neovim plugin configuration scan",
+    "description": "Full scan of lua/plugins tree for neovim lazy.nvim setup",
     "tracked_files": [
-      { "path": "<repo-relative or absolute path>", "mtime": 1743768000000, "hash": "<sha256-hex>" }
+      { "path": "lua/plugins/ui/bufferline.lua" },
+      { "path": "lua/plugins/lsp/nvim-lspconfig.lua" }
     ]
   }
 }
 ```
 
-**Tier 2:** `cache-ctrl write local --data '<json>'`
+#### Tier 2 — CLI
 
-**Tier 3:** Same as Tier 2 — there is no direct-file fallback for writes. If neither Tier 1 nor Tier 2 is available, request access to one of them.
+`cache-ctrl write local --data '<json>'` — pass the same `content` object as JSON string.
 
-#### LocalCacheFile schema
+#### Tier 3
 
-All fields are validated on write. Unknown extra fields are allowed and preserved.
-
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `timestamp` | `string` | ✅ | ISO 8601 datetime. Use `""` when invalidating |
-| `topic` | `string` | ✅ | Human description of what was scanned |
-| `description` | `string` | ✅ | One-liner for keyword search |
-| `cache_miss_reason` | `string` | ➕ optional | Why the previous cache was discarded |
-| `tracked_files` | `Array<{ path: string; mtime: number; hash?: string }>` | ✅ | **Mandatory** for `check-files` to work. `mtime` is Unix ms (`Date.getTime()`). `hash` is SHA-256 hex |
-| *(any other fields)* | `unknown` | ➕ optional | Preserved unchanged |
-
-**Minimal valid example:**
-```json
-{
-  "timestamp": "2026-04-05T10:00:00Z",
-  "topic": "neovim plugin configuration scan",
-  "description": "Full scan of lua/plugins tree for neovim lazy.nvim setup",
-  "tracked_files": [
-    { "path": "lua/plugins/ui/bufferline.lua", "mtime": 1743768000000, "hash": "a1b2c3..." }
-  ]
-}
-```
+Not available — there is no direct-file fallback for writes. If neither Tier 1 nor Tier 2 is accessible, request access to one of them.
 
 ### 4. Confirm cache (optional)
 
@@ -94,7 +95,7 @@ All fields are validated on write. Unknown extra fields are allowed and preserve
 **Tier 2:** `cache-ctrl list --agent local`
 **Tier 3:** `read` `.ai/local-context-gatherer_cache/context.json` and verify `timestamp` is current.
 
-Note: local entries always show `is_stale: true` in Tier 1/2 list output — this is expected. Use `cache_ctrl_check_files` (Tier 1/2) or timestamp comparison (Tier 3) for authoritative change detection.
+Note: local entries show `is_stale: true` only when `cache_ctrl_check_files` detects actual changes (changed files, new non-ignored files, or deleted files). A freshly-written cache with no subsequent file changes will show `is_stale: false`.
 
 ---
 
@@ -107,6 +108,16 @@ Note: local entries always show `is_stale: true` in Tier 1/2 list output — thi
 | Confirm written | `cache_ctrl_list` | `cache-ctrl list --agent local` | `read` file, check `timestamp` |
 | View full entry | `cache_ctrl_inspect` | `cache-ctrl inspect local context` | `read` file directly |
 | Write cache | `cache_ctrl_write` | `cache-ctrl write local --data '<json>'` | ❌ not available |
+
+## server_time in Responses
+
+Every `cache_ctrl_*` tool call returns a `server_time` field at the outer JSON level:
+
+```json
+{ "ok": true, "value": { ... }, "server_time": "2026-04-05T12:34:56.789Z" }
+```
+
+Use this to assess how stale stored timestamps are — you do not need `bash` or system access to know the current time.
 
 ## Cache Location
 

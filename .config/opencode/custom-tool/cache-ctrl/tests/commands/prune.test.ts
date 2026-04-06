@@ -64,8 +64,8 @@ describe("pruneCommand — external entries", () => {
     const result = await pruneCommand({ agent: "external" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.matched).toContain(staleFile);
-    expect(result.value.matched).not.toContain(freshFile);
+    expect(result.value.matched.map((m) => m.file)).toContain(staleFile);
+    expect(result.value.matched.map((m) => m.file)).not.toContain(freshFile);
     expect(result.value.action).toBe("invalidated");
 
     // Stale file should still exist but with fetched_at zeroed
@@ -97,7 +97,7 @@ describe("pruneCommand — external entries", () => {
     const result = await pruneCommand({ agent: "external", delete: true });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.matched).toContain(staleFile);
+    expect(result.value.matched.map((m) => m.file)).toContain(staleFile);
     expect(result.value.action).toBe("deleted");
     expect(await fileExists(staleFile)).toBe(false);
   });
@@ -119,8 +119,8 @@ describe("pruneCommand — external entries", () => {
     const result = await pruneCommand({ agent: "external", maxAge: "3h" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.matched).not.toContain(file2h);
-    expect(result.value.matched).toContain(file5h);
+    expect(result.value.matched.map((m) => m.file)).not.toContain(file2h);
+    expect(result.value.matched.map((m) => m.file)).toContain(file5h);
   });
 
   it("rejects invalid maxAge format", async () => {
@@ -160,7 +160,7 @@ describe("pruneCommand — local entry", () => {
     const result = await pruneCommand({ agent: "local" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.matched).toContain(localPath);
+    expect(result.value.matched.map((m) => m.file)).toContain(localPath);
     expect(result.value.action).toBe("invalidated");
 
     const content = JSON.parse(
@@ -179,7 +179,7 @@ describe("pruneCommand — local entry", () => {
     const result = await pruneCommand({ agent: "local", delete: true });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.matched).toContain(localPath);
+    expect(result.value.matched.map((m) => m.file)).toContain(localPath);
     expect(await fileExists(localPath)).toBe(false);
   });
 
@@ -218,8 +218,8 @@ describe("pruneCommand — all agents", () => {
     const result = await pruneCommand({ agent: "all" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.matched).toContain(staleFile);
-    expect(result.value.matched).toContain(localPath);
+    expect(result.value.matched.map((m) => m.file)).toContain(staleFile);
+    expect(result.value.matched.map((m) => m.file)).toContain(localPath);
     expect(result.value.count).toBe(2);
   });
 });
