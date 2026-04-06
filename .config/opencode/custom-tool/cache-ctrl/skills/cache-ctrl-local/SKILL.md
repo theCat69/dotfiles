@@ -78,6 +78,18 @@ the tool preserves them automatically via per-path merge.
 Submitting a facts key for a path absent from submitted `tracked_files` is a
 VALIDATION_ERROR and the entire write is rejected.
 
+### Fact completeness
+
+When a file appears in `changed_files` or `new_files`, read the **whole file** before writing
+facts — not just the diff. A 2-line change does not support a complete re-description of the
+file, and submitting partial facts for a re-read path **permanently replaces** whatever was
+cached before.
+
+Write facts as **enumerable observations** — one entry per notable characteristic (purpose,
+structure, key dependencies, patterns, constraints, entry points). Do not bundle multiple
+distinct properties into a single string. A file should have as many fact entries as it has
+distinct notable properties, not a prose summary compressed into one or two lines.
+
 ### When to submit `global_facts`
 
 Submit `global_facts` only when you re-read at least one structural file in this session:
