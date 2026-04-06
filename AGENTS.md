@@ -46,3 +46,9 @@ Code pattern examples (real snippets from the project):
 - **Neovim plugins**: each file in `lua/plugins/*/` returns a `LazyPluginSpec` or `LazyPluginSpec[]`
 - **No secrets in repo**: secrets sourced from `~/.secrets` (gitignored)
 - **opencode dependency versions**: `@opencode-ai/*` packages and opencode plugins (e.g. `@mohak34/*`, `@slkiser/*`) must **never** be version-pinned — always use `"latest"`. Pinned versions in this context are always wrong.
+
+## Auto-Managed Files (Do Not Commit)
+
+The following files are automatically updated at runtime and should **never** be committed by AI agents:
+
+- `.config/opencode/package.json` — opencode auto-updates the `@opencode-ai/plugin` version on every run. Any version bump in this file is runtime noise, not an agent change. Do not revert, pin, or commit this file unless explicitly instructed by the user.

@@ -1,4 +1,4 @@
-import { posix, sep } from "node:path";
+import { isAbsolute, posix, relative, sep } from "node:path";
 import { findRepoRoot, readCache } from "../cache/cacheManager.js";
 import { resolveLocalCachePath } from "../cache/localCache.js";
 import { compareTrackedFile } from "../files/changeDetector.js";
@@ -45,14 +45,18 @@ export async function checkFilesCommand(): Promise<Result<CheckFilesResult["valu
       getGitDeletedFiles(repoRoot),
       getUntrackedNonIgnoredFiles(repoRoot),
     ]);
-    const cachedPaths = new Set(trackedFiles.map((f) => toPosix(f.path)));
+    const toRepoRelativePosix = (filePath: string): string => {
+      const rel = isAbsolute(filePath) ? relative(repoRoot, filePath) : filePath;
+      return rel.split(sep).join(posix.sep);
+    };
+    const cachedPaths = new Set(trackedFiles.map((f) => toRepoRelativePosix(f.path)));
     // When tracked_files is empty (blank-slate), skip git-tracked files from new_files
     // because those were already present before this cache was written.
     // Untracked non-ignored files are always reported as new — they represent newly
     // created files that the user added to the working tree.
     const baseFiles = trackedFiles.length > 0 ? gitTrackedFiles : [];
     const newFiles = [...new Set([...baseFiles, ...untrackedNonIgnoredFiles])].filter(
-      (p) => !cachedPaths.has(toPosix(p)),
+      (p) => !cachedPaths.has(toRepoRelativePosix(p)),
     );
 
     return {

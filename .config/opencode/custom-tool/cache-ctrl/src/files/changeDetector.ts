@@ -113,8 +113,8 @@ export async function resolveTrackedFileStats(
         // lstat: mtime reflects the symlink node; hash is computed from the target content via readFile
         const [fileStat, hash] = await Promise.all([lstat(absolutePath), computeFileHash(absolutePath)]);
         return { path: file.path, mtime: fileStat.mtimeMs, hash };
-      } catch (err) {
-        if (err instanceof Error && "code" in err && (err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+      } catch {
+        // Always return gracefully per the "never throws" contract — do not propagate filesystem errors
         return { path: file.path, mtime: 0 };
       }
     }),

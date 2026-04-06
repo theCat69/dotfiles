@@ -15,7 +15,8 @@ ENV GIT_COMMITTER_EMAIL="e2e@cache-ctrl.test"
 COPY e2e/fixtures/repo /fixtures/repo-template
 
 # Initialize git inside the template so copied temp dirs are standalone git repos.
-# ENV vars are not yet set during RUN steps, so use inline overrides here.
+# Use inline overrides here so the baked fixture commit has explicit metadata
+# independent of the broader runtime/default git identity configured above.
 RUN git -C /fixtures/repo-template init && \
     git -C /fixtures/repo-template add . && \
     GIT_AUTHOR_NAME="E2E" GIT_AUTHOR_EMAIL="e2e@test" \
