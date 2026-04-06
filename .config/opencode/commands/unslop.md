@@ -1,5 +1,5 @@
 ---
-description: Run AI slop cleanup on changed files (git diff scope by default). Supports --review for report-only and --full for whole-codebase scope.
+description: Run a single AI slop cleanup pass on changed files — interactive, no test writing, asks before committing. Use /unslop-loop for automated multi-pass with test writing and auto-commit.
 ---
 
 <user-input>
@@ -32,6 +32,32 @@ Combination matrix:
 
 ---
 
+## Execution Context
+
+Identify which execution context applies **before running any steps**.
+
+**Builder context** (agent has `unslop` skill permission and can edit files directly):
+Continue to Step 1. Load skill `unslop` and execute all 4 passes yourself on the resolved scope.
+- If mode is **report-only**: apply the `--review` mode defined in the skill — report slop findings per category, do NOT edit any file.
+- If mode is **edit**: apply all 4 passes with full edits as defined in the skill.
+
+**Orchestrator context** (agent cannot edit files; has `task` access to `coder`):
+Run Step 1 yourself to resolve the file scope. Then call `coder` as a task with this prompt:
+
+> Load skill `unslop`. Run all 4 sequential passes on these files: [scope list]. Mode: [edit | report-only]. Scope rule: never touch files outside this list.
+> Return: files touched, what was removed per pass, Pass 4 coverage gaps, remaining risks. Output ≤ 300 tokens.
+
+After coder returns, proceed to Step 2 (Present Results) and Step 3 (Next Step) yourself.
+
+**Fallback** (neither context available — e.g. run from `ask` or `Planner`):
+Inform the user:
+
+> "This command requires Builder or Orchestrator. Please switch to one of those agents and re-run `/unslop`."
+
+Then stop.
+
+---
+
 ## Step 1 — Resolve Scope
 
 **Default / `--review` (no `--full`, no explicit path)**:
@@ -47,31 +73,7 @@ Use the provided path(s) directly. Verify each path exists. If any path does not
 
 ---
 
-## Step 2 — Execute
-
-Detect which execution context is available:
-
-**Builder context** (agent has `unslop` skill permission):
-Load skill `unslop`. Execute all 4 passes sequentially on the resolved scope.
-- If mode is **report-only**: apply the `--review` mode defined in the skill — report slop findings per category, do NOT edit any file.
-- If mode is **edit**: apply all 4 passes with full edits as defined in the skill.
-
-**Orchestrator context** (agent can call `coder` as a task):
-Call the `coder` subagent with this exact prompt:
-
-> Load skill `unslop`. Run all 4 sequential passes on these files: [scope list]. Mode: [edit | report-only]. Scope rule: never touch files outside this list.
-> Return: files touched, what was removed per pass, Pass 4 coverage gaps, remaining risks. Output ≤ 300 tokens.
-
-**Fallback** (neither context available — e.g. run from `ask` or `Planner`):
-Inform the user:
-
-> "This command requires Builder or Orchestrator. Please switch to one of those agents and re-run `/unslop`."
-
-Then stop.
-
----
-
-## Step 3 — Present Results
+## Step 2 — Present Results
 
 Display results structured as follows:
 
@@ -84,7 +86,7 @@ Display results structured as follows:
 
 ---
 
-## Step 4 — Next Step (skip if `--review`)
+## Step 3 — Next Step (skip if `--review`)
 
 If mode is **report-only**, skip this step entirely and stop.
 
@@ -92,6 +94,8 @@ If edits were made (mode is **edit**), use the `question` tool to ask the user:
 
 > **What would you like to do next?**
 >
-> - **Commit changes** — stage and commit the cleanup diff
-> - **Run another pass** — re-run `/unslop` on the same scope
+> - **Commit changes** — stage and commit the cleanup diff, then stop
+> - **Hand off to `/unslop-loop`** — switch to automated mode: loops until all clean, writes tests, and commits after each cycle (optionally provide a max-commit count)
 > - **Nothing** — done, no action needed
+
+If the user chooses **Hand off to `/unslop-loop`**: run `/unslop-loop` on the same scope as this pass, passing `--full` if it was active, or the explicit path(s) if they were provided. If the user also specifies a max-commit count, pass it as an argument.
