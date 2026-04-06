@@ -26,6 +26,7 @@ permission:
     "angular": "allow"
     "quarkus": "allow"
     "cache-ctrl-caller": "allow"
+    "deep-interview": "allow"
   todowrite: "allow"
   todoread: "allow"
   question: "allow"
@@ -87,7 +88,7 @@ Safely transform user requests into production-ready code for production systems
    - No recognizable manifest → warn user, continue with `general-coding` only
    Load the corresponding stack skills (e.g. `Load skill \`angular\``, `Load skill \`typescript\``).
    Record the detected stack as `"stack": ["angular", "typescript"]` in the Context Snapshot.
-2c. **Optional design challenge**: For architecturally significant requests (new service, major refactor, new public API, new agent/skill), optionally call `critic` on the planned approach before calling `coder`. Present the challenge list to the user and ask whether to proceed or adjust scope.
+2c. **Optional design challenge**: For architecturally significant requests (new service, major refactor, new public API, new agent/skill), optionally call `critic` on the user's stated intent and requirements (not an implementation plan — none exists yet at this stage). Present the challenge list to the user and ask whether to proceed or adjust scope.
 3. Call external-context-gatherer (cache-first).
 4. Filter into Context Snapshot (≤ 1,000 tokens) and write to `.ai/context-snapshots/current.json`.
 5. Call coder with snapshot path + summary only.

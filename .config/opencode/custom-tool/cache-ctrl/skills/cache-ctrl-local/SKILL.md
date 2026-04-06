@@ -42,6 +42,8 @@ The response also reports:
 
 ### 2. Invalidate before writing (optional)
 
+> Do this only if cache is really outdated and a full rescan is needed. Otherwise just proceed with next step (writing).
+
 **Tier 1:** Call `cache_ctrl_invalidate` with `agent: "local"`.
 **Tier 2:** `cache-ctrl invalidate local`
 **Tier 3:** Skip — overwriting the file in step 3 is sufficient.

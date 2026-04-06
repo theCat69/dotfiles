@@ -370,6 +370,40 @@ In deep review mode, `local-context-gatherer` and `external-context-gatherer` ma
 
 ---
 
+## Slash commands
+
+Commands available in any opencode session. Invoke them by typing `/command-name` in the chat.
+
+| Command | File | Purpose |
+|---|---|---|
+| `/init-implementer` | `commands/init-implementer.md` | Deep-scans a project, detects the stack, generates skill files and code examples |
+| `/unslop` | `commands/unslop.md` | Removes AI slop from changed files (or `--full` for the whole codebase, or a specific path) |
+| `/critic` | `commands/critic.md` | Challenges a plan, spec, or current work from first principles (Necessity / Simplicity / Coupling) |
+| `/interview` | `commands/interview.md` | Runs a Socratic requirements session, producing a Structured Spec when ambiguity drops below 20% |
+
+### `/unslop`
+
+Runs the `unslop` skill in sequential bounded passes on changed files.  
+Default mode edits files in place; pass `--review` for a report-only pass with no writes.  
+Routing: Builder loads the skill directly; Orchestrator delegates to the coder subagent; other agents return an error.  
+**Never auto-writes tests** — it only flags gaps in the Pass 4 report.
+
+### `/critic`
+
+Challenges the current plan, spec, or in-progress work from first principles.  
+Input modes: empty (prompts user), `--diff` (staged changes), `--file <path>`, or free-form text pasted inline.  
+Findings are routed to the appropriate agent (Planner, Builder, Orchestrator) or presented to the user to proceed or re-challenge.
+
+### `/interview`
+
+Runs a deep-interview requirements session using the `deep-interview` skill.  
+Asks Socratic questions in a scored loop and proceeds only when ambiguity falls below 20%.  
+Produces a **Structured Spec** (Goal, Constraints, Success Criteria, Out of Scope, Final Score, Assumptions).  
+Routes to Planner, Builder, Orchestrator, saves to `features/spec-<slug>.md`, or exits — user's choice.  
+Requires `deep-interview` skill permission; Orchestrator has it by default, other agents may not.
+
+---
+
 ## Installation Tutorial
 
 ### Requirements
