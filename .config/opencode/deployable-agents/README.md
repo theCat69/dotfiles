@@ -256,7 +256,7 @@ A multi-agent pipeline that transforms user requests into reviewed, production-r
 ```
 
 The Orchestrator **never writes code itself** and never exposes raw context to the coder.  
-The coder **never calls subagents** (`task: "deny"`).
+The coder **never calls implementation subagents** — it only calls context gatherers (`local-context-gatherer`, `external-context-gatherer`) when the snapshot is insufficient or external knowledge is needed (cache-first).
 
 ---
 
