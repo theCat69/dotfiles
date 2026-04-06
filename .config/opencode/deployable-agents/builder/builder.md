@@ -24,6 +24,8 @@ permission:
     "project-code-examples": "allow"
     "git-commit": "allow"
     "cache-ctrl-caller": "allow"
+    "unslop": "allow"
+    "deep-interview": "allow"
   webfetch: "allow"
   websearch: "allow"
   "context7_*": "allow"
@@ -63,6 +65,9 @@ Use when the task is:
 
 In direct mode: load skills, optionally check cache / gather context, write the code, commit.
 
+If the user's request is vague (ambiguity signals: no constraints, no success criteria, vague action verbs like "improve/fix/make better"), load skill `deep-interview` before writing any code.
+If the user's request contains `deslop`, `cleanup`, or `unslop`, load skill `unslop` after writing code.
+
 ## Pipeline mode (optional)
 Use when the task is:
 - Large or architecturally significant
@@ -70,6 +75,7 @@ Use when the task is:
 - Explicitly requested to include a review cycle
 
 In pipeline mode:
+If the request is vague (ambiguity signals: no constraints, no success criteria, vague verbs), load skill `deep-interview` before step 1 (before gathering context).
 1. Check cache state with `cache_ctrl_list`.
 2. Call local-context-gatherer (cache-first).
 3. **Detect stack from gathered context:**
@@ -81,6 +87,7 @@ In pipeline mode:
    Load the corresponding stack skills.
 4. Optionally call external-context-gatherer (cache-first) for external docs or best practices.
 5. Write the code yourself.
+5.5. Load skill `unslop` and run a bounded cleanup pass on changed files before calling reviewer.
 6. Call reviewer with the git diff.
 7. Call security-reviewer with the git diff.
 8. **Security triage — re-verification loop.** For each non-obvious finding, assess whether it is genuinely applicable. Re-call security-reviewer with a targeted prompt if needed. Classify as Confirmed / Deferred / Discarded.

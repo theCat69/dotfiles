@@ -203,6 +203,8 @@ Loading a skill not in the allow-list will fail.
 | `cache-ctrl-caller` | global | Cache-first protocol for calling local-context-gatherer and external-context-gatherer |
 | `cache-ctrl-local` | global | Local cache schema, write protocol, and tracked-files format |
 | `cache-ctrl-external` | global | External cache schema, write protocol, and source metadata format |
+| `unslop` | global | AI slop cleanup in sequential bounded passes scoped to changed files only |
+| `deep-interview` | global | Socratic requirements gathering with ambiguity scoring — proceed only when ambiguity < 20% |
 
 ---
 
@@ -217,13 +219,14 @@ A read-only Q&A assistant. Cannot write files or run arbitrary commands.
 | File | Mode | Role |
 |---|---|---|
 | `ask.md` | primary | Main assistant — answers questions, gathers context, delegates reviews |
+| `critic.md` | subagent | Adversarial design challenger (shared) |
 | `reviewer.md` | subagent | Code quality reviewer (shared) |
 | `security-reviewer.md` | subagent | Security auditor (shared) |
 | `librarian.md` | subagent | Documentation auditor (shared) |
 | `local-context-gatherer.md` | subagent | Repo context extractor (shared) |
 | `external-context-gatherer.md` | subagent | Web/MCP context fetcher (shared) |
 
-**Workflow:** Identify goal → ask clarifying questions → gather context (context7 / websearch / webfetch / local repo) → answer accurately.
+**Workflow:** Identify goal → ask clarifying questions → gather context (context7 / websearch / webfetch / local repo) → optionally call critic for adversarial challenge on broad/complex topics → answer accurately.
 
 ---
 
@@ -237,6 +240,7 @@ A multi-agent pipeline that transforms user requests into reviewed, production-r
 |---|---|---|
 | `Orchestrator.md` | primary | Orchestrates the full pipeline: gather → code → review → security → docs |
 | `coder.md` | subagent | Implements features from a Context Snapshot |
+| `critic.md` | subagent | Adversarial design challenger (shared) |
 | `reviewer.md` | subagent | Code quality reviewer (shared) |
 | `security-reviewer.md` | subagent | Security auditor (shared) |
 | `librarian.md` | subagent | Documentation keeper (shared) |
@@ -248,6 +252,7 @@ A multi-agent pipeline that transforms user requests into reviewed, production-r
 ```
 1. Gather local context  (local-context-gatherer, cache-first)
 2. Detect stack → load stack skills eagerly
+2c. Optional design challenge  (critic — for architecturally significant requests)
 3. Gather external context  (external-context-gatherer, cache-first)
 4. Build Context Snapshot  → write to .ai/context-snapshots/current.json  (≤ 1,000 tokens)
 5. Implement  (coder ← snapshot path + summary only)
@@ -282,18 +287,21 @@ A lightweight implementation agent that writes code directly. No multi-agent ove
 
 ```
 Direct mode (default):
-  1. Load skills → write code → commit
+  1. If request is vague, run deep-interview (skill) before writing code
+  2. Load skills → write code → optionally run unslop cleanup → commit
 
 Pipeline mode (optional, for complex/risk-sensitive tasks):
-  1. Gather local context  (local-context-gatherer, cache-first)
-  2. Detect stack → load stack skills
-  3. Optionally gather external context  (external-context-gatherer, cache-first)
-  4. Write code directly (no coder delegation)
-  5. Review  (reviewer ← git diff)
-  6. Security audit  (security-reviewer ← git diff)
-  7. Security triage loop
-  8. Update docs  (librarian)
-  9. Summarize → await user validation
+  1. If request is vague, run deep-interview (skill) before gathering context
+  2. Gather local context  (local-context-gatherer, cache-first)
+  3. Detect stack → load stack skills
+  4. Optionally gather external context  (external-context-gatherer, cache-first)
+  5. Write code directly (no coder delegation)
+  5.5. Run unslop bounded cleanup pass on changed files
+  6. Review  (reviewer ← git diff)
+  7. Security audit  (security-reviewer ← git diff)
+  8. Security triage loop
+  9. Update docs  (librarian)
+  10. Summarize → await user validation
 ```
 
 The Builder **writes all code itself** — it never delegates to a coder subagent. Use it instead of Orchestrator when a single-agent workflow is sufficient.
@@ -309,6 +317,7 @@ Turns vague ideas into concrete, production-ready feature specs through iterativ
 | File | Mode | Role |
 |---|---|---|
 | `Planner.md` | primary | Drives the planning loop, manages user interaction |
+| `critic.md` | subagent | Adversarial design challenger (shared) |
 | `feature-designer.md` | subagent | Breaks features into tasks and writes specs to disk |
 | `feature-reviewer.md` | subagent | Reviews specs for clarity, feasibility, and production-readiness |
 | `reviewer.md` | subagent | Code quality reviewer (shared) |
@@ -321,13 +330,15 @@ Turns vague ideas into concrete, production-ready feature specs through iterativ
 
 ```
 1. Restate idea + identify gaps
-2. Ask clarifying questions (one batch at a time)
+2. If ambiguity signals present, run deep-interview (skill) loop before gathering context
+   Otherwise ask focused clarifying questions
 3. Gather repo context  (local-context-gatherer)
    Detect stack → load stack skills
 4. Write feature specs  (feature-designer)
 5. Present specs to user for review
-6. Optionally run spec review  (feature-reviewer)
-7. Final user approval
+6. For architecturally significant features, optionally call critic (present challenge list to user)
+7. Optionally run spec review  (feature-reviewer)
+8. Final user approval
 ```
 
 ---
@@ -340,6 +351,7 @@ The `shared/subagents/` directory contains agents reused across all bundles.
 |---|---|---|
 | `local-context-gatherer` | Extracts repo structure, conventions, constraints | `.ai/local-context-gatherer_cache/context.json` |
 | `external-context-gatherer` | Fetches docs via context7, websearch, webfetch, GitHub MCP | `.ai/external-context-gatherer_cache/` |
+| `critic` | Challenges plans and designs from first principles (Necessity / Simplicity / Coupling) | — |
 | `reviewer` | Code quality, architecture, style review | — |
 | `security-reviewer` | CVE scan (GitHub Advisory DB + Dependabot), OWASP patterns | — |
 | `librarian` | Keeps README, AGENTS.md, `.code-examples-for-ai/` in sync | `.ai/librarian_cache/changes.json` |
