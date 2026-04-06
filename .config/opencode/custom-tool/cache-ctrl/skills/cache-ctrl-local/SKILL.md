@@ -42,6 +42,8 @@ The response also reports:
 
 ### 2. Invalidate before writing (optional)
 
+> Do this only if cache is really outdated and a full rescan is needed. Otherwise just proceed with next step (writing).
+
 **Tier 1:** Call `cache_ctrl_invalidate` with `agent: "local"`.
 **Tier 2:** `cache-ctrl invalidate local`
 **Tier 3:** Skip — overwriting the file in step 3 is sufficient.
@@ -59,11 +61,47 @@ The response also reports:
 | `topic` | `string` | ✅ | Human description of what was scanned |
 | `description` | `string` | ✅ | One-liner for keyword search |
 | `tracked_files` | `Array<{ path: string }>` | ✅ | Paths to track; `mtime` and `hash` are auto-computed by the tool |
+| `global_facts` | `string[]` | optional | Repo-level facts; last-write-wins; see trigger rule below |
+| `facts` | `Record<string, string[]>` | optional | Per-file facts keyed by path; per-path merge |
 | `cache_miss_reason` | `string` | optional | Why the previous cache was discarded |
 
 > **Cold start vs incremental**: On first run (no existing cache), submit all relevant files. On subsequent runs, submit only new and changed files — the tool merges them in.
 
 > **Auto-set by the tool — do not include**: `timestamp` (current UTC), `mtime` (filesystem `lstat()`), and `hash` (SHA-256) per `tracked_files` entry.
+
+### Scope rule for `facts`
+
+Submit `facts` ONLY for files you actually read in this session (i.e., files present in
+your submitted `tracked_files`). Never reconstruct or re-submit facts for unchanged files —
+the tool preserves them automatically via per-path merge.
+
+Submitting a facts key for a path absent from submitted `tracked_files` is a
+VALIDATION_ERROR and the entire write is rejected.
+
+### Fact completeness
+
+When a file appears in `changed_files` or `new_files`, read the **whole file** before writing
+facts — not just the diff. A 2-line change does not support a complete re-description of the
+file, and submitting partial facts for a re-read path **permanently replaces** whatever was
+cached before.
+
+Write facts as **enumerable observations** — one entry per notable characteristic (purpose,
+structure, key dependencies, patterns, constraints, entry points). Do not bundle multiple
+distinct properties into a single string. A file should have as many fact entries as it has
+distinct notable properties, not a prose summary compressed into one or two lines.
+
+### When to submit `global_facts`
+
+Submit `global_facts` only when you re-read at least one structural file in this session:
+AGENTS.md, install.sh, opencode.json, package.json, *.toml config files.
+
+If none of those are in `changed_files` or `new_files`, omit `global_facts` from the write.
+The existing value is preserved automatically.
+
+### Eviction
+
+Facts for files deleted from disk are evicted automatically on the next write — no agent
+action needed. `global_facts` is never evicted.
 
 #### Tier 1 — `cache_ctrl_write`
 

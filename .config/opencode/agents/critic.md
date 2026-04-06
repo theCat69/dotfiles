@@ -1,0 +1,1 @@
+/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/planner/../shared/subagents/critic.md

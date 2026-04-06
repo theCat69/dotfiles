@@ -203,6 +203,10 @@ Loading a skill not in the allow-list will fail.
 | `cache-ctrl-caller` | global | Cache-first protocol for calling local-context-gatherer and external-context-gatherer |
 | `cache-ctrl-local` | global | Local cache schema, write protocol, and tracked-files format |
 | `cache-ctrl-external` | global | External cache schema, write protocol, and source metadata format |
+| `unslop` | global | AI slop cleanup in sequential bounded passes scoped to changed files only (edit mode — always writes files) |
+| `unslop-reviewer` | global | Read-only slop scanner — emits a structured numbered findings list, never edits files |
+| `unslop-coder` | global | Applies a pre-computed unslop findings list — targeted edits only, no scanning |
+| `deep-interview` | global | Socratic requirements gathering with ambiguity scoring — proceed only when ambiguity < 20% |
 
 ---
 
@@ -217,13 +221,14 @@ A read-only Q&A assistant. Cannot write files or run arbitrary commands.
 | File | Mode | Role |
 |---|---|---|
 | `ask.md` | primary | Main assistant — answers questions, gathers context, delegates reviews |
+| `critic.md` | subagent | Adversarial design challenger (shared) |
 | `reviewer.md` | subagent | Code quality reviewer (shared) |
 | `security-reviewer.md` | subagent | Security auditor (shared) |
 | `librarian.md` | subagent | Documentation auditor (shared) |
 | `local-context-gatherer.md` | subagent | Repo context extractor (shared) |
 | `external-context-gatherer.md` | subagent | Web/MCP context fetcher (shared) |
 
-**Workflow:** Identify goal → ask clarifying questions → gather context (context7 / websearch / webfetch / local repo) → answer accurately.
+**Workflow:** Identify goal → ask clarifying questions → gather context (context7 / websearch / webfetch / local repo) → optionally call critic for adversarial challenge on broad/complex topics → answer accurately.
 
 ---
 
@@ -237,6 +242,7 @@ A multi-agent pipeline that transforms user requests into reviewed, production-r
 |---|---|---|
 | `Orchestrator.md` | primary | Orchestrates the full pipeline: gather → code → review → security → docs |
 | `coder.md` | subagent | Implements features from a Context Snapshot |
+| `critic.md` | subagent | Adversarial design challenger (shared) |
 | `reviewer.md` | subagent | Code quality reviewer (shared) |
 | `security-reviewer.md` | subagent | Security auditor (shared) |
 | `librarian.md` | subagent | Documentation keeper (shared) |
@@ -248,6 +254,7 @@ A multi-agent pipeline that transforms user requests into reviewed, production-r
 ```
 1. Gather local context  (local-context-gatherer, cache-first)
 2. Detect stack → load stack skills eagerly
+2c. Optional design challenge  (critic — for architecturally significant requests)
 3. Gather external context  (external-context-gatherer, cache-first)
 4. Build Context Snapshot  → write to .ai/context-snapshots/current.json  (≤ 1,000 tokens)
 5. Implement  (coder ← snapshot path + summary only)
@@ -282,18 +289,21 @@ A lightweight implementation agent that writes code directly. No multi-agent ove
 
 ```
 Direct mode (default):
-  1. Load skills → write code → commit
+  1. If request is vague, run deep-interview (skill) before writing code
+  2. Load skills → write code → optionally run unslop cleanup → commit
 
 Pipeline mode (optional, for complex/risk-sensitive tasks):
-  1. Gather local context  (local-context-gatherer, cache-first)
-  2. Detect stack → load stack skills
-  3. Optionally gather external context  (external-context-gatherer, cache-first)
-  4. Write code directly (no coder delegation)
-  5. Review  (reviewer ← git diff)
-  6. Security audit  (security-reviewer ← git diff)
-  7. Security triage loop
-  8. Update docs  (librarian)
-  9. Summarize → await user validation
+  1. If request is vague, run deep-interview (skill) before gathering context
+  2. Gather local context  (local-context-gatherer, cache-first)
+  3. Detect stack → load stack skills
+  4. Optionally gather external context  (external-context-gatherer, cache-first)
+  5. Write code directly (no coder delegation)
+  5.5. Run unslop bounded cleanup pass on changed files
+  6. Review  (reviewer ← git diff)
+  7. Security audit  (security-reviewer ← git diff)
+  8. Security triage loop
+  9. Update docs  (librarian)
+  10. Summarize → await user validation
 ```
 
 The Builder **writes all code itself** — it never delegates to a coder subagent. Use it instead of Orchestrator when a single-agent workflow is sufficient.
@@ -309,6 +319,7 @@ Turns vague ideas into concrete, production-ready feature specs through iterativ
 | File | Mode | Role |
 |---|---|---|
 | `Planner.md` | primary | Drives the planning loop, manages user interaction |
+| `critic.md` | subagent | Adversarial design challenger (shared) |
 | `feature-designer.md` | subagent | Breaks features into tasks and writes specs to disk |
 | `feature-reviewer.md` | subagent | Reviews specs for clarity, feasibility, and production-readiness |
 | `reviewer.md` | subagent | Code quality reviewer (shared) |
@@ -321,13 +332,15 @@ Turns vague ideas into concrete, production-ready feature specs through iterativ
 
 ```
 1. Restate idea + identify gaps
-2. Ask clarifying questions (one batch at a time)
+2. If ambiguity signals present, run deep-interview (skill) loop before gathering context
+   Otherwise ask focused clarifying questions
 3. Gather repo context  (local-context-gatherer)
    Detect stack → load stack skills
 4. Write feature specs  (feature-designer)
 5. Present specs to user for review
-6. Optionally run spec review  (feature-reviewer)
-7. Final user approval
+6. For architecturally significant features, optionally call critic (present challenge list to user)
+7. Optionally run spec review  (feature-reviewer)
+8. Final user approval
 ```
 
 ---
@@ -340,6 +353,7 @@ The `shared/subagents/` directory contains agents reused across all bundles.
 |---|---|---|
 | `local-context-gatherer` | Extracts repo structure, conventions, constraints | `.ai/local-context-gatherer_cache/context.json` |
 | `external-context-gatherer` | Fetches docs via context7, websearch, webfetch, GitHub MCP | `.ai/external-context-gatherer_cache/` |
+| `critic` | Challenges plans and designs from first principles (Necessity / Simplicity / Coupling) | — |
 | `reviewer` | Code quality, architecture, style review | — |
 | `security-reviewer` | CVE scan (GitHub Advisory DB + Dependabot), OWASP patterns | — |
 | `librarian` | Keeps README, AGENTS.md, `.code-examples-for-ai/` in sync | `.ai/librarian_cache/changes.json` |
@@ -355,6 +369,47 @@ Both `reviewer` and `security-reviewer` (and `librarian`) support two review mod
 
 In diff-based mode, the `git-diff-review` skill is loaded first to identify changed files.  
 In deep review mode, `local-context-gatherer` and `external-context-gatherer` may be called for broader context.
+
+---
+
+## Slash commands
+
+Commands available in any opencode session. Invoke them by typing `/command-name` in the chat.
+
+| Command | File | Purpose |
+|---|---|---|
+| `/init-implementer` | `commands/init-implementer.md` | Deep-scans a project, detects the stack, generates skill files and code examples |
+| `/unslop` | `commands/unslop.md` | Removes AI slop from changed files (pass `--full` to target the whole codebase, or provide an explicit path) |
+| `/unslop-loop` | `commands/unslop-loop.md` | Runs unslop in a loop — writes tests, auto-commits per cycle, stops when clean or after N commits |
+| `/critic` | `commands/critic.md` | Challenges a plan, spec, or current work from first principles (Necessity / Simplicity / Coupling) |
+| `/interview` | `commands/interview.md` | Runs a Socratic requirements session, producing a Structured Spec when ambiguity drops below 20% |
+
+### `/unslop`
+
+Runs the `unslop` skill in sequential bounded passes on changed files.  
+Default scope is the git diff; pass `--full` to target all source files (explicit override — use with care).  
+Routing: Builder loads the `unslop` skill directly and edits files; Orchestrator delegates scan to `unslop-reviewer` subagent and edits to `unslop-coder` subagent; other agents return an error.  
+**Never auto-writes tests** — it only flags gaps in the Pass 4 report. Use `/unslop-loop` if you want test writing.
+
+### `/unslop-loop`
+
+Runs the `unslop` skill (Builder) or a `unslop-reviewer` → `unslop-coder` pipeline (Orchestrator) in a continuous loop until the scope is fully clean or a commit limit is reached.  
+Each iteration runs all 4 passes, **writes tests** for behaviors touched (explicit Pass 4 override), runs the test suite, and commits on success. Rolls back and stops on test failure.  
+Arguments: optional bare integer sets `max_commits` (e.g. `/unslop-loop 3`); `--full` expands scope to the whole codebase; an explicit path targets specific files.
+
+### `/critic`
+
+Challenges the current plan, spec, or in-progress work from first principles.  
+Input modes: empty (prompts user), `--diff` (staged changes), `--file <path>`, or free-form text pasted inline.  
+Findings are routed to the appropriate agent (Planner, Builder, Orchestrator) or presented to the user to proceed or re-challenge.
+
+### `/interview`
+
+Runs a deep-interview requirements session using the `deep-interview` skill.  
+Asks Socratic questions in a scored loop and proceeds only when ambiguity falls below 20%.  
+Produces a **Structured Spec** (Goal, Constraints, Success Criteria, Out of Scope, Final Score, Assumptions).  
+Routes to Planner, Builder, Orchestrator, saves to `features/spec-<slug>.md`, or exits — user's choice.  
+Requires `deep-interview` skill permission; Orchestrator has it by default, other agents may not.
 
 ---
 

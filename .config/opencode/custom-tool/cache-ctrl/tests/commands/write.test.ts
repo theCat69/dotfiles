@@ -537,6 +537,307 @@ describe("writeCommand", () => {
     expect(parsed["foo"]).toBe("bar");
   });
 
+  it("facts per-path merge: unsubmitted paths preserved in facts after delta write", async () => {
+    const fileA = join(tmpDir, "facts-preserve-a.ts");
+    const fileB = join(tmpDir, "facts-preserve-b.ts");
+    await writeFile(fileA, "export const a = 1;");
+    await writeFile(fileB, "export const b = 2;");
+
+    // First write: submit both files with facts
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "initial",
+        description: "both files",
+        tracked_files: [{ path: fileA }, { path: fileB }],
+        facts: {
+          [fileA]: ["fact about A"],
+          [fileB]: ["fact about B"],
+        },
+      },
+    });
+
+    // Second write: submit only fileA — facts for fileB must be preserved
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "delta",
+        description: "only file A",
+        tracked_files: [{ path: fileA }],
+        facts: { [fileA]: ["updated fact about A"] },
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const facts = parsed["facts"] as Record<string, string[]>;
+    expect(facts[fileB]).toEqual(["fact about B"]);
+    expect(facts[fileA]).toEqual(["updated fact about A"]);
+  });
+
+  it("facts per-path replace: submitted path overwrites existing facts for that path", async () => {
+    const fileA = join(tmpDir, "facts-replace-a.ts");
+    await writeFile(fileA, "export const a = 1;");
+
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "first",
+        description: "initial facts",
+        tracked_files: [{ path: fileA }],
+        facts: { [fileA]: ["original fact"] },
+      },
+    });
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "second",
+        description: "updated facts",
+        tracked_files: [{ path: fileA }],
+        facts: { [fileA]: ["replacement fact"] },
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const facts = parsed["facts"] as Record<string, string[]>;
+    expect(facts[fileA]).toEqual(["replacement fact"]);
+  });
+
+  it("facts eviction: facts for file deleted from disk are removed after next write", async () => {
+    const fileA = join(tmpDir, "facts-evict-a.ts");
+    const fileB = join(tmpDir, "facts-evict-b.ts");
+    const fileC = join(tmpDir, "facts-evict-c.ts");
+    await writeFile(fileA, "a");
+    await writeFile(fileB, "b");
+    await writeFile(fileC, "c");
+
+    // Write all three files with facts
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "initial",
+        description: "all three",
+        tracked_files: [{ path: fileA }, { path: fileB }],
+        facts: {
+          [fileA]: ["fact A"],
+          [fileB]: ["fact B"],
+        },
+      },
+    });
+
+    // Delete fileB from disk
+    await rm(fileB);
+
+    // Write fileC — fileB should be evicted from facts
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "after delete",
+        description: "write C",
+        tracked_files: [{ path: fileC }],
+        facts: { [fileC]: ["fact C"] },
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const facts = parsed["facts"] as Record<string, string[]>;
+    expect(facts[fileA]).toEqual(["fact A"]);
+    expect(facts[fileC]).toEqual(["fact C"]);
+    expect(Object.keys(facts)).not.toContain(fileB);
+  });
+
+  it("facts empty after all tracked files deleted from disk", async () => {
+    const fileA = join(tmpDir, "facts-empty-a.ts");
+    const fileB = join(tmpDir, "facts-empty-b.ts");
+    const fileC = join(tmpDir, "facts-empty-c.ts");
+    await writeFile(fileA, "a");
+    await writeFile(fileB, "b");
+    await writeFile(fileC, "c");
+
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "initial",
+        description: "two files with facts",
+        tracked_files: [{ path: fileA }, { path: fileB }],
+        facts: { [fileA]: ["fact A"], [fileB]: ["fact B"] },
+      },
+    });
+
+    await rm(fileA);
+    await rm(fileB);
+
+    // Write fileC with no facts — fileA and fileB evicted, leaving facts: {}
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "after all deleted",
+        description: "write C no facts",
+        tracked_files: [{ path: fileC }],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const facts = parsed["facts"] as Record<string, string[]>;
+    expect(Object.keys(facts)).toHaveLength(0);
+  });
+
+  it("scope guard — pass: facts paths are a subset of submitted tracked_files", async () => {
+    const fileA = join(tmpDir, "scope-pass-a.ts");
+    await writeFile(fileA, "a");
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "guard pass",
+        description: "valid scope",
+        tracked_files: [{ path: fileA }],
+        facts: { [fileA]: ["fact"] },
+      },
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("scope guard — fail: facts contains path not in submitted tracked_files", async () => {
+    const fileA = join(tmpDir, "scope-fail-a.ts");
+    const fileB = join(tmpDir, "scope-fail-b.ts");
+    await writeFile(fileA, "a");
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "guard fail",
+        description: "invalid scope",
+        tracked_files: [{ path: fileA }],
+        facts: { [fileB]: ["fact about B — not in tracked_files"] },
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe(ErrorCode.VALIDATION_ERROR);
+    expect(result.error).toContain(fileB);
+  });
+
+  it("scope guard — pass: empty facts object always passes regardless of tracked_files", async () => {
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "empty facts",
+        description: "no facts submitted",
+        tracked_files: [],
+        facts: {},
+      },
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("scope guard — fail: non-empty facts with empty tracked_files returns VALIDATION_ERROR", async () => {
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "guard fail empty tracked_files",
+        description: "facts with no tracked_files",
+        tracked_files: [],
+        facts: { "a.ts": ["some fact"] },
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe(ErrorCode.VALIDATION_ERROR);
+    expect(result.error).toContain("a.ts");
+  });
+
+  it("scope guard — pass: facts key absent means no validation occurs", async () => {
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "no facts key",
+        description: "facts field omitted entirely",
+        tracked_files: [],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("global_facts last-write-wins: submitted value replaces existing", async () => {
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "first",
+        description: "initial global_facts",
+        tracked_files: [],
+        global_facts: ["original global fact"],
+      },
+    });
+
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "second",
+        description: "updated global_facts",
+        tracked_files: [],
+        global_facts: ["new global fact"],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed["global_facts"]).toEqual(["new global fact"]);
+  });
+
+  it("global_facts preserved when not submitted in second write", async () => {
+    await writeCommand({
+      agent: "local",
+      content: {
+        topic: "first",
+        description: "sets global_facts",
+        tracked_files: [],
+        global_facts: ["preserved fact"],
+      },
+    });
+
+    // Second write omits global_facts — must be preserved via top-level merge
+    const result = await writeCommand({
+      agent: "local",
+      content: {
+        topic: "second",
+        description: "no global_facts",
+        tracked_files: [],
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const raw = await readFile(result.value.file, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed["global_facts"]).toEqual(["preserved fact"]);
+  });
+
   it("corrupted tracked_files in existing cache is treated as empty (safeParse fallback)", async () => {
     // Pre-write a corrupted context.json with tracked_files: null
     const cacheDir = join(tmpDir, ".ai", "local-context-gatherer_cache");

@@ -44,6 +44,8 @@ export const LocalCacheFileSchema = z.looseObject({
   description: z.string(),
   cache_miss_reason: z.string().optional(),
   tracked_files: z.array(TrackedFileSchema),
+  global_facts: z.array(z.string()).optional(),
+  facts: z.record(z.string(), z.array(z.string())).optional(),
 });
 
 export type TrackedFile = z.infer<typeof TrackedFileSchema>;

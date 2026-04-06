@@ -4,7 +4,6 @@
 
 ## Plugins
 
-- **cc-safety-net** — commit guardrails (blocks unsafe git operations)
 - **@slkiser/opencode-quota** — real-time token usage tracking
 - **@mohak34/opencode-notifier** — desktop notifications on task completion
 

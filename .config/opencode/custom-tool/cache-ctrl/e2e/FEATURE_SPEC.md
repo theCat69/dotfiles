@@ -63,6 +63,7 @@ e2e/
     ├── list.e2e.test.ts
     ├── inspect.e2e.test.ts
     ├── write.e2e.test.ts
+    ├── write-perf.e2e.test.ts
     ├── check-files.e2e.test.ts
     ├── invalidate.e2e.test.ts
     ├── flush.e2e.test.ts
