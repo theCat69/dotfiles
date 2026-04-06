@@ -200,6 +200,9 @@ Loading a skill not in the allow-list will fail.
 | `project-documentation` | project-local | Comment style, README format, changelog |
 | `project-security` | project-local | Secrets, input validation, dependency security |
 | `project-code-examples` | project-local | Index of real code pattern examples in `.code-examples-for-ai/` |
+| `cache-ctrl-caller` | global | Cache-first protocol for calling local-context-gatherer and external-context-gatherer |
+| `cache-ctrl-local` | global | Local cache schema, write protocol, and tracked-files format |
+| `cache-ctrl-external` | global | External cache schema, write protocol, and source metadata format |
 
 ---
 
