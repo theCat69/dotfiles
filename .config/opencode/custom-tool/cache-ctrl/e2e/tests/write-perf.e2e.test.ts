@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { rm, mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runCli, parseJsonOutput } from "../helpers/cli.ts";
 import { createTestRepo, type TestRepo } from "../helpers/repo.ts";
@@ -53,6 +53,9 @@ async function runDeltaWriteTest(
   n: number,
   elapsedLimitMs: number,
 ): Promise<void> {
+  // Clear the fixture's pre-seeded context.json so the cold-start write begins
+  // from a truly empty cache (no fixture tracked files survive the merge).
+  await rm(join(repo.dir, ".ai"), { recursive: true, force: true });
   const paths = await seedPerfFiles(repo.dir, n);
 
   const coldResult = await runCli(
@@ -131,6 +134,8 @@ describe("write local — performance", () => {
   it(
     `cold start: ${REALISTIC} files — resolveTrackedFileStats throughput`,
     async () => {
+      // Clear the fixture's pre-seeded context.json so the merge starts from empty.
+      await rm(join(repo.dir, ".ai"), { recursive: true, force: true });
       const paths = await seedPerfFiles(repo.dir, REALISTIC);
 
       const payload = {
@@ -172,6 +177,8 @@ describe("write local — performance", () => {
   it(
     `cold start: ${STRESS} files — stress resolveTrackedFileStats`,
     async () => {
+      // Clear the fixture's pre-seeded context.json so the merge starts from empty.
+      await rm(join(repo.dir, ".ai"), { recursive: true, force: true });
       const paths = await seedPerfFiles(repo.dir, STRESS);
 
       const payload = {
