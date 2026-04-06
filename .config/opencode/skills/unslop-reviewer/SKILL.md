@@ -20,7 +20,7 @@ Each finding must include all of these fields:
 | `id` | string | Sequential: `F-1`, `F-2`, … |
 | `file` | string | Relative file path |
 | `pass` | integer | `1` = dead-code · `2` = duplication · `3` = naming/errors · `4` = test-coverage |
-| `category` | enum | `dead-code` \| `duplication` \| `abstraction` \| `boundary` \| `test` |
+| `category` | enum | `dead-code` \| `duplication` \| `abstraction` \| `boundary` \| `naming` \| `test` |
 | `size` | enum | `S` = single line/symbol · `M` = function/block · `L` = cross-file/structural |
 | `description` | string | What the slop is and where |
 | `fix` | string | Exact action to take (delete / rename / extract / inline / add test for …) |
@@ -33,7 +33,7 @@ Emit a **numbered list only** — one line per finding, no prose, no section hea
 
 ```
 1. F-1 | src/auth.ts | pass:1 | dead-code | S | Unused `lodash` import at line 3 | Delete line 3
-2. F-2 | src/auth.ts | pass:3 | dead-code | S | Variable named `data` at line 47 | Rename to `userRecord`
+2. F-2 | src/auth.ts | pass:3 | naming | S | Variable named `data` at line 47 | Rename to `userRecord`
 …
 ```
 

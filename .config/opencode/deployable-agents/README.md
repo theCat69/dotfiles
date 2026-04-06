@@ -203,7 +203,9 @@ Loading a skill not in the allow-list will fail.
 | `cache-ctrl-caller` | global | Cache-first protocol for calling local-context-gatherer and external-context-gatherer |
 | `cache-ctrl-local` | global | Local cache schema, write protocol, and tracked-files format |
 | `cache-ctrl-external` | global | External cache schema, write protocol, and source metadata format |
-| `unslop` | global | AI slop cleanup in sequential bounded passes scoped to changed files only |
+| `unslop` | global | AI slop cleanup in sequential bounded passes scoped to changed files only (edit mode — always writes files) |
+| `unslop-reviewer` | global | Read-only slop scanner — emits a structured numbered findings list, never edits files |
+| `unslop-coder` | global | Applies a pre-computed unslop findings list — targeted edits only, no scanning |
 | `deep-interview` | global | Socratic requirements gathering with ambiguity scoring — proceed only when ambiguity < 20% |
 
 ---
@@ -386,13 +388,12 @@ Commands available in any opencode session. Invoke them by typing `/command-name
 
 Runs the `unslop` skill in sequential bounded passes on changed files.  
 Default scope is the git diff; pass `--full` to target all source files (explicit override — use with care).  
-Default mode edits files in place; pass `--review` for a report-only pass with no writes.  
-Routing: Builder loads the skill directly; Orchestrator delegates to the coder subagent; other agents return an error.  
+Routing: Builder loads the `unslop` skill directly and edits files; Orchestrator delegates scan to `unslop-reviewer` subagent and edits to `unslop-coder` subagent; other agents return an error.  
 **Never auto-writes tests** — it only flags gaps in the Pass 4 report. Use `/unslop-loop` if you want test writing.
 
 ### `/unslop-loop`
 
-Runs the `unslop` skill in a continuous loop until the scope is fully clean or a commit limit is reached.  
+Runs the `unslop` skill (Builder) or a `unslop-reviewer` → `unslop-coder` pipeline (Orchestrator) in a continuous loop until the scope is fully clean or a commit limit is reached.  
 Each iteration runs all 4 passes, **writes tests** for behaviors touched (explicit Pass 4 override), runs the test suite, and commits on success. Rolls back and stops on test failure.  
 Arguments: optional bare integer sets `max_commits` (e.g. `/unslop-loop 3`); `--full` expands scope to the whole codebase; an explicit path targets specific files.
 
