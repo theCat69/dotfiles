@@ -35,7 +35,7 @@ Check whether tracked repo files have changed since the last scan.
 
 | Result | Action |
 |---|---|
-| `status: "unchanged"` AND cached content is sufficient | Call `cache_ctrl_inspect` (agent: "local") to read the cached context and use it directly — do NOT call `local-context-gatherer`. |
+| `status: "unchanged"` AND cached content is sufficient | Call `cache_ctrl_inspect` (agent: "local", filter: ["<task-keywords>"]) to read relevant facts directly — do NOT call `local-context-gatherer`. Always pass `filter` with keywords from your current task to avoid loading the full facts map. |
 | `status: "unchanged"` BUT cached content is insufficient or empty | Call `local-context-gatherer` with an explicit instruction to perform a **forced full scan** (ignore `check-files` result). This ensures the gatherer re-reads all files rather than skipping due to no detected changes. |
 | `status: "changed"` | Files changed. Call `local-context-gatherer` for a **delta scan**. Pass the `check-files` result in the task prompt (`changed_files`, `new_files` lists) so the gatherer scans only those files. |
 | File absent (no cache yet) | Cold start — no prior scan. Call `local-context-gatherer`. |
@@ -93,8 +93,10 @@ To **force a re-fetch** for a specific subject:
 Use when you want to pass a cached summary to a subagent or include it inline in a prompt.
 
 **Tier 1:** Call `cache_ctrl_inspect` with `agent` and `subject`.
-**Tier 2:** `cache-ctrl inspect external <subject>` or `cache-ctrl inspect local context`
+**Tier 2:** `cache-ctrl inspect external <subject>` or `cache-ctrl inspect local context --filter <kw>[,<kw>...]`
 **Tier 3:** `read` the file directly from `.ai/<agent>_cache/<subject>.json`.
+
+> **For `agent: "local"`: always pass `filter` with keywords from your current task** (e.g. `filter: ["lsp"]`). An unfiltered local inspect returns the entire facts map which may be very large. `global_facts` and all non-`tracked_files` metadata are always included regardless of filter. `tracked_files` is never returned by local inspect.
 
 ---
 
@@ -105,7 +107,8 @@ Use when you want to pass a cached summary to a subagent or include it inline in
 | Check local freshness | `cache_ctrl_check_files` | `cache-ctrl check-files` | read context.json, check timestamp |
 | List external entries | `cache_ctrl_list` (agent: "external") | `cache-ctrl list --agent external` | glob + read each JSON |
 | Search entries | `cache_ctrl_search` | `cache-ctrl search <kw>...` | scan subject/description fields |
-| Read full entry | `cache_ctrl_inspect` | `cache-ctrl inspect <agent> <subject>` | read file directly |
+| Read facts (local) | `cache_ctrl_inspect` + `filter` | `cache-ctrl inspect local context --filter <kw>` | read file, extract facts |
+| Read entry (external) | `cache_ctrl_inspect` | `cache-ctrl inspect external <subject>` | read file directly |
 | Invalidate local | `cache_ctrl_invalidate` (agent: "local") | `cache-ctrl invalidate local` | delete or overwrite file |
 | Invalidate external | `cache_ctrl_invalidate` (agent: "external", subject) | `cache-ctrl invalidate external <subject>` | set `fetched_at` to `""` via edit |
 | HTTP freshness check | `cache_ctrl_check_freshness` | `cache-ctrl check-freshness <subject>` | compare `fetched_at` with now |

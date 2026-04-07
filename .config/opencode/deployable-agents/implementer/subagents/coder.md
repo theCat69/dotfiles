@@ -23,7 +23,6 @@ permission:
     "angular": "allow"
     "quarkus": "allow"
     "cache-ctrl-caller": "allow"
-    "unslop": "allow"
     "unslop-coder": "allow"
   task:
     "*": "deny"
