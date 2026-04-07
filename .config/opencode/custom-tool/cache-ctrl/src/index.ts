@@ -55,7 +55,12 @@ const COMMAND_HELP: Record<CommandName, CommandHelp> = {
       "    <agent>            Agent type: external or local",
       "    <subject-keyword>  Keyword used to locate the cache entry",
       "",
+      "  Options:",
+      "    --filter <kw>[,<kw>...]   Return only facts whose file path contains any keyword",
+      "                              (local agent only; comma-separated; case-insensitive OR match)",
+      "",
       "  Output: Full JSON content of the matched cache entry.",
+      "  Note: tracked_files is never returned for local agent inspect.",
     ].join("\n"),
   },
   flush: {
@@ -240,7 +245,7 @@ function usageError(message: string): never {
 export { usageError };
 
 /** Flags that consume the following token as their value. Boolean flags must NOT appear here. */
-const VALUE_FLAGS = new Set(["data", "agent", "url", "max-age"]);
+const VALUE_FLAGS = new Set(["data", "agent", "url", "max-age", "filter"]);
 
 export function parseArgs(argv: string[]): { args: string[]; flags: Record<string, string | boolean> } {
   const positional: string[] = [];
@@ -314,7 +319,21 @@ async function main(): Promise<void> {
       if (agent !== "external" && agent !== "local") {
         usageError(`Invalid agent: "${agent}". Must be external or local`);
       }
-      const result = await inspectCommand({ agent, subject });
+      if (flags.filter === true) {
+        usageError("--filter requires a value: --filter <kw>[,<kw>...]");
+      }
+      const filterRaw = typeof flags.filter === "string" ? flags.filter : undefined;
+      const filter = filterRaw
+        ? filterRaw
+            .split(",")
+            .map((f) => f.trim())
+            .filter(Boolean)
+        : undefined;
+      const result = await inspectCommand({
+        agent,
+        subject,
+        ...(filter !== undefined ? { filter } : {}),
+      });
       if (result.ok) {
         printResult(result, pretty);
       } else {

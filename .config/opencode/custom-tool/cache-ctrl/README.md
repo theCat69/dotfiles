@@ -123,14 +123,19 @@ Lists all cache entries. Shows age, human-readable age string, and staleness fla
 ### `inspect`
 
 ```
-cache-ctrl inspect <agent> <subject-keyword> [--pretty]
+cache-ctrl inspect <agent> <subject-keyword> [--filter <kw>[,<kw>...]] [--pretty]
 ```
 
 Prints the full JSON content of the best-matching cache entry. Uses the same keyword scoring as `search`. Returns `AMBIGUOUS_MATCH` if two results score identically.
 
+**`--filter <kw>[,<kw>...]`** (local agent only): restricts `facts` to entries whose file path contains at least one keyword (case-insensitive substring). `global_facts` and all other metadata fields are always included regardless of filter. Ignored for the external agent.
+
+**`tracked_files` is never returned** for `agent: "local"` — it is internal operational metadata consumed by `check-files` and is always stripped from inspect responses.
+
 ```
 cache-ctrl inspect external opencode-skills --pretty
 cache-ctrl inspect local context --pretty
+cache-ctrl inspect local context --filter lsp,nvim --pretty
 ```
 
 ---

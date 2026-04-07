@@ -7,6 +7,17 @@ import { ExternalCacheFileSchema, LocalCacheFileSchema } from "../types/cache.js
 import { ErrorCode, type Result } from "../types/result.js";
 import type { InspectArgs, InspectResult } from "../types/commands.js";
 
+function filterFacts(
+  facts: Record<string, string[]>,
+  keywords: string[],
+): Record<string, string[]> {
+  if (keywords.length === 0) return facts;
+  const lower = keywords.map((k) => k.toLowerCase());
+  return Object.fromEntries(
+    Object.entries(facts).filter(([path]) => lower.some((kw) => path.toLowerCase().includes(kw))),
+  );
+}
+
 export async function inspectCommand(args: InspectArgs): Promise<Result<InspectResult["value"]>> {
   try {
     const repoRoot = await findRepoRoot(process.cwd());
@@ -92,6 +103,29 @@ export async function inspectCommand(args: InspectArgs): Promise<Result<InspectR
         ok: false,
         error: `Ambiguous match: multiple entries scored equally for "${args.subject}"`,
         code: ErrorCode.AMBIGUOUS_MATCH,
+      };
+    }
+
+    if (args.agent === "local") {
+      // Destructure to strip tracked_files (internal operational metadata, never exposed
+      // to callers) and to extract facts for filtering. All other fields — including
+      // global_facts, topic, description, timestamp, cache_miss_reason — flow through
+      // via ...rest and are always included in the response.
+      const { tracked_files: _dropped, facts, ...rest } = top.content as LocalCacheFile;
+      const filteredFacts =
+        facts !== undefined ? filterFacts(facts, args.filter ?? []) : undefined;
+      return {
+        ok: true,
+        value: {
+          ...rest,
+          ...(filteredFacts !== undefined ? { facts: filteredFacts } : {}),
+          file: top.file,
+          agent: args.agent,
+          // The cast is safe: tracked_files is intentionally stripped from the local
+          // response. LocalCacheFile uses z.looseObject so the runtime shape is valid;
+          // the static type just cannot express the intentional omission without a
+          // separate type definition.
+        } as unknown as InspectResult["value"],
       };
     }
 

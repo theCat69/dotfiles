@@ -69,3 +69,88 @@ describe("inspect", () => {
     expect(errorOutput.code).toBe("INVALID_ARGS");
   });
 });
+
+describe("inspect local — tracked_files stripping and --filter", () => {
+  it("inspect local context never returns tracked_files", async () => {
+    // Write a local entry with tracked_files + facts
+    const entry = {
+      topic: "filter test",
+      description: "inspect filter e2e",
+      tracked_files: [{ path: "src/file-a.ts" }, { path: "src/file-b.ts" }],
+      facts: {
+        "src/file-a.ts": ["exports fetchUser"],
+        "src/file-b.ts": ["exports validateInput"],
+      },
+    };
+    const writeResult = await runCli(["write", "local", "--data", JSON.stringify(entry)], {
+      cwd: repo.dir,
+    });
+    expect(writeResult.exitCode).toBe(0);
+
+    const result = await runCli(["inspect", "local", "context"], { cwd: repo.dir });
+    expect(result.exitCode).toBe(0);
+
+    const output = parseJsonOutput<{ ok: boolean; value: Record<string, unknown> }>(result.stdout);
+    expect(output.ok).toBe(true);
+    expect(output.value.tracked_files).toBeUndefined();
+    expect(output.value.facts).toBeDefined();
+  });
+
+  it("inspect local context --filter returns only matching facts paths", async () => {
+    const entry = {
+      topic: "filter test",
+      description: "inspect filter e2e",
+      tracked_files: [{ path: "src/file-a.ts" }, { path: "src/file-b.ts" }],
+      facts: {
+        "src/file-a.ts": ["exports fetchUser"],
+        "src/file-b.ts": ["exports validateInput"],
+      },
+    };
+    const writeResult = await runCli(["write", "local", "--data", JSON.stringify(entry)], {
+      cwd: repo.dir,
+    });
+    expect(writeResult.exitCode).toBe(0);
+
+    const result = await runCli(["inspect", "local", "context", "--filter", "file-a"], {
+      cwd: repo.dir,
+    });
+    expect(result.exitCode).toBe(0);
+
+    const output = parseJsonOutput<{
+      ok: boolean;
+      value: { facts: Record<string, string[]> };
+    }>(result.stdout);
+    expect(output.ok).toBe(true);
+    const facts = output.value.facts;
+    expect(facts["src/file-a.ts"]).toEqual(["exports fetchUser"]);
+    expect(facts["src/file-b.ts"]).toBeUndefined();
+  });
+
+  it("inspect local context --filter with comma-separated keywords (OR logic)", async () => {
+    const entry = {
+      topic: "filter test",
+      description: "multi-keyword filter e2e",
+      tracked_files: [{ path: "src/file-a.ts" }, { path: "src/file-b.ts" }],
+      facts: {
+        "src/file-a.ts": ["exports fetchUser"],
+        "src/file-b.ts": ["exports validateInput"],
+      },
+    };
+    await runCli(["write", "local", "--data", JSON.stringify(entry)], { cwd: repo.dir });
+
+    const result = await runCli(
+      ["inspect", "local", "context", "--filter", "file-a,file-b"],
+      { cwd: repo.dir },
+    );
+    expect(result.exitCode).toBe(0);
+
+    const output = parseJsonOutput<{
+      ok: boolean;
+      value: { facts: Record<string, string[]> };
+    }>(result.stdout);
+    expect(output.ok).toBe(true);
+    const facts = output.value.facts;
+    expect(facts["src/file-a.ts"]).toBeDefined();
+    expect(facts["src/file-b.ts"]).toBeDefined();
+  });
+});

@@ -23,6 +23,10 @@ export type ListResult = { ok: true; value: ListEntry[] };
 export interface InspectArgs {
   agent: AgentType;
   subject: string;
+  /** Path-keyword filter for local agent. Only facts entries whose file path contains
+   *  at least one keyword (case-insensitive substring) are included. global_facts is
+   *  always included. Ignored for external agent. */
+  filter?: string[];
 }
 
 export type InspectResult = {
