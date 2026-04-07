@@ -29,9 +29,8 @@ Check whether tracked repo files have changed since the last scan.
 
 **Tier 1:** Call `cache_ctrl_check_files`.
 **Tier 2:** `cache-ctrl check-files`
-**Tier 3:** `read` `.ai/local-context-gatherer_cache/context.json`.
   - File absent → cold start, proceed to call the gatherer.
-  - File present → if `timestamp` is empty or older than 1 hour → stale, call the gatherer.
+  - File present → if files have changed => call the local-context-gatherer to read those files and update the cache before continuing. 
 
 | Result | Action |
 |---|---|
