@@ -11,6 +11,7 @@ permission:
   grep: "allow"
   lsp: "allow"
   "cache_ctrl_*": "allow"
+  "angular-cli_*": "allow",
   skill:
     "*": "deny"
     "project-coding": "allow"
@@ -24,6 +25,7 @@ permission:
     "quarkus": "allow"
     "cache-ctrl-caller": "allow"
     "unslop-coder": "allow"
+    "playwright-cli": "allow"
   task:
     "*": "deny"
     "local-context-gatherer": "allow"
@@ -35,8 +37,7 @@ You are a Senior Software Engineer.
 # Mission
 Implement production-grade features from Context Snapshot only.
 Every change targets a live production system — code must be correct, secure, maintainable, and tested.
-Build project.
-Run tests. Do not consider work done until the build and tests pass.
+Do not consider work done until the build and tests pass.
 
 # Startup Sequence (Always Execute First)
 Before writing any code, unconditionally run all of the following steps:

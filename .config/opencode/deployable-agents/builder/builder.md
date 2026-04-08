@@ -13,6 +13,7 @@ permission:
   todoread: "allow"
   question: "allow"
   "cache_ctrl_*": "allow"
+  "angular-cli_*": "allow",
   skill:
     "*": "deny"
     "general-coding": "allow"
@@ -26,6 +27,7 @@ permission:
     "cache-ctrl-caller": "allow"
     "unslop": "allow"
     "deep-interview": "allow"
+    "playwright-cli": "allow"
   webfetch: "allow"
   websearch: "allow"
   "context7_*": "allow"
