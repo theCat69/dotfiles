@@ -170,7 +170,7 @@ Otherwise: increment `iteration` and go back to Pass 1.
 
 ## Step 3-O — Orchestrator Loop
 
-### SETUP Phase (run once, before the loop. Rerun if the loop stage cannot finish the required commit treshold)
+### SETUP Phase (runs before each loop cycle — re-entered whenever the previous cycle exhausted its batches without reaching `max_commits`)
 
 Call `reviewer` as a task with this prompt:
 
@@ -188,11 +188,10 @@ Once reviewer returns:
    - Fill batches greedily in pass order: add findings until the next finding would push the batch over `batch_cap` or the batch reaches 10 findings — whichever comes first. Start a new batch when either limit is hit.
    - This produces batches B1, B2, …, Bk.
 
-4. **Initialize loop state**: only the first time you reached this point otherwise proceed to next loop. 
-   - `commit_count = 0`
-   - `batch_index = 1`
-   - `total_batches = k`
-   - `max_commits` = parsed value or unlimited
+4. **Initialize / reset loop state**:
+   - **First entry only**: set `commit_count = 0` and `max_commits` = parsed value or unlimited.
+   - **Every entry** (first and re-entry): set `batch_index = 1` and `total_batches = k`.
+   - Preserve `commit_count` and `max_commits` across re-entries — do NOT reset them.
 
 ### LOOP Phase (iterate over batches B1…Bk)
 
@@ -241,7 +240,7 @@ If `commit_count >= max_commits`:
 - Report: *"Reached commit limit of `<max_commits>`. Stopping."*
 - **Stop.**
 
-If `batch_index > total_batches`: all batches processed but `commit_count` not reached  — Go back to step 3-0.
+If `batch_index > total_batches`: all batches processed but `commit_count` has not reached `max_commits` — **re-enter the SETUP Phase** (call `reviewer` again on the same scope, generate fresh findings, and start a new batch cycle). `commit_count` and `max_commits` are carried over; only `batch_index` and `total_batches` are reset.
 
 Otherwise: continue to next batch.
 
