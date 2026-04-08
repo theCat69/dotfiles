@@ -28,6 +28,7 @@ permission:
     "unslop": "allow"
     "deep-interview": "allow"
     "playwright-cli": "allow"
+    "frontend": "allow"
   webfetch: "allow"
   websearch: "allow"
   "context7_*": "allow"
@@ -68,6 +69,10 @@ Before selecting mode or writing any code, unconditionally run all of the follow
    - `pom.xml` or `build.gradle` containing `quarkus` → load `quarkus` + `java`
    - `pom.xml` or `build.gradle` without quarkus → load `java`
    - No recognizable manifest → warn the user and continue with `general-coding` only
+5. Check for frontend project signals (run after stack detection — these load in addition to the stack skills):
+   - `package.json` contains any of `react`, `vue`, `svelte`, `next`, `nuxt`, `vite`, `solid-js`, `astro` → load `frontend` + `playwright-cli`
+   - `@angular/core` detected (Angular project) → load `frontend` + `playwright-cli`
+   - `playwright.config.ts` or `playwright.config.js` exists at project root → load `playwright-cli`
 
 # When to Use Each Mode
 
@@ -98,7 +103,10 @@ If the request is vague (ambiguity signals: no constraints, no success criteria,
    - `pom.xml` or `build.gradle` containing `quarkus` → stack: `[quarkus, java]`
    - `pom.xml` or `build.gradle` without quarkus → stack: `[java]`
    - No recognizable manifest → use `general-coding` only, warn user
-   Load the corresponding stack skills.
+   Load the corresponding stack skills. Also check for frontend signals (load in addition to stack skills):
+   - `package.json` contains any of `react`, `vue`, `svelte`, `next`, `nuxt`, `vite`, `solid-js`, `astro` → load `frontend` + `playwright-cli`
+   - `@angular/core` detected (Angular project) → load `frontend` + `playwright-cli`
+   - `playwright.config.ts` or `playwright.config.js` exists at project root → load `playwright-cli`
 4. Optionally call external-context-gatherer (cache-first) for external docs or best practices.
 5. Write the code yourself.
 5.5. Load skill `unslop` and run a bounded cleanup pass on changed files before calling reviewer.

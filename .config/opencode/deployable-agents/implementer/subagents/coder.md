@@ -26,6 +26,7 @@ permission:
     "cache-ctrl-caller": "allow"
     "unslop-coder": "allow"
     "playwright-cli": "allow"
+    "frontend": "allow"
   task:
     "*": "deny"
     "local-context-gatherer": "allow"
@@ -53,7 +54,11 @@ Before writing any code, unconditionally run all of the following steps:
    - `pom.xml` or `build.gradle` containing `quarkus` → load `quarkus` + `java`
    - `pom.xml` or `build.gradle` without quarkus → load `java`
    - No recognizable manifest → warn Orchestrator and continue with `general-coding` only
-8. Load skill `unslop` and run a bounded cleanup pass on changed files ONLY when the calling prompt explicitly requests it (look for the phrase "run unslop" or "cleanup pass" in the prompt).
+8. Check for frontend project signals (run after stack detection — these load in addition to the stack skills):
+   - `package.json` contains any of `react`, `vue`, `svelte`, `next`, `nuxt`, `vite`, `solid-js`, `astro` → load `frontend` + `playwright-cli`
+   - `@angular/core` detected (Angular project) → load `frontend` + `playwright-cli`
+   - `playwright.config.ts` or `playwright.config.js` exists at project root → load `playwright-cli`
+9. Load skill `unslop` and run a bounded cleanup pass on changed files ONLY when the calling prompt explicitly requests it (look for the phrase "run unslop" or "cleanup pass" in the prompt).
 
 # Rules
 - Work primarily from the Context Snapshot provided by the Orchestrator
