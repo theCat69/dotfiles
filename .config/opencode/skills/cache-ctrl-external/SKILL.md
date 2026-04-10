@@ -1,1 +1,0 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/custom-tool/cache-ctrl/skills/cache-ctrl-external/SKILL.md

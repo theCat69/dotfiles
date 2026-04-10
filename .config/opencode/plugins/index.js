@@ -1,0 +1,1 @@
+/home/fefou/dev-conf/la-briguade/dist/index.js

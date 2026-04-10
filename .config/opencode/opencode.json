@@ -5,17 +5,6 @@
     "@mohak34/opencode-notifier@latest"
   ],
   "mcp": {
-    "context7": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@upstash/context7-mcp",
-        "--api-key",
-        "{env:CONTEXT7_API_KEY}"
-      ],
-      "enabled": true
-    },
     "youtube-transcript": {
       "type": "local",
       "command": [

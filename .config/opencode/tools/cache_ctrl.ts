@@ -1,1 +1,1 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/custom-tool/cache-ctrl/cache_ctrl.ts
+/home/fefou/dev-conf/cache-ctrl/cache_ctrl.ts

@@ -1,1 +1,0 @@
-/home/fefou/dev-conf/dotfiles/.config/opencode/deployable-agents/planner/subagents/feature-reviewer.md
