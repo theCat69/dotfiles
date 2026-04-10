@@ -7,7 +7,7 @@ Demonstrates a `printHelp(command?: string): void` function that:
 - Is pure and testable — no side effects beyond stdout write
 
 ## Source
-`src/index.ts` in `custom-tool/cache-ctrl`
+Pattern source: upstream `@thecat69/cache-ctrl` package (`src/index.ts`) in https://github.com/theCat69/cache-ctrl (not a local file in this repo).
 
 ## Code snippet
 

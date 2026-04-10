@@ -21,6 +21,8 @@ Required tools (as documented in `install.sh`):
 - `zoxide` — directory jumper
 - `sjvm` — custom JVM switcher
 - `bun` — JS/TS runtime (for opencode plugin)
+- `la-briguade` — external opencode plugin (agents/skills/slash commands/hooks)
+- `@thecat69/cache-ctrl` — cache-control CLI + opencode integration
 
 Optional but used:
 - `eza` (replaces `ls`), `rg` (replaces `grep`), `batcat` (replaces `cat`), `jless`
@@ -65,6 +67,12 @@ bun run src/index.ts
 ```bash
 # From repo root — creates symlinks in $HOME and $XDG_CONFIG_HOME
 zsh install.sh
+
+# Install external opencode agent pipeline
+npm install la-briguade && npx la-briguade install
+
+# Install cache-control CLI and opencode integration
+npm install -g @thecat69/cache-ctrl && cache-ctrl install
 ```
 
 Symlinks created:
