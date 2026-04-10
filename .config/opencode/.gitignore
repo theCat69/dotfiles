@@ -3,3 +3,5 @@ node_modules
 .ai/
 opencode-notifier-state.json
 package-lock.json
+tools
+skills
