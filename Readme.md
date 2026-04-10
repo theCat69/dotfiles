@@ -16,7 +16,7 @@ Everything is managed via idempotent symlinks from this repo into `~/.config/`.
 | **Starship** | Cross-shell prompt with custom modules (Quarkus, Zsh icon, time) |
 | **gitui** | Terminal-based git client with Catppuccin themes |
 | **k9s** | Kubernetes TUI with Gruvbox skin and custom resource aliases |
-| **opencode** | AI coding assistant with custom agents, MCP servers, and plugins |
+| **opencode** | AI coding assistant with external agent pipeline (la-briguade), MCP servers, and plugins |
 | **bat** | `cat` replacement with syntax highlighting |
 | **IdeaVim** | Vim emulation config for JetBrains IDEs |
 
@@ -38,6 +38,8 @@ These must be installed before running `install.sh`. Most are available via your
 - [bat / batcat](https://github.com/sharkdp/bat) — syntax-highlighted `cat`
 - [Bun](https://bun.sh/) — JS runtime (for opencode plugins)
 - [nvm](https://github.com/nvm-sh/nvm) — Node version manager
+- [la-briguade](https://github.com/theCat69/la-briguade) — opencode plugin that provides agents/skills/slash commands/hooks (`npm install la-briguade && npx la-briguade install`)
+- [@thecat69/cache-ctrl](https://github.com/theCat69/cache-ctrl) — cache-control CLI + opencode integration (`npm install -g @thecat69/cache-ctrl && cache-ctrl install`)
 - [Rust](https://www.rust-lang.org/tools/install) (via rustup)
 - [Go](https://go.dev/dl/) (installed to `/usr/local/go`)
 - [k9s](https://k9scli.io/)
@@ -55,6 +57,8 @@ These must be installed before running `install.sh`. Most are available via your
 git clone https://github.com/theCat69/dotfiles.git ~/dev-conf/dotfiles
 cd ~/dev-conf/dotfiles
 zsh install.sh
+npm install la-briguade && npx la-briguade install
+npm install -g @thecat69/cache-ctrl && cache-ctrl install
 ```
 
 The script creates symlinks using `ln -sf` — it is fully idempotent and safe to re-run at any time.
@@ -140,13 +144,15 @@ Kubernetes cluster management from the terminal, the way it should be.
 
 An AI coding assistant with a full custom agent pipeline and tool configuration.
 
+The agents/skills pipeline is provided by the external [`la-briguade`](https://github.com/theCat69/la-briguade) opencode plugin, and cache-control functionality is provided by [`@thecat69/cache-ctrl`](https://github.com/theCat69/cache-ctrl).
+
 - **Runtime:** Bun
 - **Plugins:** `cc-safety-net` (commit guardrails), `@slkiser/opencode-quota` (token tracking), `@mohak34/opencode-notifier` (desktop notifications)
 - **MCP servers:**
   - `context7` — up-to-date library documentation
   - `youtube-transcript` — fetch video transcripts as context
   - `github` — read-only GitHub access (repos, security advisories, Actions)
-- **Custom agents:** 11 agents including Orchestrator, Planner, Coder, Reviewer, Security Reviewer, Feature Designer, Librarian, and more — a full AI-assisted development pipeline
+- **Custom agents/skills:** installed from `la-briguade` (production-grade multi-agent pipeline)
 - **Custom LSP:** `jdtls-lombok` — Java language server with Lombok annotation processing pre-wired
 
 ### bat

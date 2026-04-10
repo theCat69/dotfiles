@@ -159,9 +159,9 @@ bats test/
 bats test/test_install.bats
 ```
 
-### TypeScript tests (cache-ctrl and other Bun projects with `package.json`)
+### TypeScript tests in this repo (opencode config)
 ```bash
-cd .config/opencode/custom-tool/cache-ctrl
+cd .config/opencode
 
 # Run all tests (delegates to bunx vitest run via package.json "test" script)
 bun run test
@@ -169,6 +169,8 @@ bun run test
 # Watch mode (during development)
 bun run test:watch
 ```
+
+`@thecat69/cache-ctrl` tests are maintained and executed in the upstream repository, not in this dotfiles repo.
 
 ### Neovim health check (manual)
 ```

@@ -9,7 +9,22 @@ This is a **developer dotfiles and configuration repository** for Kubuntu. It ma
 - **Zsh** shell configuration (Oh My Zsh, aliases, PATH)
 - **Dotfiles installation** (`install.sh` — idempotent symlink creation)
 - **opencode** AI coding tool configuration + TypeScript plugin (Bun runtime)
+  - Agents/skills/slash commands/hooks are provided by the external `la-briguade` opencode plugin
+  - Cache-control tooling is provided by the external `@thecat69/cache-ctrl` package
 - **Starship**, **Ghostty**, **gitui**, **k9s**, and other tool configs
+
+## External AI Packages
+
+The opencode AI pipeline in this repo depends on external packages:
+
+- [`la-briguade`](https://github.com/theCat69/la-briguade) — opencode plugin that provides production-grade agents, skills, slash commands, and hooks used by this setup
+  ```bash
+  npm install la-briguade && npx la-briguade install
+  ```
+- [`@thecat69/cache-ctrl`](https://github.com/theCat69/cache-ctrl) — CLI + native OpenCode integration that provides cache-ctrl functionality
+  ```bash
+  npm install -g @thecat69/cache-ctrl && cache-ctrl install
+  ```
 
 ## Detailed Guidelines
 
@@ -52,3 +67,6 @@ Code pattern examples (real snippets from the project):
 The following files are automatically updated at runtime and should **never** be committed by AI agents:
 
 - `.config/opencode/package.json` — opencode auto-updates the `@opencode-ai/plugin` version on every run. Any version bump in this file is runtime noise, not an agent change. Do not revert, pin, or commit this file unless explicitly instructed by the user.
+- `.config/opencode/plugins/index.js` — installed/updated by `npx la-briguade install`.
+- `.config/opencode/tools/cache_ctrl.ts` — installed/updated by `cache-ctrl install`.
+- `.config/opencode/skills/cache-ctrl-*/` — installed/updated by `cache-ctrl install`.
