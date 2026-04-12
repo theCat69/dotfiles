@@ -24,3 +24,6 @@ ln -sf $(pwd)/.config/gitui ~/.config/
 
 # opencode
 ln -sf $(pwd)/.config/opencode ~/.config/
+
+# la-briguade 
+ln -sf $(pwd)/.config/la_briguade ~/.config/
