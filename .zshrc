@@ -218,3 +218,5 @@ eval "$(zoxide init zsh)"
 
 # Homebrew
 [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+. "$HOME/.local/share/../bin/env"
