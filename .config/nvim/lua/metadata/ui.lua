@@ -2,7 +2,7 @@
 
 local M = {}
 
-local theme = "dark"
+local theme = "ligth"
 
 local initialized = false
 

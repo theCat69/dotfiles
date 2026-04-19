@@ -48,10 +48,10 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 #
-theme = Gruvbox Dark Hard
+theme = Gruvbox Light 
 font-size = 12
 keybind = alt+ctrl+shift+arrow_up=resize_split:up,10
 keybind = alt+ctrl+shift+arrow_left=resize_split:left,10
 keybind = alt+ctrl+shift+arrow_down=resize_split:down,10
-keybind = alt+ctrl+shift+arrow_right=resize_split:right,10
+keybind = super+ctrl+shift+arrow_right=resize_split:right,10
 
