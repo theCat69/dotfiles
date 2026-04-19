@@ -2,7 +2,7 @@
 --theme=gruvbox-light
 
 # All the styles only here as an example
---style="changes,header,grid,numbers"
+#--style="changes,header,grid,numbers"
 
 # No pager
 #--pager=never
