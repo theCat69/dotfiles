@@ -1,5 +1,5 @@
-# Set theme GitHub
---theme=GitHub
+# Set theme gruvbox-light 
+--theme=gruvbox-light
 
 # All the styles only here as an example
 --style="changes,header,grid,numbers"
