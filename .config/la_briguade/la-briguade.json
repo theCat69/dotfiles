@@ -4,7 +4,46 @@
   "opus_enabled": false,
   "agents": {
     "local-context-gatherer": {
-      "model": "github-copilot/gpt-5-mini"
+      "model": "azure_foundry/gpt-5.4-nano"
+    },
+    "external-context-gatherer": {
+      "model": "azure_foundry/gpt-5.4-nano"
+    },
+    "builder": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "ask": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "orchestrator": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "planner": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "architect": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "coder": {
+      "model": "azure_foundry/gpt-5.3-codex"
+    },
+    "critic": {
+      "model": "azure_foundry/Kimi-K2.6"
+    },
+    "feature-designer": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "feature-reviewer": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "librarian": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "reviewer": {
+      "model": "azure_foundry/gpt-5.4"
+    },
+    "security-reviewer": {
+      "model": "azure_foundry/gpt-5.4"
     }
   }
 }

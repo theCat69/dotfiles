@@ -165,6 +165,9 @@ export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 # snap app
 export PATH="$PATH:/snap/bin"
 
+# webp
+export PATH="$PATH:/home/fef/dev/tools/libwebp-1.6.0-linux-x86-64/bin"
+
 . "/home/fef/.deno/env"
 
 # Aliases
@@ -184,6 +187,7 @@ ij() {
   fi
 }
 alias jtool="jetbrains-toolbox &> /dev/null & disown"
+alias odn="open-docker-nest --host-docker"
 # Suffix aliases
 alias -s md="batcat"
 alias -s rs="$EDITOR"
