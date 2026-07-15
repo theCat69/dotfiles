@@ -47,19 +47,11 @@ test -f "$HOME/dev-tools/headroom/plugins/opencode/dist/entry.opencode.js"
 
 ## 3. Configure OpenCode
 
-Add the built plugin's absolute path to the `plugin` array in `~/.config/opencode/opencode.json`:
+Create a symlink between entry.opencode.js and opencode plugin directory.
 
-```json
-{
-  "plugin": [
-    "@slkiser/opencode-quota",
-    "@mohak34/opencode-notifier@latest",
-    "/home/fefou/dev-tools/headroom/plugins/opencode/dist/entry.opencode.js"
-  ]
-}
+```bash
+ln -s $HOME/dev-tools/headroom/plugins/opencode/dist/entry.opencode.js $HOME/.config/opencode/plugins/entry.opencode.js
 ```
-
-Preserve the rest of the existing OpenCode configuration. Substitute your home directory if it is not `/home/fefou`.
 
 The plugin reads `HEADROOM_PROXY_URL`; it does not add model definitions. Keep using the normal Copilot model ID:
 
