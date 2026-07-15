@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+readonly HEADROOM_PROXY_HOST="127.0.0.1"
+readonly HEADROOM_PROXY_PORT="8787"
+HEADROOM_PROXY_URL="http://${HEADROOM_PROXY_HOST}:${HEADROOM_PROXY_PORT}"
+readonly PROXY_STARTUP_ATTEMPTS=20
+readonly PROXY_STARTUP_DELAY_SECONDS="0.25"
+readonly PROXY_LOG_PATH="${XDG_STATE_HOME:-${HOME}/.local/state}/headroom/proxy.log"
+
+is_proxy_running() {
+  (exec 3<>"/dev/tcp/${HEADROOM_PROXY_HOST}/${HEADROOM_PROXY_PORT}") 2>/dev/null
+}
+
+start_proxy() {
+  mkdir -p "$(dirname "${PROXY_LOG_PATH}")"
+
+  HEADROOM_PROXY_URL="${HEADROOM_PROXY_URL}" \
+    nohup headroom proxy --port "${HEADROOM_PROXY_PORT}" \
+    >>"${PROXY_LOG_PATH}" 2>&1 </dev/null &
+}
+
+wait_for_proxy() {
+  local attempt
+
+  for ((attempt = 1; attempt <= PROXY_STARTUP_ATTEMPTS; attempt++)); do
+    if is_proxy_running; then
+      return 0
+    fi
+
+    sleep "${PROXY_STARTUP_DELAY_SECONDS}"
+  done
+
+  printf 'Headroom proxy did not start on %s. Check %s.\n' \
+    "${HEADROOM_PROXY_URL}" "${PROXY_LOG_PATH}" >&2
+  return 1
+}
+
+if ! is_proxy_running; then
+  start_proxy
+  wait_for_proxy
+fi
+
+exec env HEADROOM_PROXY_URL="${HEADROOM_PROXY_URL}" opencode "$@"

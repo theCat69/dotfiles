@@ -146,6 +146,11 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 export PATH=/home/fefou/.opencode/bin:$PATH
 export OPENCODE_EXPERIMENTAL_LSP_TOOL=true
 export OPENCODE_ENABLE_EXA=1 
+export PATH="$HOME/dev-conf/dotfiles/.config/opencode/bin:$PATH"
+alias opencode="opencode-headroom"
+## headroom
+### Enable output token compression
+export HEADROOM_OUTPUT_SHAPER=1
 # Add JBang to environment
 alias j!=jbang
 export PATH="$HOME/.jbang/bin:$PATH"
@@ -153,7 +158,14 @@ export PATH="$HOME/.jbang/bin:$PATH"
 export PATH=$PATH:/usr/local/go/bin
 # rust
 export PATH=$PATH:~/dev-tools/compilers/wasm/binaryen/binaryen-version_126/bin
-
+# Android
+export ANDROID_HOME=$HOME/Android/Sdk
+export ANDROID_USER_HOME=$HOME/.config/.android
+export ANDROID_AVD_HOME=$HOME/.config/.android/avd
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+# Maestro
+export PATH=$PATH:$HOME/.maestro/bin
 
 # Aliases
 alias ls="eza"
@@ -172,6 +184,7 @@ ij() {
   fi
 }
 alias jtool="jetbrains-toolbox &> /dev/null & disown"
+alias odn="open-docker-nest --host-docker"
 # Suffix aliases
 alias -s md="batcat"
 alias -s rs="$EDITOR"
@@ -220,3 +233,4 @@ eval "$(zoxide init zsh)"
 [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 . "$HOME/.local/share/../bin/env"
+export PATH=$PATH:$HOME/.maestro/bin
