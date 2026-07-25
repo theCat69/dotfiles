@@ -71,6 +71,7 @@ function M.setup()
   require("plugins.lsp.sql").setup()
   require("plugins.lsp.nvim-metals").setup()
   require("plugins.ai.gen").setup()
+  require("plugins.ai.minuet").setup_when_requested()
 end
 
 return M
