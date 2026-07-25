@@ -78,17 +78,16 @@ local function config()
   })
 end
 
----@type LazyPluginSpec
-return {
-  "folke/noice.nvim",
-  config = config,
-  event = "VeryLazy",
-  dependencies = {
-    -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
-    "MunifTanjim/nui.nvim",
-    -- OPTIONAL:
-    --   `nvim-notify` is only needed, if you want to use the notification view.
-    --   If not available, we use `mini` as the fallback
-    "rcarriga/nvim-notify",
-  }
-}
+local M = {}
+
+function M.setup_when_idle()
+  vim.api.nvim_create_autocmd("VimEnter", {
+    group = vim.api.nvim_create_augroup("fefou-noice", { clear = true }),
+    once = true,
+    callback = function()
+      vim.schedule(config)
+    end,
+  })
+end
+
+return M

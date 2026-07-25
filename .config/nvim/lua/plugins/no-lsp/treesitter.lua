@@ -1,153 +1,81 @@
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = {
-    'c', 'cpp', 'go', 'lua', 'py', 'rs', 'ts', 'java', 'scala', 'yaml', 'kt', 'tsx', 'sh',
-    'groovy', 'zig', 'solidity', 'gitcommit', 'zsh', 'css', 'scss', 'angular', 'html', 'regex',
-    'yaml'
-  },
-  callback = function() vim.treesitter.start() end,
-})
+local M = {}
 
----@type LazyPluginSpec[]
-return {
-  {
-    "nvim-treesitter/nvim-treesitter",
-    lazy = false,
-    event = "BufRead",
-    branch = "main",
-    build = ":TSUpdate",
-    ---@class TSConfig
-    opts = {
-      -- custom handling of parsers
-      ensure_installed = {
-        'c', 'cpp', 'go', 'lua', 'python', 'rust', 'typescript', 'java', 'scala', 'yaml', 'kotlin', 'tsx', 'bash',
-        'groovy', 'zig', 'solidity', 'gitcommit', 'zsh', 'css', 'scss', 'angular', 'html', 'regex', 'yaml'
-      },
-    },
-    config = function(_, opts)
-      -- TODO this will log at every nvim startup so i remove it for now
-      -- install parsers from custom opts.ensure_installed
-      -- if opts.ensure_installed and #opts.ensure_installed > 0 then
-      --   require("nvim-treesitter").install(opts.ensure_installed)
-      --   -- register and start parsers for filetypes
-      --   for _, parser in ipairs(opts.ensure_installed) do
-      --     local filetypes = parser -- In this case, parser is the filetype/language name
-      --     vim.treesitter.language.register(parser, filetypes)
-      --
-      --     vim.api.nvim_create_autocmd({ "FileType" }, {
-      --       pattern = filetypes,
-      --       callback = function(event)
-      --         vim.treesitter.start(event.buf, parser)
-      --       end,
-      --     })
-      --   end
-      -- end
-
-      -- this make me freeze. I think i need a better approach than this copy pasta i found
-      -- Auto-install and start parsers for any buffer
-      -- vim.api.nvim_create_autocmd({ "BufRead" }, {
-      --   callback = function(event)
-      --     local bufnr = event.buf
-      --     local filetype = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
-      --
-      --     -- Skip if no filetype
-      --     if filetype == "" then
-      --       return
-      --     end
-      --
-      --     -- Check if this filetype is already handled by explicit opts.ensure_installed config
-      --     for _, filetypes in pairs(opts.ensure_installed) do
-      --       local ft_table = type(filetypes) == "table" and filetypes or { filetypes }
-      --       if vim.tbl_contains(ft_table, filetype) then
-      --         return -- Already handled above
-      --       end
-      --     end
-      --
-      --     -- Get parser name based on filetype
-      --     local parser_name = vim.treesitter.language.get_lang(filetype) -- might return filetype (not helpful)
-      --     if not parser_name then
-      --       return
-      --     end
-      --     -- Try to get existing parser (helpful check if filetype was returned above)
-      --     local parser_configs = require("nvim-treesitter.parsers")
-      --     if not parser_configs[parser_name] then
-      --       return -- Parser not available, skip silently
-      --     end
-      --
-      --     local parser_installed = pcall(vim.treesitter.get_parser, bufnr, parser_name)
-      --
-      --     if not parser_installed then
-      --       -- If not installed, install parser synchronously
-      --       require("nvim-treesitter").install({ parser_name }):wait(30000)
-      --     end
-      --
-      --     -- let's check again
-      --     parser_installed = pcall(vim.treesitter.get_parser, bufnr, parser_name)
-      --
-      --     if parser_installed then
-      --       -- Start treesitter for this buffer
-      --       vim.treesitter.start(bufnr, parser_name)
-      --     end
-      --   end,
-      -- })
-    end,
-  },
-  {
-    "nvim-treesitter/nvim-treesitter-context",
-    event = "BufRead",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      event = "BufRead",
-    },
-    opts = {
-      multiwindow = true,
-    },
-  },
-  {
-    "nvim-treesitter/nvim-treesitter-textobjects",
-    branch = "main",
-    keys = {
-      {
-        "af",
-        function()
-          require("nvim-treesitter-textobjects.select").select_textobject("@function.outer", "textobjects")
-        end,
-        desc = "Select outer function",
-        mode = { "x", "o" },
-      },
-      {
-        "if",
-        function()
-          require("nvim-treesitter-textobjects.select").select_textobject("@function.inner", "textobjects")
-        end,
-        desc = "Select inner function",
-        mode = { "x", "o" },
-      },
-      {
-        "ac",
-        function()
-          require("nvim-treesitter-textobjects.select").select_textobject("@class.outer", "textobjects")
-        end,
-        desc = "Select outer class",
-        mode = { "x", "o" },
-      },
-      {
-        "ic",
-        function()
-          require("nvim-treesitter-textobjects.select").select_textobject("@class.inner", "textobjects")
-        end,
-        desc = "Select inner class",
-        mode = { "x", "o" },
-      },
-      {
-        "as",
-        function()
-          require("nvim-treesitter-textobjects.select").select_textobject("@local.scope", "locals")
-        end,
-        desc = "Select local scope",
-        mode = { "x", "o" },
-      },
-    },
-    ---@module "nvim-treesitter-textobjects"
-    opts = { multiwindow = true },
-  },
+local filetypes = {
+  "c",
+  "cpp",
+  "go",
+  "lua",
+  "py",
+  "rs",
+  "ts",
+  "java",
+  "scala",
+  "yaml",
+  "kt",
+  "tsx",
+  "sh",
+  "groovy",
+  "zig",
+  "solidity",
+  "gitcommit",
+  "zsh",
+  "css",
+  "scss",
+  "angular",
+  "html",
+  "regex",
 }
+
+local parsers = {
+  "c",
+  "cpp",
+  "go",
+  "lua",
+  "python",
+  "rust",
+  "typescript",
+  "java",
+  "scala",
+  "yaml",
+  "kotlin",
+  "tsx",
+  "bash",
+  "groovy",
+  "zig",
+  "solidity",
+  "gitcommit",
+  "zsh",
+  "css",
+  "scss",
+  "angular",
+  "html",
+  "regex",
+}
+
+local function select_textobject(query)
+  return function()
+    require("nvim-treesitter-textobjects.select").select_textobject(query, "textobjects")
+  end
+end
+
+function M.setup()
+  vim.api.nvim_create_autocmd("FileType", {
+    pattern = filetypes,
+    callback = function()
+      vim.treesitter.start()
+    end,
+  })
+
+  require("treesitter-context").setup({ multiwindow = true })
+
+  vim.keymap.set({ "x", "o" }, "af", select_textobject("@function.outer"), { desc = "Select outer function" })
+  vim.keymap.set({ "x", "o" }, "if", select_textobject("@function.inner"), { desc = "Select inner function" })
+  vim.keymap.set({ "x", "o" }, "ac", select_textobject("@class.outer"), { desc = "Select outer class" })
+  vim.keymap.set({ "x", "o" }, "ic", select_textobject("@class.inner"), { desc = "Select inner class" })
+  vim.keymap.set({ "x", "o" }, "as", select_textobject("@local.scope"), { desc = "Select local scope" })
+  vim.api.nvim_create_user_command("TSInstallConfigured", function()
+    require("nvim-treesitter").install(parsers)
+  end, { desc = "Install configured Treesitter parsers" })
+end
+
+return M

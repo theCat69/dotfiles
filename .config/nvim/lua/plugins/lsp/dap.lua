@@ -104,18 +104,10 @@ local function config()
   end
 end
 
----This is use as a "sub plugin" definition in lsp plugin definition
----@type LazyPluginSpec
-return {
-  'theHamsta/nvim-dap-virtual-text',
-  dependencies = {
-    "nvim-neotest/nvim-nio",
-    {
-      "rcarriga/nvim-dap-ui",
-      dependencies = {
-        'mfussenegger/nvim-dap',
-      },
-    }
-  },
-  config = config
-}
+local M = {}
+
+function M.setup()
+  config()
+end
+
+return M

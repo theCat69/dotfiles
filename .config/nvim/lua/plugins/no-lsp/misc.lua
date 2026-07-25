@@ -9,14 +9,11 @@ local function config_autopairs()
   require("nvim-autopairs").setup({})
 end
 
----@type LazyPluginSpec[]
-return {
-  {
-    'numToStr/Comment.nvim',
-    config = config_comment,
-  },
-  {
-    "windwp/nvim-autopairs",
-    config = config_autopairs,
-  },
-}
+local M = {}
+
+function M.setup()
+  config_comment()
+  config_autopairs()
+end
+
+return M

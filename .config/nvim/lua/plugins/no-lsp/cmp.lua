@@ -45,14 +45,10 @@ local function config()
   }
 end
 
----@type LazyPluginSpec[]
-return {
-  {
-    'hrsh7th/nvim-cmp',
-    dependencies = { 'hrsh7th/cmp-nvim-lsp', 'L3MON4D3/LuaSnip', 'saadparwaiz1/cmp_luasnip' },
-    config = config
-  },
-  {
-    'theCat69/friendly-snippets'
-  }
-}
+local M = {}
+
+function M.setup()
+  config()
+end
+
+return M

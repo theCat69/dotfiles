@@ -131,7 +131,7 @@ export NVM_DIR="$HOME/.config/nvm"
 ## local bin
 export PATH=~/.local/bin:$PATH
 ## nvim
-export PATH=/opt/nvim:$PATH
+export PATH=/opt/nvim/bin:$PATH
 ## sjvm
 export PATH=~/projects/rust/sjvm/target/release:$PATH
 export PATH=~/.java/current/bin:$PATH

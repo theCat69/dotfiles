@@ -28,11 +28,10 @@ local function config()
   })
 end
 
----@type LazyPluginSpec
-return {
-  'nvim-tree/nvim-tree.lua',
-  dependencies = {
-    'nvim-tree/nvim-web-devicons',
-  },
-  config = config
-}
+local M = {}
+
+function M.setup()
+  config()
+end
+
+return M

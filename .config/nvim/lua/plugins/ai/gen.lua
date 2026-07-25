@@ -1,13 +1,11 @@
----@type LazyPluginSpec
-return {
-  "David-Kunz/gen.nvim",
-  cmd = { "Gen" },
-  -- i will have to check on windows if it works as well
-  opts = {
-    display_mode = "split",
-  },
-  -- need ollaman to run
-  cond = function()
-    return vim.fn.executable('ollama') == 1
+local M = {}
+
+function M.setup()
+  if vim.fn.executable("ollama") ~= 1 then
+    return
   end
-}
+
+  require("gen").setup({ display_mode = "split" })
+end
+
+return M

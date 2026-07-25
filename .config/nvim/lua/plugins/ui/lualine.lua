@@ -65,8 +65,10 @@ local function config()
 end
 
 
----@type LazyPluginSpec
-return {
-  'nvim-lualine/lualine.nvim',
-  config = config,
-}
+local M = {}
+
+function M.setup()
+  config()
+end
+
+return M

@@ -5,7 +5,7 @@ This file is the entry point for AI agents (Codex, OpenAI, etc.) working on this
 ## Repository Overview
 
 This is a **developer dotfiles and configuration repository** for Kubuntu. It manages:
-- **Neovim** configuration (Lua, lazy.nvim plugin manager)
+- **Neovim** configuration (Lua, Neovim 0.12+ native `vim.pack` package manager)
 - **Zsh** shell configuration (Oh My Zsh, aliases, PATH)
 - **Dotfiles installation** (`install.sh` — idempotent symlink creation)
 - **opencode** AI coding tool configuration + TypeScript plugin (Bun runtime)
@@ -58,7 +58,7 @@ Code pattern examples (real snippets from the project):
 - **TypeScript runtime**: Bun (in `.config/opencode/`)
 - **Commit format**: `<version> / <ai|human> / <purpose> : <summary>`
 - **Install**: `zsh install.sh` from repo root — creates symlinks via `ln -sf`
-- **Neovim plugins**: each file in `lua/plugins/*/` returns a `LazyPluginSpec` or `LazyPluginSpec[]`
+- **Neovim plugins**: `lua/packages.lua` installs package sources; plugin modules expose a focused `setup()` function
 - **No secrets in repo**: secrets sourced from `~/.secrets` (gitignored)
 - **opencode dependency versions**: `@opencode-ai/*` packages and opencode plugins (e.g. `@mohak34/*`, `@slkiser/*`) must **never** be version-pinned — always use `"latest"`. Pinned versions in this context are always wrong.
 

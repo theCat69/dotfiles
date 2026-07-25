@@ -10,7 +10,7 @@ Everything is managed via idempotent symlinks from this repo into `~/.config/`.
 
 | Tool | What it is |
 |---|---|
-| **Neovim** | Full IDE-grade editor config via lazy.nvim (LSP, DAP, Treesitter, AI) |
+| **Neovim** | Full IDE-grade editor config via native `vim.pack` (LSP, DAP, Treesitter, AI) |
 | **Zsh** | Shell config: Oh My Zsh + Starship prompt, smart aliases, PATH management |
 | **Ghostty** | Fast GPU-accelerated terminal emulator |
 | **Starship** | Cross-shell prompt with custom modules (Quarkus, Zsh icon, time) |
@@ -86,17 +86,17 @@ The script creates symlinks using `ln -sf` — it is fully idempotent and safe t
 
 ### Neovim
 
-A full IDE-grade setup built on [lazy.nvim](https://github.com/folke/lazy.nvim). The entire config lives in `.config/nvim/lua/` and is organised by category (`lsp/`, `ui/`, `git/`, `ai/`, etc.).
+A full IDE-grade setup for Neovim 0.12+ using native `vim.pack`. The entire config lives in `.config/nvim/lua/` and is organised by category (`lsp/`, `ui/`, `git/`, `ai/`, etc.).
 
 - **Theme:** Gruvbox Dark (auto-detects light/dark terminal background, transparent background, mode-coloured blinking cursor)
-- **LSP:** 20+ servers managed by Mason with auto-update — `clangd`, `rust_analyzer`, `pyright`, `lua_ls`, `ts_ls`, `gopls`, `kotlin_language_server`, `angularls`, `tailwindcss`, `zls`, `solidity_ls`, `yamlls`, `bashls`, `dockerls`, and more
-- **Language extras:** rust-tools, nvim-metals (Scala), nvim-dap + dapui (debug adapter), Jenkinsfile linter
+- **LSP:** 20+ servers installed by Mason and configured with native Neovim APIs — `clangd`, `rust_analyzer`, `pyright`, `lua_ls`, `ts_ls`, `gopls`, `kotlin_language_server`, `angularls`, `tailwindcss`, `zls`, `solidity_ls`, `yamlls`, `bashls`, `dockerls`, and more
+- **Language extras:** nvim-metals (Scala), nvim-dap + dapui (debug adapter), Jenkinsfile linter
 - **Completion:** nvim-cmp + LuaSnip + friendly-snippets
 - **Treesitter:** full parse-tree highlighting + context + textobjects
 - **UI:** noice.nvim + nvim-notify (command line overhaul), nvim-tree, dropbar (breadcrumbs), lualine (macro-recording indicator)
 - **Git:** gitsigns, vim-fugitive, vim-rhubarb
-- **Navigation:** Telescope (fzf-native + ui-select), arrow.nvim configured for AZERTY keyboards
-- **AI:** gen.nvim connecting to a local Ollama instance — lazy-loads only when `ollama` is detected on `$PATH`
+- **Navigation:** Telescope (ui-select), arrow.nvim configured for AZERTY keyboards
+- **AI:** gen.nvim connecting to a local Ollama instance when `ollama` is detected on `$PATH`
 
 ### Zsh
 

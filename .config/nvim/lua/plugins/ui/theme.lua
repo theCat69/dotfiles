@@ -36,9 +36,10 @@ local function config()
   "n-c-sm:block-Cursor,v:block-vCursor,i-ci-ve:block-iCursor-blinkwait500-blinkoff200-blinkon500,r-cr-o:hor20"
 end
 
----@type LazyPluginSpec
-return {
-  'morhetz/gruvbox',
-  priority = 1000,
-  config = config
-}
+local M = {}
+
+function M.setup()
+  config()
+end
+
+return M

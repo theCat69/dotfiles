@@ -1,5 +1,3 @@
-local cmd = "Git"
-
 local function gitsign_config()
   require('gitsigns').setup {
     signs = {
@@ -12,17 +10,10 @@ local function gitsign_config()
   }
 end
 
----@type LazyPluginSpec[]
-return {
-  {
-    'lewis6991/gitsigns.nvim',
-    config = gitsign_config,
-  },
-  {
-    'tpope/vim-rhubarb',
-    dependencies = {
-      'tpope/vim-fugitive',
-    },
-    cmd = cmd
-  },
-}
+local M = {}
+
+function M.setup()
+  gitsign_config()
+end
+
+return M
