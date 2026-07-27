@@ -4,46 +4,46 @@
   "opus_enabled": false,
   "agents": {
     "local-context-gatherer": {
-      "model": "azure_foundry/gpt-5.4-nano"
+      "model": "azure_foundry/gpt-5.6-luna"
     },
     "external-context-gatherer": {
-      "model": "azure_foundry/gpt-5.4-nano"
+      "model": "azure_foundry/gpt-5.6-luna"
     },
     "builder": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "ask": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "orchestrator": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "planner": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "architect": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "coder": {
-      "model": "azure_foundry/gpt-5.3-codex"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "critic": {
-      "model": "azure_foundry/Kimi-K2.6"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "feature-designer": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "feature-reviewer": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "librarian": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "reviewer": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     },
     "security-reviewer": {
-      "model": "azure_foundry/gpt-5.4"
+      "model": "azure_foundry/gpt-5.6-terra"
     }
   }
 }
